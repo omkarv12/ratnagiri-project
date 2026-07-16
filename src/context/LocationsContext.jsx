@@ -120,34 +120,21 @@ export const LocationsProvider = ({ children }) => {
 });
 
         const parsedHomestays = homeData.map((row) => {
+  return {
+    ...row,
 
-
-    return {
-
-        id: row.id,
-
-        name: row.homestay_name || `Homestay ${row.id}`,
-
-        owner: row.owner_name || "Unknown",
-
-        phone: row.phone_number || "Unknown",
-
-        village: row.village_town_city || "Unknown",
-
-        taluka: row.taluka_name || "Unknown",
-
-        type: row.homestay_type || "Homestay",
-
-        amenities: row.facilities_services || "Basic",
-
-        mediaDriveUrl: row.photo_homestay || "#",
-
-        lat: row.latitude,
-
-        lng: row.longitude
-
-    };
-
+    id: row.id,
+    name: row.homestay_name || `Homestay ${row.id}`,
+    owner: row.owner_name || "Unknown",
+    phone: row.phone_number || "Unknown",
+    village: row.village_town_city || "Unknown",
+    taluka: row.taluka_name || "Unknown",
+    type: row.homestay_type || "Homestay",
+    amenities: row.facilities_services || "Basic",
+    mediaDriveUrl: row.photo_homestay || "#",
+    lat: row.latitude,
+    lng: row.longitude
+  };
 });
 
         const parsedEco = ecoData.map((row, index) => {

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 
@@ -25,7 +25,7 @@ export default function App() {
       <Router>
         <Routes>
 
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/login" element={<Login />} />
 
@@ -42,7 +42,7 @@ export default function App() {
             />
 
             <Route
-              path="/profile/:id"
+              path="/profile/:type/:id"
               element={<LocationProfile />}
             />
 
