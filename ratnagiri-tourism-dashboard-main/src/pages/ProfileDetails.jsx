@@ -96,7 +96,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
       {/* HEADER SECTION */}
       <div
-        className={`relative ${heroHeight} text-white overflow-hidden ${compact ? "rounded-xl" : ""}`}
+        className={`sticky top-0 z-20 relative ${heroHeight} text-white overflow-hidden ${compact ? "rounded-xl" : ""}`}
         style={{
           backgroundImage: `url(${photos.length ? photos[0].url : placeholderImage})`,
           backgroundSize: "cover",
@@ -377,7 +377,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
               }
             }
           }}
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center cursor-zoom-out p-6"
+          className="fixed inset-0 bg-black/90 z-2000 flex items-center justify-center cursor-zoom-out p-6"
         >
           <img
             src={galleryPhotos[lightboxIndex].url}

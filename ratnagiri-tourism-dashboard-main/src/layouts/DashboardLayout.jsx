@@ -50,7 +50,7 @@ export default function DashboardLayout() {
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow transition"
                         >
                             <LogIn size={18} />
-                            Login
+                            Admin Login
                         </button>
 
                     )}

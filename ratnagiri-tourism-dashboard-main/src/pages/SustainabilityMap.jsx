@@ -7,6 +7,25 @@ import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, Shi
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 
+function MapLegend() {
+  return (
+    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur px-5 py-2 rounded-xl shadow-lg border border-slate-200 flex items-center gap-4 whitespace-nowrap overflow-x-auto max-w-[95%]">
+      {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
+        <div key={category} className="flex items-center gap-1.5 shrink-0">
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: color }}
+          >
+            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
+          </div>
+          <span className="text-xs font-semibold text-slate-700">
+            {category}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Fix Leaflet's default icon missing issue in webpack/vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -534,9 +553,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <p className="text-xs text-slate-500 mb-3 italic">{home.amenities.substring(0, 60)}...</p>
           <div className="flex justify-between items-center">
             <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
-            <a href={home.mediaDriveUrl} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="text-blue-600 text-xs font-bold hover:underline flex items-center gap-1">
-              <ImageIcon size={12} /> Photos
-            </a>
+            
           </div>
         </div>
       ))}
@@ -627,6 +644,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 
       {/* MAP AREA */}
 <div className="flex-1 relative bg-slate-200" style={{ cursor: pinMode ? 'crosshair' : 'grab' }}>
+  <MapLegend />
   <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
     <TileLayer
       url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
