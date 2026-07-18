@@ -258,7 +258,7 @@ const filteredHomestays = homestays.filter((home) => {
 
   const renderActivePins = () => {
     if (activeTab === 'villages') {
-      return filteredlocations.map(loc => (
+      return filteredLocations.map(loc => (
         <Marker 
           key={loc.id} 
           position={[loc.lat, loc.lng]}
