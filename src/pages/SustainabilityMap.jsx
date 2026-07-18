@@ -750,9 +750,13 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 )}
   <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
     <TileLayer
-      url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-      attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-    />
+  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+  attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+/>
+<TileLayer
+  url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+  attribution=""
+/>
 
     {districtBorder && (
       <GeoJSON
