@@ -195,7 +195,7 @@ useEffect(() => {
   "All",
   ...new Set(
     locations
-      .map((loc) => loc.taluka)
+      .map((loc) => loc.taluka_name)
       .filter(Boolean)
       .sort()
   ),
@@ -216,14 +216,14 @@ const filteredLocations = locations.filter((loc) => {
 
   const talukaMatch =
     selectedTaluka === "All" ||
-    loc.taluka === selectedTaluka;
+    loc.taluka_name === selectedTaluka;
 
   const tourismTypeMatch =
     selectedTourismType === "All" ||
     loc.category === selectedTourismType;
 
   const searchMatch =
-    loc.name
+    (loc.location_name || "")
       .toLowerCase()
       .includes(locationSearch.toLowerCase());
 
@@ -265,10 +265,10 @@ const filteredHomestays = homestays.filter((home) => {
           ref={(ref) => { markerRefs.current[loc.id] = ref; }}
 icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
 >
-          <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.name}</Tooltip>
+          <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
           <Popup>
             <div className="text-center">
-              <strong className="block text-base mb-1">{loc.name}</strong>
+              <strong className="block text-base mb-1">{loc.location_name}</strong>
               <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
               <button 
                 onClick={() => setSelectedItem({ data: loc, type: 'village' })}
@@ -451,10 +451,10 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     onClick={() => { handleFlyTo(loc.lat, loc.lng); setSelectedItem({ data: loc, type: 'village' }); }}
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
                   >
-                    <h3 className="font-bold text-slate-800 mb-2">{loc.name}</h3>
+                    <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village}</span>
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka}</span>
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village_name}</span>
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka_name}</span>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
