@@ -765,10 +765,22 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   </div>
 )}
   <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
+    <LayersControl position="topright">
+  <LayersControl.BaseLayer checked name="Satellite">
     <TileLayer
-  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-  attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-/>
+      url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+    />
+  </LayersControl.BaseLayer>
+
+  <LayersControl.BaseLayer name="Street Map">
+    <TileLayer
+      url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+      attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+    />
+  </LayersControl.BaseLayer>
+</LayersControl>
+
 <TileLayer
   url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
   attribution=""
