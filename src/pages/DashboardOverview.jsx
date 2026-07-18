@@ -335,16 +335,24 @@ export default function DashboardOverview() {
       </div>
 
       {/* ================= Discover Ratnagiri ================= */}
-      <div className="bg-white rounded-2xl shadow-md p-8 mt-8">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-slate-800">Discover Ratnagiri</h2>
-          <p className="text-slate-500 mt-2">
+      <div className="text-center mb-12">
+          <span className="inline-block px-4 py-1 bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-full mb-3">
+            Explore the District
+          </span>
+          <h2 className="text-4xl font-bold text-slate-800 mb-2">Discover Ratnagiri</h2>
+          <div className="w-16 h-1 bg-gradient-to-r from-orange-500 to-amber-500 mx-auto rounded-full mb-3"></div>
+          <p className="text-slate-500 text-lg">
             A land of history, coastline, and Konkan heritage.
           </p>
         </div>
 
         {/* History blurb */}
-        <div className="max-w-3xl mx-auto text-center mb-10">
+        <div className="max-w-4xl mx-auto mb-12 bg-gradient-to-br from-slate-50 to-orange-50/50 rounded-2xl p-8 border border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-orange-500 to-amber-500"></div>
+          <div className="flex items-start gap-3 mb-4">
+            <span className="text-3xl">📜</span>
+            <h3 className="text-lg font-bold text-slate-800 mt-1">A Storied Past</h3>
+          </div>
           <p className="text-slate-600 leading-7 mb-4">
             Ratnagiri is best known as the birthplace of freedom fighter Lokmanya Tilak,
             and carries strong ties to Swatantryaveer Savarkar and the sage Parshuram.
@@ -367,18 +375,25 @@ export default function DashboardOverview() {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+        <div className="flex flex-wrap justify-center gap-4 mb-10">
           {discoverCategories.map((cat) => (
             <button
               key={cat.name}
               onClick={() => setActiveCategory(cat.name)}
-              className={`px-5 py-2 rounded-full font-semibold text-sm transition-all ${
+              className={`group flex items-center gap-3 pl-3 pr-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 border-2 ${
                 activeCategory === cat.name
-                  ? "bg-orange-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? `bg-gradient-to-r ${cat.color} text-white border-transparent shadow-lg scale-105`
+                  : "bg-white text-slate-600 border-slate-200 hover:border-orange-300 hover:shadow-md"
               }`}
             >
-              {cat.icon} {cat.name}
+              <span
+                className={`flex items-center justify-center w-8 h-8 rounded-full text-base transition-colors ${
+                  activeCategory === cat.name ? "bg-white/25" : "bg-slate-100 group-hover:bg-orange-100"
+                }`}
+              >
+                {cat.icon}
+              </span>
+              {cat.name}
             </button>
           ))}
         </div>
