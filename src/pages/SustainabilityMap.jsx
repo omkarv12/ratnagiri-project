@@ -82,6 +82,42 @@ function createMarkerIcon(category, isSelected) {
     popupAnchor: [0, -size],
   });
 }
+// ⬇️ ADD fetchRoute HERE ⬇️
+async function fetchRoute(lat1, lon1, lat2, lon2) {
+  try {
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full&geometries=geojson`
+    );
+    const data = await response.json();
+    if (data.routes && data.routes[0]) {
+      return {
+        distance: (data.routes[0].distance / 1000).toFixed(1),
+        duration: Math.round(data.routes[0].duration / 60),
+        geometry: data.routes[0].geometry,
+      };
+    }
+    return null;
+  } catch (err) {
+    console.error("Route fetch failed:", err);
+    return null;
+  }
+}
+// ⬆️ ADD fetchRoute HERE ⬆️
+
+const handleShowRoute = async (destLat, destLng) => {
+  if (!userLocation) {
+    alert("Please allow location access to see directions.");
+    return;
+  }
+  const route = await fetchRoute(userLocation.lat, userLocation.lng, destLat, destLng);
+  if (route) {
+    setActiveRoute(route);
+    setMapPosition([destLat, destLng]);
+  } else {
+    alert("Could not calculate route.");
+  }
+};
+
 // Calculates distance in km between two lat/lng points using the Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -157,6 +193,8 @@ const [selectedItem, setSelectedItem] = useState(null); // { data, type }
 const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
 const [userLocation, setUserLocation] = useState(null);
+const [activeRoute, setActiveRoute] = useState(null);
+
 
 
 
@@ -513,12 +551,20 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     </span>
   )}
 </div>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
-                      className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800"
-                    >
-                      <ImageIcon size={14} /> View Profile
-                    </button>
+      <div className="flex items-center gap-3">
+  <button 
+    onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
+    className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800"
+  >
+    <ImageIcon size={14} /> View Profile
+  </button>
+  <button
+    onClick={(e) => { e.stopPropagation(); handleShowRoute(loc.latitude, loc.longitude); }}
+    className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+  >
+    🧭 Show Route
+  </button>
+</div>              
                   </div>
                 ))}
               </div>
@@ -623,9 +669,14 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 </p>
           <p className="text-xs text-slate-500 mb-3 italic">{home.amenities.substring(0, 60)}...</p>
           <div className="flex justify-between items-center">
-            <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
-            
-          </div>
+  <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
+  <button
+    onClick={(e) => { e.stopPropagation(); handleShowRoute(home.latitude, home.longitude); }}
+    className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+  >
+    🧭 Show Route
+  </button>
+</div>
         </div>
       ))}
       {filteredHomestays.length === 0 && (
@@ -684,6 +735,19 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       {/* MAP AREA */}
 <div className="flex-1 relative bg-slate-200" style={{ cursor: pinMode ? 'crosshair' : 'grab' }}>
   <MapLegend />
+{activeRoute && (
+  <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-4 py-2 flex items-center gap-3">
+    <span className="text-sm font-bold text-slate-800">
+      🚗 {activeRoute.distance} km · {activeRoute.duration} min
+    </span>
+    <button
+      onClick={() => setActiveRoute(null)}
+      className="text-slate-400 hover:text-slate-600 text-sm"
+    >
+      ✕
+    </button>
+  </div>
+)}
   <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
     <TileLayer
       url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
@@ -707,7 +771,23 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     <MapClickHandler isActive={pinMode} onPinDropped={handlePinDropped} />
 
     {/* Render Active Data Pins */}
-    {renderActivePins()}
+{renderActivePins()}
+
+{/* User's current location marker */}
+{userLocation && (
+  <Marker position={[userLocation.lat, userLocation.lng]}>
+    <Popup>You are here</Popup>
+  </Marker>
+)}
+
+{/* Active route line */}
+{activeRoute && (
+  <GeoJSON
+    key={JSON.stringify(activeRoute.geometry)}
+    data={activeRoute.geometry}
+    style={{ color: "#2563eb", weight: 5, opacity: 0.8 }}
+  />
+)}
 
     {/* User Custom Pins */}
     {customPins.map(pin => (
