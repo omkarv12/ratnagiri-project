@@ -1,0 +1,4 @@
+@import "tailwindcss";
+.selected-marker {
+  filter: hue-rotate(150deg) saturate(3) brightness(0.9);
+}
