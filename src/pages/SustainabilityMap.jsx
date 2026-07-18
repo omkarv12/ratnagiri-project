@@ -261,7 +261,8 @@ const filteredHomestays = homestays.filter((home) => {
       return filteredLocations.map(loc => (
         <Marker 
           key={loc.id} 
-          position={[loc.lat, loc.lng]}
+          position={[loc.latitude, loc.longitude]}
+
           ref={(ref) => { markerRefs.current[loc.id] = ref; }}
 icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
 >
@@ -285,7 +286,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       return homestays.map(home => (
         <Marker 
           key={home.id} 
-          position={[home.lat, home.lng]}
+          position={[home.latitude, home.longitude]}
           ref={(ref) => { markerRefs.current[home.id] = ref; }}
           icon={createMarkerIcon(null, selectedItem?.type === 'homestay' && selectedItem?.data?.id === home.id)}
         >
@@ -310,7 +311,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       return eco.map(e => (
         <Marker 
           key={e.id} 
-          position={[e.lat, e.lng]}
+          position={[e.latitude, e.longitude]}
           ref={(ref) => { markerRefs.current[e.id] = ref; }}
           icon={createMarkerIcon(null, selectedItem?.type === 'eco' && selectedItem?.data?.id === e.id)}
         >
@@ -448,7 +449,8 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 {filteredLocations.map(loc => (
                      <div 
                     key={loc.id} 
-                    onClick={() => { handleFlyTo(loc.lat, loc.lng); setSelectedItem({ data: loc, type: 'village' }); }}
+                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); }}
+                    
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
                   >
                     <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
@@ -543,7 +545,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       {filteredHomestays.map(home => (
         <div 
           key={home.id}
-          onClick={() => { handleFlyTo(home.lat, home.lng); setSelectedItem({ data: home, type: 'homestay' }); }}
+          onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
           className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
         >
           <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
@@ -575,7 +577,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 {eco.map(e => (
                   <div 
                     key={e.id}
-                    onClick={() => { handleFlyTo(e.lat, e.lng); setSelectedItem({ data: e, type: 'eco' }); }}
+                    onClick={() => { handleFlyTo(e.latitude, e.longitude); setSelectedItem({ data: e, type: 'eco' }); }}
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
                   >
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">{e.name}</h3>
