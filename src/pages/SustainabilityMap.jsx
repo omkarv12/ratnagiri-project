@@ -82,7 +82,21 @@ function createMarkerIcon(category, isSelected) {
     popupAnchor: [0, -size],
   });
 }
-
+// Calculates distance in km between two lat/lng points using the Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 // Component to handle map flyTo logic
 function MapController({ position }) {
   const map = useMap();
@@ -142,6 +156,8 @@ const [isHomestaySearchOpen, setIsHomestaySearchOpen] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null); // { data, type }
 const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
+const [userLocation, setUserLocation] = useState(null);
+
 
 
 
@@ -164,7 +180,26 @@ useEffect(() => {
     .then((data) => setDistrictBorder(data))
     .catch((err) => console.error("Failed to load district border:", err));
 }, []);
+  // 👇 ADD GEOLOCATION BLOCK HERE
+useEffect(() => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.log("Location access denied or unavailable:", error.message);
+      }
+    );
+  }
+}, []);
 
+  const handleFlyTo = (lat, lng) => {
+    setMapPosition([lat, lng]);
+  };
   const handleFlyTo = (lat, lng) => {
     setMapPosition([lat, lng]);
   };
@@ -462,9 +497,14 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                   >
                     <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village_name}</span>
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka_name}</span>
-                    </div>
+  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village_name}</span>
+  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka_name}</span>
+  {userLocation && (
+    <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded font-medium">
+      {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away
+    </span>
+  )}
+</div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
                       className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800"
@@ -558,7 +598,14 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
             {home.name} <ShieldCheck size={14} className="text-emerald-500" />
           </h3>
-          <p className="text-sm text-slate-600 mb-1"><strong>Location:</strong> {home.village}, {home.taluka}</p>
+          <p className="text-sm text-slate-600 mb-1">
+  <strong>Location:</strong> {home.village}, {home.taluka}
+  {userLocation && (
+    <span className="ml-2 text-emerald-700 font-medium">
+      · {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away
+    </span>
+  )}
+</p>
           <p className="text-sm text-slate-600 mb-2">
   <strong>Owner:</strong> {home.owner} (
   <a href={`tel:${home.phone.split('/')[0].trim()}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline font-medium">
