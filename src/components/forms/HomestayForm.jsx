@@ -377,8 +377,8 @@ const removeHomestayPhoto = (index) => {
     </label>
 
     <select
-        name="homestay_type"
-        value={formData.homestay_type}
+        name="homestay_unit_type"
+        value={formData.homestay_unit_type}
         onChange={handleChange}
         className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
         required
