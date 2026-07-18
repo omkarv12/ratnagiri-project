@@ -765,7 +765,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   </div>
 )}
   <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
-    <LayersControl position="topright">
+    <LayersControl position="bottomleft">
   <LayersControl.BaseLayer checked name="Satellite">
     <TileLayer
       url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
