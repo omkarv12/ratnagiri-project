@@ -335,7 +335,8 @@ export default function DashboardOverview() {
       </div>
 
       {/* ================= Discover Ratnagiri ================= */}
-      <div className="text-center mb-12">
+      <div className="bg-white rounded-2xl shadow-md p-8 mt-8">
+        <div className="text-center mb-12">
           <span className="inline-block px-4 py-1 bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-full mb-3">
             Explore the District
           </span>
