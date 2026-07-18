@@ -234,6 +234,8 @@ console.log("selectedTourismType:", JSON.stringify(selectedTourismType));
 console.log("Sample category:", JSON.stringify(locations[0]?.category));
 console.log("All categories:", locations.map(l => l.category));
 console.log("filteredLocations count:", filteredLocations.length);
+console.log("Full first location object:", JSON.stringify(locations[0], null, 2));
+
 
 const homestayTypes = [
   "All",
