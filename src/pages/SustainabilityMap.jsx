@@ -230,6 +230,10 @@ const filteredLocations = locations.filter((loc) => {
   return talukaMatch && tourismTypeMatch && searchMatch;
 
 });
+console.log("selectedTourismType:", JSON.stringify(selectedTourismType));
+console.log("Sample category:", JSON.stringify(locations[0]?.category));
+console.log("All categories:", locations.map(l => l.category));
+console.log("filteredLocations count:", filteredLocations.length);
 
 const homestayTypes = [
   "All",
@@ -283,7 +287,8 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       ));
     }
     if (activeTab === 'homestays') {
-      return homestays.map(home => (
+      return filteredHomestays.map(home => (
+
         <Marker 
           key={home.id} 
           position={[home.latitude, home.longitude]}
