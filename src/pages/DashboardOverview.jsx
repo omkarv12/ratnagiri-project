@@ -192,7 +192,7 @@ export default function DashboardOverview() {
               </button>
 
               
-                href="/ratnagiri-tourism-map.pdf"
+                <a href="/ratnagiri-tourism-map.pdf"
                 download
                 className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-colors"
               >
