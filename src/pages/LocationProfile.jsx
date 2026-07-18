@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useMemo } from "react";
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
+import RegistrationForm from '../components/forms/RegistrationForm';
 
 
 export default function LocationProfile() {

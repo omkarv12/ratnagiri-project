@@ -604,53 +604,19 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 
           
 
-          {/* CUSTOM PINS TAB */}
-          {activeTab === 'pins' && (
-            <div className="animate-in slide-in-from-right-4 duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Interactive Placement</h2>
-              
-              <button 
-                onClick={() => setPinMode(!pinMode)}
-                className={`w-full py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 mb-4 transition-colors ${
-                  pinMode ? 'bg-slate-800 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
-                }`}
-              >
-                <Crosshair size={18} />
-                {pinMode ? "Click Map to Drop Pin" : "Activate Map Pin Mode"}
-              </button>
-              
-              <p className="text-xs text-slate-500 mb-6 italic">
-                *Click the button above, then click anywhere directly on the map to record custom pin coordinates.
-              </p>
-
-              <h3 className="font-bold text-slate-700 mb-3 border-b border-slate-200 pb-2">Active User Pins</h3>
-              {customPins.length === 0 ? (
-                <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No custom locations dropped yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {customPins.map(pin => (
-                    <div key={pin.id} className="bg-white border border-slate-200 p-3 rounded-lg shadow-sm flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-slate-800">{pin.name}</p>
-                        <p className="text-xs text-slate-500 font-mono mt-1">Lat: {pin.lat.toFixed(4)}, Lng: {pin.lng.toFixed(4)}</p>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          setCustomPins(prev => prev.filter(p => p.id !== pin.id));
-                          if(mapPosition && mapPosition[0] === pin.lat) setMapPosition(null);
-                        }}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+          {/* ADD LOCATION TAB - REGISTRATION FORM */}
+{activeTab === 'pins' && (
+  <div className="animate-in slide-in-from-right-4 duration-300">
+    <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">
+      Register a New Location or Homestay
+    </h2>
+    <RegistrationForm
+      onSuccess={() => {
+        alert("Submitted! Waiting for admin approval.");
+      }}
+    />
+  </div>
+)}
 
       {/* MAP AREA */}
 <div className="flex-1 relative bg-slate-200" style={{ cursor: pinMode ? 'crosshair' : 'grab' }}>
