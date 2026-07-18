@@ -559,7 +559,13 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
             {home.name} <ShieldCheck size={14} className="text-emerald-500" />
           </h3>
           <p className="text-sm text-slate-600 mb-1"><strong>Location:</strong> {home.village}, {home.taluka}</p>
-          <p className="text-sm text-slate-600 mb-2"><strong>Owner:</strong> {home.owner} ({home.phone})</p>
+          <p className="text-sm text-slate-600 mb-2">
+  <strong>Owner:</strong> {home.owner} (
+  <a href={`tel:${home.phone.split('/')[0].trim()}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline font-medium">
+    {home.phone}
+  </a>
+  )
+</p>
           <p className="text-xs text-slate-500 mb-3 italic">{home.amenities.substring(0, 60)}...</p>
           <div className="flex justify-between items-center">
             <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
