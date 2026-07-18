@@ -102,21 +102,7 @@ async function fetchRoute(lat1, lon1, lat2, lon2) {
     return null;
   }
 }
-// ⬆️ ADD fetchRoute HERE ⬆️
 
-const handleShowRoute = async (destLat, destLng) => {
-  if (!userLocation) {
-    alert("Please allow location access to see directions.");
-    return;
-  }
-  const route = await fetchRoute(userLocation.lat, userLocation.lng, destLat, destLng);
-  if (route) {
-    setActiveRoute(route);
-    setMapPosition([destLat, destLng]);
-  } else {
-    alert("Could not calculate route.");
-  }
-};
 
 // Calculates distance in km between two lat/lng points using the Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -194,6 +180,20 @@ const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
 const [userLocation, setUserLocation] = useState(null);
 const [activeRoute, setActiveRoute] = useState(null);
+
+const handleShowRoute = async (destLat, destLng) => {
+  if (!userLocation) {
+    alert("Please allow location access to see directions.");
+    return;
+  }
+  const route = await fetchRoute(userLocation.lat, userLocation.lng, destLat, destLng);
+  if (route) {
+    setActiveRoute(route);
+    setMapPosition([destLat, destLng]);
+  } else {
+    alert("Could not calculate route.");
+  }
+};
 
 
 
