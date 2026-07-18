@@ -7,6 +7,7 @@ import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, Shi
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 
+
 function MapLegend() {
   return (
     <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur px-5 py-2 rounded-xl shadow-lg border border-slate-200 flex items-center gap-4 whitespace-nowrap overflow-x-auto max-w-[95%]">

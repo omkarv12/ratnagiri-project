@@ -125,7 +125,7 @@ export default function DashboardOverview() {
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
-
+        
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-8">
             <h2 className="text-3xl font-bold mb-5">About Ratnagiri Tourism</h2>
 
