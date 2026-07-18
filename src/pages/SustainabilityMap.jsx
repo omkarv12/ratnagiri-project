@@ -6,7 +6,7 @@ import L from 'leaflet';
 import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
-
+import RegistrationForm from '../components/forms/RegistrationForm';
 
 function MapLegend() {
   return (
@@ -617,6 +617,8 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     />
   </div>
 )}
+</div>
+      </div>
 
       {/* MAP AREA */}
 <div className="flex-1 relative bg-slate-200" style={{ cursor: pinMode ? 'crosshair' : 'grab' }}>
