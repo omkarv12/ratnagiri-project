@@ -307,17 +307,22 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 >
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
           <Popup>
-            <div className="text-center">
-              <strong className="block text-base mb-1">{loc.location_name}</strong>
-              <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
-              <button 
-                onClick={() => setSelectedItem({ data: loc, type: 'village' })}
-                className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
-              >
-                View Detailed Profile
-              </button>
-            </div>
-          </Popup>
+  <div className="text-center">
+    <strong className="block text-base mb-1">{loc.location_name}</strong>
+    <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
+    {userLocation && (
+      <span className="text-xs text-emerald-700 font-medium mb-2 block">
+        {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away from your current location
+      </span>
+    )}
+    <button 
+      onClick={() => setSelectedItem({ data: loc, type: 'village' })}
+      className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+    >
+      View Detailed Profile
+    </button>
+  </div>
+</Popup>
         </Marker>
       ));
     }
@@ -332,10 +337,15 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
         >
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-amber-500/90 shadow-sm border-0 text-white">{home.name}</Tooltip>
           <Popup>
-            <div className="text-center">
-              <strong className="block text-base mb-1">{home.name}</strong>
-              <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
-              <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>
+  <div className="text-center">
+    <strong className="block text-base mb-1">{home.name}</strong>
+    <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
+    {userLocation && (
+      <span className="text-xs text-emerald-700 font-medium mb-1 block">
+        {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
+      </span>
+    )}
+    <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>
               <button 
                 onClick={() => setSelectedItem({ data: home, type: 'homestay' })}
                 className="w-full py-1.5 mt-1 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors mb-2"
@@ -599,10 +609,10 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <p className="text-sm text-slate-600 mb-1">
   <strong>Location:</strong> {home.village}, {home.taluka}
   {userLocation && (
-    <span className="ml-2 text-emerald-700 font-medium">
-      · {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away
-    </span>
-  )}
+  <span className="ml-2 text-emerald-700 font-medium">
+    · {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
+  </span>
+)}
 </p>
           <p className="text-sm text-slate-600 mb-2">
   <strong>Owner:</strong> {home.owner} (
