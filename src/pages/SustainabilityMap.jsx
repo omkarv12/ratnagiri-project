@@ -671,7 +671,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <div className="flex justify-between items-center">
   <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
   <div className="flex items-center gap-3">
-    
+    <a
        href={`https://wa.me/91${home.phone.split('/')[0].replace(/\D/g, '')}`}
       target="_blank"
       rel="noreferrer"
