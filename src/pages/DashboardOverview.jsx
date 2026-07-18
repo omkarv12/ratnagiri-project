@@ -147,16 +147,6 @@ export default function DashboardOverview() {
           ))}
           <div className="absolute inset-0 bg-black/40"></div>
 
-          {/* Download Map button */}
-          
-            <a href="/ratnagiri-tourism-map.pdf"
-            download
-            className="absolute top-5 right-5 z-20 flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-colors"
-          >
-            <Download size={18} />
-            Download Ratnagiri Tourism Map
-          </a>
-
           {/* Slide indicator dots */}
 
           {/* Slide indicator dots */}
@@ -200,6 +190,15 @@ export default function DashboardOverview() {
                 <ClipboardPen size={18} />
                 Register Your Location/ Homestay
               </button>
+
+              
+                href="/ratnagiri-tourism-map.pdf"
+                download
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-colors"
+              >
+                <Download size={18} />
+                Download Ratnagiri Tourism Map
+              </a>
             </div>
           </div>
         </div>
