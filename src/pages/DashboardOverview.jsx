@@ -149,7 +149,7 @@ export default function DashboardOverview() {
 
           {/* Download Map button */}
           
-            href="/ratnagiri-tourism-map.pdf"
+            <a href="/ratnagiri-tourism-map.pdf"
             download
             className="absolute top-5 right-5 z-20 flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-colors"
           >
