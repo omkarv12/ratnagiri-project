@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Trees,
   UtensilsCrossed,
@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   MapPin,
   ArrowRight,
+  Download,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,22 @@ export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+
+  const heroImages = [
+    "https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg",
+    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=80", // replace with a Ratnagiri beach photo
+    "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1600&q=80", // replace with a Konkan temple photo
+    "https://images.unsplash.com/photo-1502786129293-79981df4e689?auto=format&fit=crop&w=1600&q=80", // replace with a waterfall photo
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80", // replace with a forest/eco-tourism photo
+  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   const activities = [
     {
@@ -117,14 +134,43 @@ export default function DashboardOverview() {
           </h1>
         </div>
 
-        <div
-          className="relative h-[420px] bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg')",
-          }}
-        >
+        <div className="relative h-[420px] overflow-hidden">
+          {heroImages.map((img, index) => (
+            <div
+              key={index}
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+              style={{
+                backgroundImage: `url('${img}')`,
+                opacity: index === currentSlide ? 1 : 0,
+              }}
+            />
+          ))}
           <div className="absolute inset-0 bg-black/40"></div>
+
+          {/* Download Map button */}
+          
+            href="/ratnagiri-tourism-map.pdf"
+            download
+            className="absolute top-5 right-5 z-20 flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-colors"
+          >
+            <Download size={18} />
+            Download Ratnagiri Tourism Map
+          </a>
+
+          {/* Slide indicator dots */}
+
+          {/* Slide indicator dots */}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div> 
         
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-8">
             <h2 className="text-3xl font-bold mb-5">About Ratnagiri Tourism</h2>
