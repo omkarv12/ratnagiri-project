@@ -200,9 +200,7 @@ useEffect(() => {
   const handleFlyTo = (lat, lng) => {
     setMapPosition([lat, lng]);
   };
-  const handleFlyTo = (lat, lng) => {
-    setMapPosition([lat, lng]);
-  };
+  
   useEffect(() => {
     if (selectedItem?.data?.id) {
       const marker = markerRefs.current[selectedItem.data.id];
