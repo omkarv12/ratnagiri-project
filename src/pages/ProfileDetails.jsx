@@ -36,7 +36,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
     if (!loc) return;
 
-    if (type === "eco") {
+    if (type === "eco" || type === "driver") {
       setPhotos([]);
       return;
     }
@@ -80,9 +80,9 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
   const extraPhotos = useMemo(() => {
     if (!loc) return [];
-    return type === "homestay"
-      ? parseDrivePhotoField(loc.amenities_photos)
-      : parseDrivePhotoField(loc.site_photos);
+    if (type === "homestay") return parseDrivePhotoField(loc.amenities_photos);
+    if (type === "driver") return parseDrivePhotoField(loc.vehiclePhotos);
+    return parseDrivePhotoField(loc.site_photos);
   }, [loc, type]);
 
   const galleryPhotos = [...photos.slice(1), ...extraPhotos];
@@ -160,7 +160,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
               <div className="flex items-center gap-3 mb-2">
 
                 <span className="px-3 py-1 bg-orange-500/80 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {type === "homestay" ? "Homestay" : type === "eco" ? "Eco Unit" : loc.category}
+                  {type === "homestay" ? "Homestay" : type === "eco" ? "Eco Unit" : type === "driver" ? (loc.vehicleType || "Driver") : loc.category}
                 </span>
 
                 {!compact && (
@@ -358,13 +358,42 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
             </>
           )}
 
+          {type === "driver" && (
+            <>
+              <InfoCard title="Driver Information">
+                <InfoRow label="Driver Name" value={loc.name || loc.driver_name} />
+                <InfoRow label="Phone Number" value={loc.phone} />
+                <InfoRow label="Base Village" value={loc.village} />
+                <InfoRow label="Taluka" value={loc.taluka} />
+              </InfoCard>
+
+              <InfoCard title="Vehicle & Service">
+                <InfoRow label="Vehicle Type" value={loc.vehicleType} />
+                <InfoRow label="Vehicle Number" value={loc.vehicleNumber} />
+                <InfoRow label="Service Area" value={loc.serviceArea} />
+                <InfoRow label="Per Day Rate" value={loc.rate} />
+              </InfoCard>
+
+              {loc.phone && (
+                <InfoCard title="Contact">
+                  <div className="flex justify-between gap-6">
+                    <span className="font-semibold text-slate-600">Call Driver</span>
+                    <a href={`tel:${loc.phone.split('/')[0].trim()}`} className="text-blue-600 hover:underline">
+                      {loc.phone}
+                    </a>
+                  </div>
+                </InfoCard>
+              )}
+            </>
+          )}
+
         </div>
 
         {/* PHOTO GALLERY */}
         <div className="mt-10">
           <div className="border-t border-slate-200 pt-8">
             <h2 className={`${compact ? "text-lg" : "text-2xl"} font-bold text-slate-800 mb-6`}>
-              {type === 'homestay' ? 'Property Gallery' : type === 'eco' ? 'Facility Gallery' : 'Site Photo Gallery'}
+              {type === 'homestay' ? 'Property Gallery' : type === 'eco' ? 'Facility Gallery' : type === 'driver' ? 'Vehicle Photo Gallery' : 'Site Photo Gallery'}
             </h2>
             <div className={`grid gap-4 ${compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}>
               {loadingPhotos ? (

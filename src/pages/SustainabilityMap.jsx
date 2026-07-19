@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X } from 'lucide-react';
+import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import RegistrationForm from '../components/forms/RegistrationForm';
@@ -162,7 +162,7 @@ function MapClickHandler({ isActive, onPinDropped }) {
 
 export default function SustainabilityMap() {
   const navigate = useNavigate();
-  const { locations, homestays, eco, loading } = useLocations();
+  const { locations, homestays, eco, drivers, loading } = useLocations();
   const [activeTab, setActiveTab] = useState('villages');
   const [mapPosition, setMapPosition] = useState(null); // Used to trigger flyTo
   const [pinMode, setPinMode] = useState(false);
@@ -176,6 +176,10 @@ export default function SustainabilityMap() {
 const [selectedHomestayType, setSelectedHomestayType] = useState("All");
 const [homestaySearch, setHomestaySearch] = useState("");
 const [isHomestaySearchOpen, setIsHomestaySearchOpen] = useState(false);
+const [selectedDriverTaluka, setSelectedDriverTaluka] = useState("All");
+const [selectedVehicleType, setSelectedVehicleType] = useState("All");
+const [driverSearch, setDriverSearch] = useState("");
+const [isDriverSearchOpen, setIsDriverSearchOpen] = useState(false);
 const [selectedItem, setSelectedItem] = useState(null); // { data, type }
 const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
@@ -259,6 +263,7 @@ useEffect(() => {
   const tabs = [
     { id: "villages", label: "Locations", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
+    { id: "transportation", label: "Transportation", icon: Bus },
     { id: "pins", label: "Add Location", icon: MapPin },
   ];
 
@@ -330,6 +335,39 @@ const filteredHomestays = homestays.filter((home) => {
     home.name.toLowerCase().includes(homestaySearch.toLowerCase()) ||
     (home.owner &&
       home.owner.toLowerCase().includes(homestaySearch.toLowerCase()));
+
+  return talukaMatch && typeMatch && searchMatch;
+});
+
+const driverTalukas = [
+  "All",
+  ...new Set(
+    drivers
+      .map((d) => d.taluka)
+      .filter(Boolean)
+      .sort()
+  ),
+];
+
+const vehicleTypes = [
+  "All",
+  ...new Set(
+    drivers
+      .map((d) => d.vehicleType)
+      .filter(Boolean)
+      .sort()
+  ),
+];
+
+const filteredDrivers = drivers.filter((d) => {
+  const talukaMatch =
+    selectedDriverTaluka === "All" || d.taluka === selectedDriverTaluka;
+
+  const typeMatch =
+    selectedVehicleType === "All" || d.vehicleType === selectedVehicleType;
+
+  const searchMatch =
+    (d.name || "").toLowerCase().includes(driverSearch.toLowerCase());
 
   return talukaMatch && typeMatch && searchMatch;
 });
@@ -422,6 +460,37 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           </Popup>
         </Marker>
       ));
+    }
+    if (activeTab === 'transportation') {
+      return filteredDrivers
+        .filter(d => d.lat && d.lng)
+        .map(d => (
+          <Marker
+            key={d.id}
+            position={[d.lat, d.lng]}
+            ref={(ref) => { markerRefs.current[d.id] = ref; }}
+            icon={createMarkerIcon('Buses & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
+          >
+            <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-500/90 shadow-sm border-0 text-slate-900">{d.name}</Tooltip>
+            <Popup>
+              <div className="text-left">
+                <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
+                <span className="text-xs text-slate-500 mb-2 block">{d.vehicleType}</span>
+                {userLocation && (
+                  <span className="text-xs text-emerald-700 font-medium mb-2 block">
+                    {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away from your current location
+                  </span>
+                )}
+                <button
+                  onClick={() => setSelectedItem({ data: d, type: 'driver' })}
+                  className="w-full py-1.5 mt-1 bg-lime-500 text-slate-900 rounded text-xs font-bold hover:bg-lime-600 transition-colors"
+                >
+                  View Driver Profile
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ));
     }
     return null;
   };
@@ -733,6 +802,95 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 
           
 
+          {/* TRANSPORTATION TAB */}
+          {activeTab === 'transportation' && (
+            <div className="animate-in slide-in-from-right-4 duration-300">
+              <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Drivers & Transportation</h2>
+
+              <div className="flex items-center gap-2 mb-3">
+                <div className="relative flex-1">
+                  <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search driver name..."
+                    value={driverSearch}
+                    onChange={(e) => setDriverSearch(e.target.value)}
+                    className="w-full pl-7 pr-2 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+              </div>
+
+              <select
+                value={selectedDriverTaluka}
+                onChange={(e) => setSelectedDriverTaluka(e.target.value)}
+                className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              >
+                {driverTalukas.map((taluka) => (
+                  <option key={taluka} value={taluka}>
+                    {taluka === "All" ? "All Talukas" : taluka}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedVehicleType}
+                onChange={(e) => setSelectedVehicleType(e.target.value)}
+                className="w-full mb-4 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              >
+                {vehicleTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type === "All" ? "All Vehicle Types" : type}
+                  </option>
+                ))}
+              </select>
+
+              <div className="space-y-4">
+                {filteredDrivers.map(d => (
+                  <div
+                    key={d.id}
+                    onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
+                  >
+                    <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                      {d.name} <ShieldCheck size={14} className="text-emerald-500" />
+                    </h3>
+                    <p className="text-sm text-slate-600 mb-1">
+                      <strong>Base:</strong> {d.village}, {d.taluka}
+                      {userLocation && (
+                        <span className="ml-2 text-emerald-700 font-medium">
+                          · {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-sm text-slate-600 mb-2">
+                      <strong>Contact:</strong> (
+                      <a href={`tel:${(d.phone || '').split('/')[0].trim()}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline font-medium">
+                        {d.phone}
+                      </a>
+                      )
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="px-2 py-1 bg-lime-100 text-lime-800 text-xs rounded font-bold">{d.vehicleType}</span>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleShowRoute(d.lat, d.lng); }}
+                          className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+                        >
+                          🧭 Show Route
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredDrivers.length === 0 && (
+                  <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
+                    No drivers match your filters.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ADD LOCATION TAB - REGISTRATION FORM */}
 {activeTab === 'pins' && (
   <div className="animate-in slide-in-from-right-4 duration-300">
@@ -847,4 +1005,3 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 </div>
 );
 }
-          
