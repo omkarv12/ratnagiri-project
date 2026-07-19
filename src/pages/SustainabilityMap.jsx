@@ -43,7 +43,7 @@ const CATEGORY_ICON_MAP = {
   "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
   "Adventure & Marine Tourism": { emoji: "🚤", color: "#0284c7" },
 };
-const DEFAULT_ICON = { emoji: "📍", color: "#334155" };
+const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 
 // Creates a pin-shaped divIcon with a category emoji inside.
 // Bigger + red when selected.
