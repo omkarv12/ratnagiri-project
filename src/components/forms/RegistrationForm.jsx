@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import LocationForm from "./LocationForm";
 import HomestayForm from "./HomestayForm";
+import DriverForm from "./DriverForm";
 
 export default function RegistrationForm({ onSuccess }) {
 
@@ -31,6 +32,9 @@ export default function RegistrationForm({ onSuccess }) {
                         Homestay
                     </option>
 
+                    <option value="driver">
+                        Autorickshaw / Taxi Driver
+                    </option>
 
                 </select>
 
@@ -45,6 +49,12 @@ export default function RegistrationForm({ onSuccess }) {
             {formType === "homestay" && (
 
                 <HomestayForm onSuccess={onSuccess} />
+
+            )}
+
+            {formType === "driver" && (
+
+                <DriverForm onSuccess={onSuccess} />
 
             )}
 

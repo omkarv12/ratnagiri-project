@@ -6,6 +6,7 @@ const LocationsContext = createContext({
   locations: [],
   homestays: [],
   eco: [],
+  drivers: [],
   loading: true,
   error: null
 });
@@ -27,6 +28,7 @@ export const LocationsProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);
   const [homestays, setHomestays] = useState([]);
   const [eco, setEco] = useState([]);
+  const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -69,6 +71,7 @@ export const LocationsProvider = ({ children }) => {
     const homeData = dashboardData.homestays;
 
     const ecoData = dashboardData.eco;
+    const driverData = dashboardData.drivers || [];
     console.log("Loading locations...");
     console.log("Locations:", locData.length);
 
@@ -151,9 +154,26 @@ export const LocationsProvider = ({ children }) => {
           };
         });
 
+        const parsedDrivers = driverData.map((row) => ({
+          ...row,
+          id: row.id,
+          name: row.driver_name || `Driver ${row.id}`,
+          phone: row.phone_number || "Unknown",
+          vehicleType: row.vehicle_type || "Unknown",
+          vehicleNumber: row.vehicle_number || "Unknown",
+          village: row.base_village || "Unknown",
+          taluka: row.taluka_name || "Unknown",
+          serviceArea: row.service_area || "Unknown",
+          rate: row.per_day_rate || "Unknown",
+          vehiclePhotos: row.vehicle_photos || "#",
+          lat: row.latitude,
+          lng: row.longitude,
+        }));
+
         setLocations(parsedLocations);
         setHomestays(parsedHomestays);
         setEco(parsedEco);
+        setDrivers(parsedDrivers);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -165,7 +185,7 @@ export const LocationsProvider = ({ children }) => {
   }, []);
 
   return (
-    <LocationsContext.Provider value={{ locations, homestays, eco, loading, error }}>
+    <LocationsContext.Provider value={{ locations, homestays, eco, drivers, loading, error }}>
       {children}
     </LocationsContext.Provider>
   );
