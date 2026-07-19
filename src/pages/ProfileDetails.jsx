@@ -36,7 +36,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
     if (!loc) return;
 
-    if (type === "eco" || type === "driver") {
+    if (type === "eco" || type === "driver" || type === "busstop") {
       setPhotos([]);
       return;
     }
@@ -160,14 +160,19 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
               <div className="flex items-center gap-3 mb-2">
 
                 <span className="px-3 py-1 bg-orange-500/80 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {type === "homestay" ? "Homestay" : type === "eco" ? "Eco Unit" : type === "driver" ? (loc.vehicleType || "Driver") : loc.category}
+                  {type === "homestay" ? "Homestay" : type === "eco" ? "Eco Unit" : type === "driver" ? (loc.vehicleType || "Driver") : type === "busstop" ? "Bus Stand" : loc.category}
                 </span>
 
                 {!compact && (
                   <span className="flex items-center gap-1 text-white/90 text-sm">
                     <MapPin size={14} />
-                    {loc.village_name || loc.village},
-                    {type === "eco" ? "" : ` ${loc.taluka_name || loc.taluka}`}
+                    {type === "busstop" ? (
+                      loc.taluka_name || loc.taluka
+                    ) : type === "eco" ? (
+                      loc.village_name || loc.village
+                    ) : (
+                      <>{loc.village_name || loc.village}, {loc.taluka_name || loc.taluka}</>
+                    )}
                   </span>
                 )}
 
@@ -387,9 +392,44 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
             </>
           )}
 
+          {type === "busstop" && (
+            <>
+              <InfoCard title="Bus Stand Information">
+                <InfoRow label="Stop Name" value={loc.name} />
+                <InfoRow label="Taluka" value={loc.taluka} />
+                <InfoRow label="District" value={loc.district} />
+
+                {loc.googleMapsLink && (
+                  <div className="flex justify-between gap-6">
+                    <span className="font-semibold text-slate-600">Google Maps</span>
+                    <a href={loc.googleMapsLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                      Open Location
+                    </a>
+                  </div>
+                )}
+              </InfoCard>
+
+              <InfoCard title="Timetable">
+                {loc.timetableLink ? (
+                  <a
+                    href={loc.timetableLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 py-2 px-4 bg-lime-600 hover:bg-lime-700 text-white font-bold rounded-lg transition-colors"
+                  >
+                    ⬇ Download Timetable PDF
+                  </a>
+                ) : (
+                  <div className="text-slate-500 text-sm">No timetable uploaded yet for this bus stand.</div>
+                )}
+              </InfoCard>
+            </>
+          )}
+
         </div>
 
         {/* PHOTO GALLERY */}
+        {type !== "busstop" && (
         <div className="mt-10">
           <div className="border-t border-slate-200 pt-8">
             <h2 className={`${compact ? "text-lg" : "text-2xl"} font-bold text-slate-800 mb-6`}>
@@ -420,6 +460,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
             </div>
           </div>
         </div>
+        )}
 
       </div>
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Papa from 'papaparse';
 import API_BASE_URL from "../config";
 
@@ -7,6 +7,7 @@ const LocationsContext = createContext({
   homestays: [],
   eco: [],
   drivers: [],
+  busStops: [],
   loading: true,
   error: null
 });
@@ -29,10 +30,11 @@ export const LocationsProvider = ({ children }) => {
   const [homestays, setHomestays] = useState([]);
   const [eco, setEco] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [busStops, setBusStops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const loadAllData = useCallback(async () => {
     const fetchApi = async (url) => {
 
     const controller = new AbortController();
@@ -62,7 +64,6 @@ export const LocationsProvider = ({ children }) => {
 
 };
 
-    const loadAllData = async () => {
   try {
     const dashboardData = await fetchApi("/api/dashboard");
 
@@ -72,6 +73,7 @@ export const LocationsProvider = ({ children }) => {
 
     const ecoData = dashboardData.eco;
     const driverData = dashboardData.drivers || [];
+    const busStopData = dashboardData.bus_stops || [];
     console.log("Loading locations...");
     console.log("Locations:", locData.length);
 
@@ -170,22 +172,36 @@ export const LocationsProvider = ({ children }) => {
           lng: row.longitude,
         }));
 
+        const parsedBusStops = busStopData.map((row) => ({
+          ...row,
+          id: row.id,
+          name: row.stop_name || `Bus Stand ${row.id}`,
+          taluka: row.taluka_name || "Unknown",
+          district: row.district_name || "Ratnagiri",
+          timetableLink: row.timetable_link || null,
+          googleMapsLink: row.google_maps_link || null,
+          lat: row.latitude,
+          lng: row.longitude,
+        }));
+
         setLocations(parsedLocations);
         setHomestays(parsedHomestays);
         setEco(parsedEco);
         setDrivers(parsedDrivers);
+        setBusStops(parsedBusStops);
         setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);
       }
-    };
-
-    loadAllData();
   }, []);
 
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
+
   return (
-    <LocationsContext.Provider value={{ locations, homestays, eco, drivers, loading, error }}>
+    <LocationsContext.Provider value={{ locations, homestays, eco, drivers, busStops, loading, error, reload: loadAllData }}>
       {children}
     </LocationsContext.Provider>
   );

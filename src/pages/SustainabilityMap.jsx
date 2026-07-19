@@ -43,6 +43,7 @@ const CATEGORY_ICON_MAP = {
   "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
   "Homestays": { emoji: "🏡", color: "#ffc1b6" },
   "Buses & Auto": { emoji: "🚌", color: "#e4ff48" },
+  "Bus Stand": { emoji: "🚏", color: "#65a30d" },
 };
 const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 
@@ -162,7 +163,7 @@ function MapClickHandler({ isActive, onPinDropped }) {
 
 export default function SustainabilityMap() {
   const navigate = useNavigate();
-  const { locations, homestays, eco, drivers, loading } = useLocations();
+  const { locations, homestays, eco, drivers, busStops, loading } = useLocations();
   const [activeTab, setActiveTab] = useState('villages');
   const [mapPosition, setMapPosition] = useState(null); // Used to trigger flyTo
   const [pinMode, setPinMode] = useState(false);
@@ -180,6 +181,7 @@ const [selectedDriverTaluka, setSelectedDriverTaluka] = useState("All");
 const [selectedVehicleType, setSelectedVehicleType] = useState("All");
 const [driverSearch, setDriverSearch] = useState("");
 const [isDriverSearchOpen, setIsDriverSearchOpen] = useState(false);
+const [selectedBusStopTaluka, setSelectedBusStopTaluka] = useState("All");
 const [selectedItem, setSelectedItem] = useState(null); // { data, type }
 const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
@@ -359,18 +361,48 @@ const vehicleTypes = [
   ),
 ];
 
-const filteredDrivers = drivers.filter((d) => {
-  const talukaMatch =
-    selectedDriverTaluka === "All" || d.taluka === selectedDriverTaluka;
+const filteredDrivers = drivers
+  .filter((d) => {
+    const talukaMatch =
+      selectedDriverTaluka === "All" || d.taluka === selectedDriverTaluka;
 
-  const typeMatch =
-    selectedVehicleType === "All" || d.vehicleType === selectedVehicleType;
+    const typeMatch =
+      selectedVehicleType === "All" || d.vehicleType === selectedVehicleType;
 
-  const searchMatch =
-    (d.name || "").toLowerCase().includes(driverSearch.toLowerCase());
+    const query = driverSearch.toLowerCase();
+    const searchMatch =
+      query === "" ||
+      (d.village || "").toLowerCase().includes(query) ||
+      (d.taluka || "").toLowerCase().includes(query) ||
+      (d.serviceArea || "").toLowerCase().includes(query);
 
-  return talukaMatch && typeMatch && searchMatch;
-});
+    return talukaMatch && typeMatch && searchMatch;
+  })
+  .sort((a, b) => {
+    if (!userLocation) return 0;
+    const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+    const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+    return (distA ?? Infinity) - (distB ?? Infinity);
+  });
+
+const busStopTalukas = [
+  "All",
+  ...new Set(
+    busStops
+      .map((b) => b.taluka)
+      .filter(Boolean)
+      .sort()
+  ),
+];
+
+const filteredBusStops = busStops
+  .filter((b) => selectedBusStopTaluka === "All" || b.taluka === selectedBusStopTaluka)
+  .sort((a, b) => {
+    if (!userLocation) return 0;
+    const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+    const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+    return (distA ?? Infinity) - (distB ?? Infinity);
+  });
 
   const renderActivePins = () => {
     if (activeTab === 'villages') {
@@ -462,11 +494,11 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       ));
     }
     if (activeTab === 'transportation') {
-      return filteredDrivers
+      const driverMarkers = filteredDrivers
         .filter(d => d.lat && d.lng)
         .map(d => (
           <Marker
-            key={d.id}
+            key={`driver-${d.id}`}
             position={[d.lat, d.lng]}
             ref={(ref) => { markerRefs.current[d.id] = ref; }}
             icon={createMarkerIcon('Buses & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
@@ -491,6 +523,44 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
             </Popup>
           </Marker>
         ));
+
+      const busStopMarkers = filteredBusStops
+        .filter(b => b.lat && b.lng)
+        .map(b => (
+          <Marker
+            key={`busstop-${b.id}`}
+            position={[b.lat, b.lng]}
+            ref={(ref) => { markerRefs.current[b.id] = ref; }}
+            icon={createMarkerIcon('Bus Stand', selectedItem?.type === 'busstop' && selectedItem?.data?.id === b.id)}
+          >
+            <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-700/90 shadow-sm border-0 text-white">{b.name}</Tooltip>
+            <Popup>
+              <div className="text-left">
+                <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
+                <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
+                {userLocation && (
+                  <span className="text-xs text-emerald-700 font-medium mb-2 block">
+                    {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
+                  </span>
+                )}
+                {b.timetableLink ? (
+                  <a
+                    href={b.timetableLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
+                  >
+                    ⬇ Download Timetable PDF
+                  </a>
+                ) : (
+                  <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ));
+
+      return [...driverMarkers, ...busStopMarkers];
     }
     return null;
   };
@@ -805,14 +875,17 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           {/* TRANSPORTATION TAB */}
           {activeTab === 'transportation' && (
             <div className="animate-in slide-in-from-right-4 duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Drivers & Transportation</h2>
+              <h2 className="text-lg font-bold text-slate-800 mb-1 border-l-4 border-orange-500 pl-3">Drivers & Transportation</h2>
+              <p className="text-xs text-slate-500 mb-4 pl-3">
+                {userLocation ? "Sorted by nearest to your current location." : "Enable location access to see drivers nearest to you first."}
+              </p>
 
               <div className="flex items-center gap-2 mb-3">
                 <div className="relative flex-1">
                   <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search driver name..."
+                    placeholder="Search by village, taluka, or area..."
                     value={driverSearch}
                     onChange={(e) => setDriverSearch(e.target.value)}
                     className="w-full pl-7 pr-2 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
@@ -885,6 +958,66 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 {filteredDrivers.length === 0 && (
                   <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
                     No drivers match your filters.
+                  </p>
+                )}
+              </div>
+
+              {/* BUS TIMETABLES SECTION */}
+              <h2 className="text-lg font-bold text-slate-800 mt-8 mb-1 border-l-4 border-lime-500 pl-3">Bus Timetables</h2>
+              <p className="text-xs text-slate-500 mb-4 pl-3">
+                Tap a bus stand to view it on the map, or download its timetable directly.
+              </p>
+
+              {busStopTalukas.length > 2 && (
+                <select
+                  value={selectedBusStopTaluka}
+                  onChange={(e) => setSelectedBusStopTaluka(e.target.value)}
+                  className="w-full mb-4 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                >
+                  {busStopTalukas.map((taluka) => (
+                    <option key={taluka} value={taluka}>
+                      {taluka === "All" ? "All Talukas" : taluka}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <div className="space-y-4">
+                {filteredBusStops.map(b => (
+                  <div
+                    key={b.id}
+                    onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all"
+                  >
+                    <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                      🚏 {b.name}
+                    </h3>
+                    <p className="text-sm text-slate-600 mb-2">
+                      <strong>Taluka:</strong> {b.taluka}
+                      {userLocation && (
+                        <span className="ml-2 text-emerald-700 font-medium">
+                          · {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away
+                        </span>
+                      )}
+                    </p>
+                    {b.timetableLink ? (
+                      <a
+                        href={b.timetableLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-white bg-lime-600 hover:bg-lime-700 px-3 py-1.5 rounded transition-colors"
+                      >
+                        ⬇ Download Timetable PDF
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+                    )}
+                  </div>
+                ))}
+                {filteredBusStops.length === 0 && (
+                  <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
+                    No bus stands added yet.
                   </p>
                 )}
               </div>
