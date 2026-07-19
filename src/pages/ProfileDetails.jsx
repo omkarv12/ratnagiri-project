@@ -30,6 +30,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
   const [photos, setPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [heroSlide, setHeroSlide] = useState(0);
 
   useEffect(() => {
 
@@ -86,6 +87,20 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
   const galleryPhotos = [...photos.slice(1), ...extraPhotos];
 
+  const heroImages = photos.length > 0 ? photos.map((p) => p.url) : [placeholderImage];
+
+  useEffect(() => {
+    setHeroSlide(0);
+  }, [loc?.id]);
+
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroSlide((prev) => (prev + 1) % heroImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
   if (!loc) return null;
 
   const heroHeight = compact ? "h-56" : "h-[420px]";
@@ -97,14 +112,34 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
       {/* HEADER SECTION */}
       <div
         className={`sticky top-0 z-20 relative ${heroHeight} text-white overflow-hidden ${compact ? "rounded-xl" : ""}`}
-        style={{
-          backgroundImage: `url(${photos.length ? photos[0].url : placeholderImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
       >
 
+        {heroImages.map((url, index) => (
+          <div
+            key={index}
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+            style={{
+              backgroundImage: `url(${url})`,
+              opacity: index === heroSlide ? 1 : 0,
+            }}
+          />
+        ))}
+
         <div className="absolute inset-0 bg-black/45"></div>
+
+        {heroImages.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setHeroSlide(index)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === heroSlide ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         <div className={`relative z-10 flex flex-col justify-between h-full ${compact ? "p-4" : "p-8"}`}>
 
