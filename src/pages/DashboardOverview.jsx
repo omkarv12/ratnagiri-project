@@ -244,8 +244,9 @@ export default function DashboardOverview() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-          {dashboardSections.map((section) => {
+        <div className="flex flex-wrap justify-center gap-5">
+  {dashboardSections.map((section) => {
+          
             const Icon = section.icon;
 
             return (
