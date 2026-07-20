@@ -5,7 +5,7 @@ import API_BASE_URL from "../config";
 import InfoCard from "../components/profile/InfoCard";
 import InfoRow from "../components/profile/InfoRow";
 import ChipList from "../components/profile/ChipList";
-import WeatherWidget from "./WeatherWidget"; // adjust path to wherever you save it
+import WeatherWidget from "../components/profile/WeatherWidget";
 
 // Convert a Google Drive "open?id=" link into a directly-viewable image URL
 function driveIdToImageUrl(link) {
