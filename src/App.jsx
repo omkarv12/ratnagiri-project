@@ -13,6 +13,7 @@ import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
 import CommunityExperience from "./pages/CommunityExperience";
+import Stories from "./pages/Stories";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -70,6 +71,10 @@ export default function App() {
               path="/community-experience"
               element={<CommunityExperience />}
             />
+            <Route
+  path="/stories"
+  element={<Stories />}
+/>
 
             <Route
               path="/admin"
