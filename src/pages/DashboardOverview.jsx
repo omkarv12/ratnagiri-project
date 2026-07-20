@@ -194,7 +194,7 @@ export default function DashboardOverview() {
           </div> 
         
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-8">
-            <h2 className="text-3xl font-bold mb-5">About Ratnagiri Tourism</h2>
+            <h2 className="text-3xl font-bold mb-5">About ratnagiri</h2>
 
             <p className="max-w-2xl text-lg leading-8">
               Ratnagiri district is one of Maharashtra's most beautiful
