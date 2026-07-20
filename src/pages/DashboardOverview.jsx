@@ -169,9 +169,9 @@ export default function DashboardOverview() {
     <div className="animate-in fade-in duration-500">
       {/* ================= Dashboard Header ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
-        <div className="bg-sky-100 py-5">
+        <div className="bg-orange-100 py-5">
           <h1 className="text-4xl font-bold text-center text-slate-800">
-            Ratnagiri Tourism Dashboard
+            Ratnagiri Sustainable Tourism Dashboard
           </h1>
         </div>
 
