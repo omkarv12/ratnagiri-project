@@ -42,8 +42,8 @@ const CATEGORY_ICON_MAP = {
   "Religious Tourism": { emoji: "🛕", color: "#f97316" },
   "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
   "Homestays": { emoji: "🏡", color: "#ffc1b6" },
-  "Buses & Auto": { emoji: "🚌", color: "#e4ff48" },
-  "Bus Stand": { emoji: "🚏", color: "#65a30d" },
+  "Taxi & Auto": { emoji: "🛺", color: "#0006a7" },
+  "Bus Stand": { emoji: "🚌", color: "#487c00" },
 };
 const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 
