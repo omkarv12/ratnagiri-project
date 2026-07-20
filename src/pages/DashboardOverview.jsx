@@ -59,12 +59,12 @@ export default function DashboardOverview() {
   ];
 
   const galleryImages = [
-    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1502786129293-79981df4e689?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80",
-    "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=600&q=80",
+    "https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg",
+    "https://www.trawell.in/images/tours/Ratnagiri.jpg", // replace with a Ratnagiri beach photo
+    "https://maharashtratourism.gov.in/wp-content/uploads/2024/11/areware-beach.jpg", // replace with a Konkan temple photo
+    "https://eqiaboov9ot.exactdn.com/wp-content/uploads/2023/11/7-2.png?strip=all", // replace with a waterfall photo
+    "https://aarewarebeachresort.com/wp-content/uploads/2024/06/5.jpg", 
+    "https://media1.thrillophilia.com/filestore/3cnk6270rc64ia75g37cn0tobv3w_Downpic.cc-26918286.jpg"
   ];
 
   const [activeCategory, setActiveCategory] = useState("Beaches");
