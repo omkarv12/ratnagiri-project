@@ -417,7 +417,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 py-2 px-4 bg-lime-600 hover:bg-lime-700 text-white font-bold rounded-lg transition-colors"
                   >
-                    ⬇ Download Timetable PDF
+                    ⬇ Download bus timetable
                   </a>
                 ) : (
                   <div className="text-slate-500 text-sm">No timetable uploaded yet for this bus stand.</div>

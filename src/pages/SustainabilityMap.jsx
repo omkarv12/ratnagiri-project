@@ -550,7 +550,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     rel="noreferrer"
                     className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
                   >
-                    ⬇ Download Timetable PDF
+                    ⬇ Download bus timetable
                   </a>
                 ) : (
                   <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
@@ -1023,7 +1023,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-bold text-white bg-lime-600 hover:bg-lime-700 px-3 py-1.5 rounded transition-colors"
                       >
-                        ⬇ Download Timetable PDF
+                        ⬇ Download bus timetable
                       </a>
                     ) : (
                       <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
