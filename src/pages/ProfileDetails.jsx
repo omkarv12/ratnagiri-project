@@ -5,6 +5,7 @@ import API_BASE_URL from "../config";
 import InfoCard from "../components/profile/InfoCard";
 import InfoRow from "../components/profile/InfoRow";
 import ChipList from "../components/profile/ChipList";
+import WeatherWidget from "./WeatherWidget"; // adjust path to wherever you save it
 
 // Convert a Google Drive "open?id=" link into a directly-viewable image URL
 function driveIdToImageUrl(link) {
@@ -240,6 +241,9 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
                 <InfoRow label="Road Condition" value={loc.road_condition || loc.roadStatus} />
                 <InfoRow label="Crowd Level" value={loc.crowd_level} />
               </InfoCard>
+              <InfoCard title="Weather">
+      <WeatherWidget lat={loc.lat ?? loc.latitude} lng={loc.lng ?? loc.longitude} />
+    </InfoCard>
 
               <div>
                 <h3 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-2 mb-6">Database Coordinates</h3>
