@@ -125,12 +125,7 @@ export default function DashboardOverview() {
   ];
 
   const dashboardSections = [
-    {
-      title: "Interactive Map",
-      description: "Explore all locations, homestays and attractions on the map.",
-      icon: MapPin,
-      route: "/map",
-    },
+   
     {
       title: "Resources",
       description: "Access tourism resources and useful information.",
@@ -143,12 +138,7 @@ export default function DashboardOverview() {
       icon: BookText,
       route: "/stories",
     },
-    {
-      title: "Registration",
-      description: "Register a tourism location or homestay.",
-      icon: ClipboardPen,
-      route: "/registration",
-    },
+   
     {
       title: "Rules for Tourists",
       description: "Guidelines for responsible and safe tourism.",
