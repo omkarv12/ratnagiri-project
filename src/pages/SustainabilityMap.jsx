@@ -945,6 +945,20 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     <div className="flex justify-between items-center">
                       <span className="px-2 py-1 bg-lime-100 text-lime-800 text-xs rounded font-bold">{d.vehicleType}</span>
                       <div className="flex items-center gap-3">
+                        
+                          href={`https://wa.me/91${(d.phone || '').split('/')[0].replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700"
+                          title="Chat on WhatsApp"
+                        >
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                            <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.36.101 11.943c0 2.105.549 4.161 1.595 5.972L0 24l6.238-1.635a11.918 11.918 0 005.804 1.477h.005c6.585 0 11.941-5.362 11.943-11.943a11.86 11.86 0 00-3.47-8.45zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.36-.214-3.735.98.998-3.641-.235-.374a9.86 9.86 0 01-1.51-5.264C2.176 6.463 6.634 2.006 12.05 2.006c2.629 0 5.098 1.024 6.955 2.883a9.788 9.788 0 012.876 6.966c-.003 5.416-4.46 9.93-9.831 9.93z"/>
+                          </svg>
+                          WhatsApp
+                        </a>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleShowRoute(d.lat, d.lng); }}
                           className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
