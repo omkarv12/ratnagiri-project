@@ -426,6 +426,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
           <Popup>
   <div className="text-center">
+    {console.log("photo_location:", loc.photo_location, "-> converted:", driveIdToImageUrl(loc.photo_location))}
     {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
   <img
     src={driveIdToImageUrl(loc.photo_location)}
