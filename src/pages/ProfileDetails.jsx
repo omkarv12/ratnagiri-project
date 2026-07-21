@@ -37,10 +37,15 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
     if (!loc) return;
 
-    if (type === "eco" || type === "driver" || type === "busstop") {
-      setPhotos([]);
-      return;
-    }
+    if (type === "eco" || type === "driver") {
+  setPhotos([]);
+  return;
+}
+
+if (type === "busstop") {
+  setPhotos(loc.photo_url ? [{ url: loc.photo_url }] : []);
+  return;
+}
 
     const loadPhotos = async () => {
 
@@ -397,8 +402,13 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
           )}
 
           {type === "busstop" && (
-            <>
-              <InfoCard title="Bus Stand Information">
+  <>
+    {loc.photo_url && (
+      <div className="mb-6 rounded-xl overflow-hidden">
+        <img src={loc.photo_url} alt={loc.name} className="w-full h-64 object-cover" />
+      </div>
+    )}
+    <InfoCard title="Bus Stand Information">
                 <InfoRow label="Stop Name" value={loc.name} />
                 <InfoRow label="Taluka" value={loc.taluka} />
                 <InfoRow label="District" value={loc.district} />
