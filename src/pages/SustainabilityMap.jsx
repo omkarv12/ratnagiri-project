@@ -552,7 +552,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     )}
     {b.timetableLink ? (
       
-        href={b.timetableLink}
+        <a href={b.timetableLink}
         target="_blank"
         rel="noreferrer"
         className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
