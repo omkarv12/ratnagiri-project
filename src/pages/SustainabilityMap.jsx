@@ -535,28 +535,35 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           >
             <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-700/90 shadow-sm border-0 text-white">{b.name}</Tooltip>
             <Popup>
-              <div className="text-left">
-                <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
-                <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
-                {userLocation && (
-                  <span className="text-xs text-emerald-700 font-medium mb-2 block">
-                    {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
-                  </span>
-                )}
-                {b.timetableLink ? (
-                  <a
-                    href={b.timetableLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
-                  >
-                    ⬇ Download bus timetable
-                  </a>
-                ) : (
-                  <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
-                )}
-              </div>
-            </Popup>
+  <div className="text-left">
+    {b.photo_url && (
+      <img
+        src={b.photo_url}
+        alt={b.name}
+        className="w-16 h-16 rounded-lg object-cover mb-2 border border-slate-200"
+      />
+    )}
+    <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
+    <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
+    {userLocation && (
+      <span className="text-xs text-emerald-700 font-medium mb-2 block">
+        {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
+      </span>
+    )}
+    {b.timetableLink ? (
+      
+        href={b.timetableLink}
+        target="_blank"
+        rel="noreferrer"
+        className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
+      >
+        ⬇ Download Timetable PDF
+      </a>
+    ) : (
+      <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+    )}
+  </div>
+</Popup>
           </Marker>
         ));
 
