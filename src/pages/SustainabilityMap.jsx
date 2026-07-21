@@ -537,12 +537,12 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
             <Popup>
   <div className="text-left">
     {b.photo_url && (
-      <img
-        src={b.photo_url}
-        alt={b.name}
-        className="w-16 h-16 rounded-lg object-cover mb-2 border border-slate-200"
-      />
-    )}
+  <img
+    src={b.photo_url}
+    alt={b.name}
+    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
+  />
+)}
     <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
     <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
     {userLocation && (

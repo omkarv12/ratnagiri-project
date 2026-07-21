@@ -23,9 +23,10 @@ export default function DashboardOverview() {
   const heroImages = [
     "https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg",
     "https://www.trawell.in/images/tours/Ratnagiri.jpg", // replace with a Ratnagiri beach photo
-    "https://maharashtratourism.gov.in/wp-content/uploads/2024/11/areware-beach.jpg", // replace with a Konkan temple photo
+    "https://rickshawchallenge.gamblingzion.com/uploads/2019/08/62256058_2360594510646637_5546022944985055232_o-1500x1000.jpg", // replace with a Konkan temple photo
     "https://eqiaboov9ot.exactdn.com/wp-content/uploads/2023/11/7-2.png?strip=all", // replace with a waterfall photo
-    "https://aarewarebeachresort.com/wp-content/uploads/2024/06/5.jpg", // replace with a forest/eco-tourism photo
+    "https://aarewarebeachresort.com/wp-content/uploads/2024/06/5.jpg",
+    "https://live.staticflickr.com/2670/33108029155_c89e7de6b8_b.jpg" // replace with a forest/eco-tourism photo
   ];
   const discoverCategories = [
     {
