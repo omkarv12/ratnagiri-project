@@ -121,6 +121,15 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
+
+// Convert a Google Drive "open?id=" link into a directly-viewable image URL
+function driveIdToImageUrl(link) {
+  if (!link) return null;
+  const match = link.match(/[-\w]{25,}/);
+  if (!match) return null;
+  return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1000`;
+}
+
 // Component to handle map flyTo logic
 function MapController({ position }) {
   const map = useMap();
@@ -417,13 +426,13 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
           <Popup>
   <div className="text-center">
-    {loc.photo_location && (
-      <img
-        src={loc.photo_location}
-        alt={loc.location_name}
-        className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-      />
-    )}
+    {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
+  <img
+    src={driveIdToImageUrl(loc.photo_location)}
+    alt={loc.location_name}
+    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+  />
+)}
     <strong className="block text-base mb-1">{loc.location_name}</strong>
     <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
     {userLocation && (
@@ -454,13 +463,13 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-amber-500/90 shadow-sm border-0 text-white">{home.name}</Tooltip>
           <Popup>
   <div className="text-center">
-    {home.photo_homestay && (
-      <img
-        src={home.photo_homestay}
-        alt={home.name}
-        className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-      />
-    )}
+    {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
+  <img
+    src={driveIdToImageUrl(home.photo_homestay)}
+    alt={home.name}
+    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+  />
+)}
     <strong className="block text-base mb-1">{home.name}</strong>
     <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
     {userLocation && (
