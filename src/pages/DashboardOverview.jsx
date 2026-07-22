@@ -131,7 +131,8 @@ export default function DashboardOverview() {
       title: "Resources",
       description: "Access tourism resources and useful information.",
       icon: BookOpen,
-      link : "https://drive.google.com/drive/folders/18Qf6EHo_gULFlkXvI7hDx4Q-XDCGjol2?usp=sharing",
+      route : "https://drive.google.com/drive/folders/18Qf6EHo_gULFlkXvI7hDx4Q-XDCGjol2?usp=sharing",
+      external: true,
     },
     {
       title: "Stories",
