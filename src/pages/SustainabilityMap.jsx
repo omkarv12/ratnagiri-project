@@ -274,7 +274,7 @@ useEffect(() => {
   const tabs = [
     { id: "villages", label: "Locations", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
-    { id: "transportation", label: "Transportation", icon: Bus },
+    { id: "transportation", label: "Local Resources", icon: Bus },
     { id: "pins", label: "Add Location", icon: MapPin },
   ];
 
@@ -906,7 +906,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           {/* TRANSPORTATION TAB */}
           {activeTab === 'transportation' && (
             <div className="animate-in slide-in-from-right-4 duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-1 border-l-4 border-orange-500 pl-3">Drivers & Transportation</h2>
+              <h2 className="text-lg font-bold text-slate-800 mb-1 border-l-4 border-orange-500 pl-3">Local Resources and guides</h2>
               <p className="text-xs text-slate-500 mb-4 pl-3">
                 {userLocation ? "Sorted by nearest to your current location." : "Enable location access to see drivers nearest to you first."}
               </p>
