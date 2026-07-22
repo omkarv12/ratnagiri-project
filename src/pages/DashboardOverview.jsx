@@ -253,7 +253,11 @@ export default function DashboardOverview() {
             return (
               <button
                 key={section.title}
-                onClick={() => navigate(section.route)}
+                onClick={() =>
+                  section.external
+                    ? window.open(section.route, "_blank", "noopener,noreferrer")
+                    : navigate(section.route)
+                }
                 className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:bg-white hover:shadow-lg cursor-pointer"
               >
                 {/* accent bar */}
