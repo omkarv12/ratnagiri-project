@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
 
-const MIN_PHOTO_SIZE = 500 * 1024; // 500 KB
+const MAX_PHOTO_SIZE = 500 * 1024; // 500 KB
 
 export default function LocationForm({ onSuccess }) {
     const [formData, setFormData] = useState({

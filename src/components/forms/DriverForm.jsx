@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 
-const MIN_PHOTO_SIZE = 500 * 1024; // 500 KB
+const MAX_PHOTO_SIZE = 500 * 1024; // 500 KB
 
 export default function DriverForm({ onSuccess }) {
 
@@ -32,17 +32,17 @@ export default function DriverForm({ onSuccess }) {
             return;
         }
 
-        const tooSmall = files.filter((file) => file.size < MIN_PHOTO_SIZE);
+        const tooLarge = files.filter((file) => file.size > MAX_PHOTO_SIZE);
 
-        if (tooSmall.length > 0) {
+        if (tooLarge.length > 0) {
             alert(
-                `These photos are smaller than 500 KB and were skipped: ${tooSmall
+                `These photos are larger than 500 KB and were skipped: ${tooLarge
                     .map((f) => f.name)
                     .join(", ")}`
             );
         }
 
-        const validFiles = files.filter((file) => file.size >= MIN_PHOTO_SIZE);
+        const validFiles = files.filter((file) => file.size <= MAX_PHOTO_SIZE);
 
         setSelectedPhotos((prev) => [...prev, ...validFiles]);
         setPhotoPreviews((prev) => [
