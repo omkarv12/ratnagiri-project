@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
+import LocationPicker from "./LocationPicker";
 
 
 export default function LocationForm({ onSuccess }) {
@@ -54,6 +55,10 @@ export default function LocationForm({ onSuccess }) {
     email_address: "",
     user_description: "",
     google_maps_link: "",
+
+    // Coordinates
+    latitude: null,
+    longitude: null,
 
     // Photos
     site_photos: ""
@@ -134,6 +139,10 @@ const handleChange = (e) => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+  if (formData.latitude == null || formData.longitude == null) {
+      alert("Please select the location on the map before submitting.");
+      return;
+  }
 
   try {
     setUploading(true);
@@ -414,17 +423,19 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Google Map link of the location
-(Please follow these steps - Open google maps  - search location - long press on the screen - copy the link - paste here)
+    Location on Map
   </label>
 
-  <input
-    type="url"
-    name="google_maps_link"
-    value={formData.google_maps_link}
-    onChange={handleChange}
-    className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
-    placeholder="https://maps.google.com/..."
+  <LocationPicker
+    latitude={formData.latitude}
+    longitude={formData.longitude}
+    onChange={(lat, lng) =>
+        setFormData((prev) => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng,
+        }))
+    }
   />
 </div>
 
