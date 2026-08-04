@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 
-const MAX_PHOTO_SIZE = 500 * 1024; // 500 KB
+
 
 export default function HomestayForm({ onSuccess }) {
 
@@ -54,22 +54,10 @@ export default function HomestayForm({ onSuccess }) {
             return;
         }
 
-        const tooLarge = files.filter((file) => file.size > MAX_PHOTO_SIZE);
-
-        if (tooLarge.length > 0) {
-            alert(
-                `These photos are larger than 500 KB and were skipped: ${tooLarge
-                    .map((f) => f.name)
-                    .join(", ")}`
-            );
-        }
-
-        const validFiles = files.filter((file) => file.size <= MAX_PHOTO_SIZE);
-
-        setSelectedPhotos((prev) => [...prev, ...validFiles]);
+        setSelectedPhotos((prev) => [...prev, ...files]);
         setPhotoPreviews((prev) => [
             ...prev,
-            ...validFiles.map((file) => URL.createObjectURL(file)),
+            ...files.map((file) => URL.createObjectURL(file)),
         ]);
 
         e.target.value = "";
