@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 
+const MIN_PHOTO_SIZE = 500 * 1024; // 500 KB
+
 export default function HomestayForm({ onSuccess }) {
 
     const [formData, setFormData] = useState({
@@ -32,48 +34,75 @@ export default function HomestayForm({ onSuccess }) {
         guides_available: "",
         local_experiences: "",
         social_media_link: "",
-        homestay_photos: "",
         price_range: "",
         activity_details_doc: "",
         suggestions_query: "",
+        site_photos: "",
 
     });
-    const [selectedHomestayPhotos, setSelectedHomestayPhotos] = useState([]);
 
-    const handleHomestayPhotos = (e) => {
+    const [selectedPhotos, setSelectedPhotos] = useState([]);
+    const [photoPreviews, setPhotoPreviews] = useState([]);
+    const [uploading, setUploading] = useState(false);
 
-    const newPhotos = Array.from(e.target.files);
+    const handlePhotoSelect = (e) => {
+        const files = Array.from(e.target.files);
 
-    setSelectedHomestayPhotos((prev) => [
-        ...prev,
-        ...newPhotos,
-    ]);
+        if (selectedPhotos.length + files.length > 5) {
+            alert("You can upload a maximum of 5 photos.");
+            e.target.value = "";
+            return;
+        }
 
-    setFormData((prev) => ({
-        ...prev,
-        site_photos: [
-            ...(prev.site_photos || []),
-            ...newPhotos,
-        ],
-    }));
+        const tooSmall = files.filter((file) => file.size < MIN_PHOTO_SIZE);
 
-};
+        if (tooSmall.length > 0) {
+            alert(
+                `These photos are smaller than 500 KB and were skipped: ${tooSmall
+                    .map((f) => f.name)
+                    .join(", ")}`
+            );
+        }
 
+        const validFiles = files.filter((file) => file.size >= MIN_PHOTO_SIZE);
 
-const removeHomestayPhoto = (index) => {
+        setSelectedPhotos((prev) => [...prev, ...validFiles]);
+        setPhotoPreviews((prev) => [
+            ...prev,
+            ...validFiles.map((file) => URL.createObjectURL(file)),
+        ]);
 
-    const updated = selectedHomestayPhotos.filter(
-        (_, i) => i !== index
-    );
+        e.target.value = "";
+    };
 
-    setSelectedHomestayPhotos(updated);
+    const removePhoto = (index) => {
+        setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+        setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
 
-    setFormData((prev) => ({
-        ...prev,
-        site_photos: updated,
-    }));
+    const uploadPhotos = async () => {
+        const uploadedUrls = [];
 
-};
+        for (const file of selectedPhotos) {
+            const uploadData = new FormData();
+            uploadData.append("photo", file);
+
+            const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+                method: "POST",
+                body: uploadData,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Photo upload failed");
+            }
+
+            uploadedUrls.push(data.url);
+        }
+
+        return uploadedUrls;
+    };
 
     const handleChange = (e) => {
 
@@ -92,6 +121,18 @@ const removeHomestayPhoto = (index) => {
 
     try {
 
+        setUploading(true);
+
+        let photoUrls = [];
+        if (selectedPhotos.length > 0) {
+            photoUrls = await uploadPhotos();
+        }
+
+        const payload = {
+            ...formData,
+            site_photos: photoUrls.join(","),
+        };
+
         const response = await fetch(
             `${API_BASE_URL}/api/homestays/register`,
             {
@@ -99,7 +140,7 @@ const removeHomestayPhoto = (index) => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             }
         );
 
@@ -149,18 +190,25 @@ const removeHomestayPhoto = (index) => {
             local_experiences: "",
 
             social_media_link: "",
-            homestay_photos: "",
             price_range: "",
             activity_details_doc: "",
             suggestions_query: "",
+            site_photos: "",
 
         });
+
+        setSelectedPhotos([]);
+        setPhotoPreviews([]);
 
     } catch (err) {
 
         console.error(err);
 
         alert(err.message);
+
+    } finally {
+
+        setUploading(false);
 
     }
 
@@ -441,24 +489,44 @@ const removeHomestayPhoto = (index) => {
 
 <div>
 
-  <label className="block text-xs font-bold text-slate-500 mb-2">
-    Photo of the Homestay (Google Drive Folder Link)
-  </label>
+    <label className="block text-xs font-bold text-slate-500 mb-2">
+        Homestay Photos (up to 5, min 500 KB each)
+    </label>
 
-  <input
-    type="text"
-    name="site_photos"
-    placeholder="Paste the Google Drive folder link containing homestay photos"
-    value={formData.site_photos || ""}
-    onChange={handleChange}
-    className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
-  />
+    <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handlePhotoSelect}
+        className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
+    />
+
+    <p className="text-xs text-slate-400 mt-1">
+        {selectedPhotos.length}/5 photos selected
+    </p>
+
+    {photoPreviews.length > 0 && (
+        <div className="flex flex-wrap gap-3 mt-3">
+            {photoPreviews.map((src, index) => (
+                <div key={index} className="relative">
+                    <img
+                        src={src}
+                        alt={`preview-${index}`}
+                        className="w-20 h-20 object-cover rounded border border-slate-300"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    >
+                        ×
+                    </button>
+                </div>
+            ))}
+        </div>
+    )}
 
 </div>
-
-
-
-
 
 
 
@@ -879,25 +947,6 @@ const removeHomestayPhoto = (index) => {
 
 <div>
 
-    <label className="block text-xs font-bold text-slate-500 mb-2">
-        Additional Homestay Photos (Google Drive Folder Link)
-    </label>
-
-    <input
-        type="text"
-        name="additional_homestay_photos"
-        placeholder="Paste the Google Drive folder link containing additional homestay photos"
-        value={formData.additional_homestay_photos || ""}
-        onChange={handleChange}
-        className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
-    />
-
-</div>
-
-
-
-<div>
-
     <label className="block text-xs font-bold text-slate-500 mb-1">
         Homestay's own booking website (If any provide link)
     </label>
@@ -935,9 +984,10 @@ const removeHomestayPhoto = (index) => {
 
             <button
                 type="submit"
-                className="w-full py-3 bg-orange-600 text-white rounded-lg"
+                disabled={uploading}
+                className="w-full py-3 bg-orange-600 text-white rounded-lg disabled:opacity-60"
             >
-                Submit Homestay
+                {uploading ? "Uploading..." : "Submit Homestay"}
             </button>
 
         </form>

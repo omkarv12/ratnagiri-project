@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
 
+const MIN_PHOTO_SIZE = 500 * 1024; // 500 KB
+
 export default function LocationForm({ onSuccess }) {
     const [formData, setFormData] = useState({
 
@@ -20,7 +22,7 @@ export default function LocationForm({ onSuccess }) {
     public_transport: "",
     nearest_bus_stand: "",
     nearest_railway_station: "",
-    
+
 
     // Tourism Facilities
     parking_space: "",
@@ -55,47 +57,71 @@ export default function LocationForm({ onSuccess }) {
     google_maps_link: "",
 
     // Photos
-    photo_location: "",
     site_photos: ""
 
 });
 
 const [selectedPhotos, setSelectedPhotos] = useState([]);
+const [photoPreviews, setPhotoPreviews] = useState([]);
+const [uploading, setUploading] = useState(false);
 
+const handlePhotoSelect = (e) => {
+    const files = Array.from(e.target.files);
 
-const handleFileChange = (e) => {
+    if (selectedPhotos.length + files.length > 5) {
+        alert("You can upload a maximum of 5 photos.");
+        e.target.value = "";
+        return;
+    }
 
-  const newFiles = Array.from(e.target.files);
+    const tooSmall = files.filter((file) => file.size < MIN_PHOTO_SIZE);
 
-  setSelectedPhotos((prev) => [
-    ...prev,
-    ...newFiles,
-  ]);
+    if (tooSmall.length > 0) {
+        alert(
+            `These photos are smaller than 500 KB and were skipped: ${tooSmall
+                .map((f) => f.name)
+                .join(", ")}`
+        );
+    }
 
-  setFormData((prev) => ({
-    ...prev,
-    site_photos: [
-      ...(prev.site_photos || []),
-      ...newFiles,
-    ],
-  }));
+    const validFiles = files.filter((file) => file.size >= MIN_PHOTO_SIZE);
 
+    setSelectedPhotos((prev) => [...prev, ...validFiles]);
+    setPhotoPreviews((prev) => [
+        ...prev,
+        ...validFiles.map((file) => URL.createObjectURL(file)),
+    ]);
+
+    e.target.value = "";
 };
 
-
 const removePhoto = (index) => {
+    setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+};
 
-  const updatedPhotos = selectedPhotos.filter(
-    (_, i) => i !== index
-  );
+const uploadPhotos = async () => {
+    const uploadedUrls = [];
 
-  setSelectedPhotos(updatedPhotos);
+    for (const file of selectedPhotos) {
+        const uploadData = new FormData();
+        uploadData.append("photo", file);
 
-  setFormData((prev) => ({
-    ...prev,
-    site_photos: updatedPhotos,
-  }));
+        const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+            method: "POST",
+            body: uploadData,
+        });
 
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Photo upload failed");
+        }
+
+        uploadedUrls.push(data.url);
+    }
+
+    return uploadedUrls;
 };
 
 const handleChange = (e) => {
@@ -111,6 +137,18 @@ const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
+    setUploading(true);
+
+    let photoUrls = [];
+    if (selectedPhotos.length > 0) {
+        photoUrls = await uploadPhotos();
+    }
+
+    const payload = {
+        ...formData,
+        site_photos: photoUrls.join(","),
+    };
+
     const response = await fetch(
     `${API_BASE_URL}/api/locations/register`,
       {
@@ -118,7 +156,7 @@ const handleSubmit = async (e) => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       }
     );
 
@@ -172,7 +210,7 @@ const handleSubmit = async (e) => {
   crowd_level: "",
   site_activities: "",
   site_activity_details_doc: "",
-  site_photos: [],
+  site_photos: "",
 
   // Sustainability
   formal_regulations: "",
@@ -185,17 +223,19 @@ const handleSubmit = async (e) => {
   user_description: "",
   google_maps_link: "",
 
-  // Photos
-  photo_location: "",
-
 });
+
+    setSelectedPhotos([]);
+    setPhotoPreviews([]);
 
   } catch (err) {
     alert(err.message);
+  } finally {
+    setUploading(false);
   }
 };
 
-  
+
   return (
 
 
@@ -374,31 +414,6 @@ City
 
 
 <div>
-
-    <label className="block text-xs font-bold text-slate-500 mb-2">
-        Photo of the location (Google Drive Folder Link)
-    </label>
-
-    <input
-        type="text"
-        name="photo_location"
-        placeholder="Paste the Google Drive folder link"
-        value={formData.photo_location || ""}
-        onChange={(e) =>
-            setFormData({
-                ...formData,
-                photo_location: e.target.value
-            })
-        }
-        className="w-full rounded-lg border border-slate-300 px-4 py-2
-        focus:outline-none focus:ring-2 focus:ring-orange-500"
-    />
-
-</div>
-
-
-
-<div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
     Google Map link of the location
 (Please follow these steps - Open google maps  - search location - long press on the screen - copy the link - paste here)
@@ -537,25 +552,6 @@ onChange={handleChange}
 
 
 </div>
-
-
-
-      
-
-      
-
-
-        
-
-
-      
-
-      
-
-
-
-
-
 
 
 
@@ -1125,30 +1121,42 @@ onChange={handleChange}
 
 <div className="mb-8">
 
-
-<div className="mb-8">
-
     <label className="block text-xs font-bold text-slate-500 mb-2">
-        Google Drive Folder Link (Tourist Attraction Photos)
+        Location Photos (up to 5, min 500 KB each)
     </label>
 
     <input
-        type="text"
-        name="site_photos"
-        placeholder="Paste the Google Drive folder link containing attraction, amenities and activity photos"
-        value={formData.site_photos || ""}
-        onChange={(e) =>
-            setFormData({
-                ...formData,
-                site_photos: e.target.value
-            })
-        }
-        className="w-full rounded-lg border border-slate-300 px-4 py-2
-        focus:outline-none focus:ring-2 focus:ring-orange-500"
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handlePhotoSelect}
+        className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
     />
 
-</div>
-  
+    <p className="text-xs text-slate-400 mt-1">
+        {selectedPhotos.length}/5 photos selected
+    </p>
+
+    {photoPreviews.length > 0 && (
+        <div className="flex flex-wrap gap-3 mt-3">
+            {photoPreviews.map((src, index) => (
+                <div key={index} className="relative">
+                    <img
+                        src={src}
+                        alt={`preview-${index}`}
+                        className="w-20 h-20 object-cover rounded border border-slate-300"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    >
+                        ×
+                    </button>
+                </div>
+            ))}
+        </div>
+    )}
 
 </div>
 
@@ -1168,64 +1176,14 @@ onChange={handleChange}
   />
 </div>
 
-
-
-
-
-
-      {/* <div>
-        <label className="block text-xs font-bold text-slate-500 mb-1">
-          Upload Photo
-        </label>
-
-        <div>
-
-
-
-<input
-
-type="file"
-
-name="site_photos"
-
-onChange={(e)=>
-setFormData({
-...formData,
-site_photos:e.target.files[0]
-})
-}
-
-/>
-
-
-
-</div>
-      </div> */}
-
       <button
         type="submit"
-        className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors"
+        disabled={uploading}
+        className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors disabled:opacity-60"
       >
-        Submit Profile Data
+        {uploading ? "Uploading..." : "Submit Profile Data"}
       </button>
 
     </form>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

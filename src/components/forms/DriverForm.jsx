@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 
+const MIN_PHOTO_SIZE = 500 * 1024; // 500 KB
+
 export default function DriverForm({ onSuccess }) {
 
     const [formData, setFormData] = useState({
@@ -17,6 +19,69 @@ export default function DriverForm({ onSuccess }) {
         vehicle_photos: "",
     });
 
+    const [selectedPhotos, setSelectedPhotos] = useState([]);
+    const [photoPreviews, setPhotoPreviews] = useState([]);
+    const [uploading, setUploading] = useState(false);
+
+    const handlePhotoSelect = (e) => {
+        const files = Array.from(e.target.files);
+
+        if (selectedPhotos.length + files.length > 5) {
+            alert("You can upload a maximum of 5 photos.");
+            e.target.value = "";
+            return;
+        }
+
+        const tooSmall = files.filter((file) => file.size < MIN_PHOTO_SIZE);
+
+        if (tooSmall.length > 0) {
+            alert(
+                `These photos are smaller than 500 KB and were skipped: ${tooSmall
+                    .map((f) => f.name)
+                    .join(", ")}`
+            );
+        }
+
+        const validFiles = files.filter((file) => file.size >= MIN_PHOTO_SIZE);
+
+        setSelectedPhotos((prev) => [...prev, ...validFiles]);
+        setPhotoPreviews((prev) => [
+            ...prev,
+            ...validFiles.map((file) => URL.createObjectURL(file)),
+        ]);
+
+        e.target.value = "";
+    };
+
+    const removePhoto = (index) => {
+        setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+        setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const uploadPhotos = async () => {
+        const uploadedUrls = [];
+
+        for (const file of selectedPhotos) {
+            const uploadData = new FormData();
+            uploadData.append("photo", file);
+
+            const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+                method: "POST",
+                body: uploadData,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Photo upload failed");
+            }
+
+            uploadedUrls.push(data.url);
+        }
+
+        return uploadedUrls;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -26,12 +91,24 @@ export default function DriverForm({ onSuccess }) {
         e.preventDefault();
 
         try {
+            setUploading(true);
+
+            let photoUrls = [];
+            if (selectedPhotos.length > 0) {
+                photoUrls = await uploadPhotos();
+            }
+
+            const payload = {
+                ...formData,
+                vehicle_photos: photoUrls.join(","),
+            };
+
             const response = await fetch(
                 `${API_BASE_URL}/api/drivers/register`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(payload),
                 }
             );
 
@@ -61,9 +138,14 @@ export default function DriverForm({ onSuccess }) {
                 vehicle_photos: "",
             });
 
+            setSelectedPhotos([]);
+            setPhotoPreviews([]);
+
         } catch (err) {
             console.error(err);
             alert(err.message);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -198,16 +280,41 @@ export default function DriverForm({ onSuccess }) {
 
             <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2">
-                    Vehicle Photos (Google Drive Folder Link)
+                    Vehicle Photos (up to 5, min 500 KB each)
                 </label>
+
                 <input
-                    type="text"
-                    name="vehicle_photos"
-                    value={formData.vehicle_photos}
-                    onChange={handleChange}
-                    placeholder="Paste the Google Drive folder link containing vehicle photos"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoSelect}
                     className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
                 />
+
+                <p className="text-xs text-slate-400 mt-1">
+                    {selectedPhotos.length}/5 photos selected
+                </p>
+
+                {photoPreviews.length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-3">
+                        {photoPreviews.map((src, index) => (
+                            <div key={index} className="relative">
+                                <img
+                                    src={src}
+                                    alt={`preview-${index}`}
+                                    className="w-20 h-20 object-cover rounded border border-slate-300"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removePhoto(index)}
+                                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div>
@@ -228,9 +335,10 @@ export default function DriverForm({ onSuccess }) {
 
             <button
                 type="submit"
-                className="w-full py-3 bg-orange-600 text-white rounded-lg"
+                disabled={uploading}
+                className="w-full py-3 bg-orange-600 text-white rounded-lg disabled:opacity-60"
             >
-                Submit Driver Registration
+                {uploading ? "Uploading..." : "Submit Driver Registration"}
             </button>
 
         </form>
