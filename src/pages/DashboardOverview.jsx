@@ -37,6 +37,13 @@ export default function DashboardOverview() {
       spots: ["Ganpatipule Beach", "Bhatye Beach", "Aare-Ware Beach", "Guhagar Beach", "Ganeshgule Beach", "Mandvi Beach"],
     },
     {
+      name: "Beaches",
+      icon: "🏖️",
+      color: "from-sky-500 to-sky-700",
+      image: "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+      spots: ["Ganpatipule Beach", "Bhatye Beach", "Aare-Ware Beach", "Guhagar Beach", "Ganeshgule Beach", "Mandvi Beach"],
+    },
+    {
       name: "Forts",
       icon: "🏰",
       color: "from-amber-600 to-amber-800",
