@@ -130,7 +130,7 @@ function driveIdToImageUrl(link) {
   return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1000`;
 }
 
-// Component to handle map flyTo logic
+// Component to handle map flyTo llogic
 function MapController({ position }) {
   const map = useMap();
 
