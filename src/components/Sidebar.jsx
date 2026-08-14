@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Map, LayoutDashboard, Menu, X, LogIn, LogOut, Shield } from 'lucide-react';
+import { Map, LayoutDashboard, LogIn, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar({ open, setOpen }) {
@@ -9,14 +9,6 @@ export default function Sidebar({ open, setOpen }) {
 
     return (
         <>
-            {/* Hamburger Button */}
-            <button
-                onClick={() => setOpen(!open)}
-                className="fixed top-5 left-5 z-50 bg-slate-900 text-white p-3 rounded-lg shadow-lg hover:bg-slate-800 transition"
-            >
-                {open ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
             {/* Sidebar */}
             <aside
                 className={`fixed top-0 left-0 z-40 h-screen w-64 bg-slate-900 text-white p-6 transform transition-transform duration-300 ${

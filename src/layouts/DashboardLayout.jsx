@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { LogIn, LogOut, Menu } from "lucide-react";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,7 +33,7 @@ export default function DashboardLayout() {
               aria-label="Toggle sidebar"
               className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#0b3149] hover:bg-[#0a2b3f] text-white transition"
             >
-              <Menu size={20} />
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
             <div
