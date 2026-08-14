@@ -488,7 +488,7 @@ export default function DashboardOverview() {
                 <td className='p3'>March – June</td>
                 <td className='p3Hot and humid</td>
                 <td className='p3> Carry sun protection if traveling</td>
-             
+              </tr>
               <tr className='border border-slate200'>
                 <td className='p3  font-medium'>Monsoon</td>
                 <td className='p3'>June – September</td>
