@@ -14,19 +14,25 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Slider1 from "../assets/Slider1.png";
+import Slider2 from "../assets/Slider2.png";
+import Slider3 from "../assets/Slider3.png";
+import Slider4 from "../assets/Slider4.png";
+import Slider5 from "../assets/Slider5.png";
+
+const heroImages = [
+  Slider1,
+  Slider2,
+  Slider3,
+  Slider4,
+  Slider5,
+];
 
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
-
-  // Hero background slider images
-  const heroImages = [
-    "/public/src/assets/Slider1.png",
-    "/public/src/assets/Slider2.png", // replace with a Ratnagiri beach photo
-    "/public/src/assets/Slider3.png", // replace with a Konkan temple photo
-    "/public/src/assets/Slider4.png", // replace with a waterfall photo
-    "/public/src/assets/Slider5.png", // replace with a forest/eco-tourism photoj
-  ];
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -35,7 +41,18 @@ export default function DashboardOverview() {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [heroImages.length]);
+  }, []);
+
+  return (
+    <div>
+      <img
+        src={heroImages[currentSlide]}
+        alt={`Slide ${currentSlide + 1}`}
+        style={{ width: "100%", height: "auto" }}
+      />
+    </div>
+  );
+}
 
   const discoverCategories = [
     {
