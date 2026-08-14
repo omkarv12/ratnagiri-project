@@ -11,10 +11,6 @@ import {
   MapPin,
   Download,
   Search,
-  Instagram,
-  Facebook,
-  Twitter,
-  Youtube,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +22,44 @@ import Slider5 from "../assets/Slider5.png";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5];
+
+// lucide-react no longer ships trademarked brand icons (Instagram, Facebook,
+// Twitter, YouTube, etc). These small inline SVGs are drop-in replacements
+// that accept the same `size` prop the lucide icons used.
+function InstagramIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function TwitterIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M18.9 2H22l-7.6 8.7L23.5 22H16.9l-5.2-6.8L5.7 22H2.6l8.1-9.3L1.5 2h6.8l4.7 6.2zm-1.2 18h1.7L7.4 4H5.6z" />
+    </svg>
+  );
+}
+
+function YoutubeIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 17a24 24 0 0 1 0-10 4 4 0 0 1 2.9-2.8C7.7 3.8 12 3.8 12 3.8s4.3 0 6.6.4A4 4 0 0 1 21.5 7a24 24 0 0 1 0 10 4 4 0 0 1-2.9 2.8c-2.3.4-6.6.4-6.6.4s-4.3 0-6.6-.4A4 4 0 0 1 2.5 17z" />
+      <polygon points="10 15 15 12 10 9" />
+    </svg>
+  );
+}
 
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
@@ -252,10 +286,10 @@ export default function DashboardOverview() {
   ];
 
   const socialLinks = [
-    { icon: Instagram, label: "Instagram", href: "https://instagram.com" },
-    { icon: Youtube, label: "YouTube", href: "https://youtube.com" },
-    { icon: Facebook, label: "Facebook", href: "https://facebook.com" },
-    { icon: Twitter, label: "Twitter", href: "https://twitter.com" },
+    { icon: InstagramIcon, label: "Instagram", href: "https://instagram.com" },
+    { icon: YoutubeIcon, label: "YouTube", href: "https://youtube.com" },
+    { icon: FacebookIcon, label: "Facebook", href: "https://facebook.com" },
+    { icon: TwitterIcon, label: "Twitter", href: "https://twitter.com" },
   ];
 
   if (loading) {
