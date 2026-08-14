@@ -11,6 +11,10 @@ import {
   MapPin,
   Download,
   Search,
+  Instagram,
+  Facebook,
+  Twitter,
+  Youtube,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -208,6 +212,50 @@ export default function DashboardOverview() {
       icon: ShieldCheck,
       route: "/rules",
     },
+  ];
+
+  // ================= Footer data =================
+  // Each entry either has a `route` (internal, uses navigate) or an `href`
+  // (external link, opens in a new tab). Swap these out for your real routes
+  // as your router grows.
+  const footerColumns = [
+    {
+      heading: "Destinations",
+      links: [
+        { label: "Interactive Map", route: "/map" },
+        { label: "Itineraries", route: "/itineraries" },
+        { label: "How to Reach", route: "/how-to-reach" },
+        { label: "Village Life", route: "/village-life" },
+        { label: "Cultural Events", route: "/cultural-events" },
+      ],
+    },
+    {
+      heading: "Explore and Learn",
+      links: [
+        { label: "Stories", route: "/stories" },
+        { label: "Videos", route: "/videos" },
+        { label: "Resources", route: "/resources" },
+        { label: "Rules for Tourists", route: "/rules" },
+        { label: "Guided Walks", route: "/guided-walks" },
+      ],
+    },
+    {
+      heading: "About",
+      links: [
+        { label: "Our Story", route: "/about" },
+        { label: "Konkani Food", route: "/konkani-food" },
+        { label: "Tourism Fund", route: "/tourism-fund" },
+        { label: "Register a Homestay", route: "/registration" },
+        { label: "Enquiries & FAQ", route: "/faq" },
+      ],
+    },
+  ];
+
+  const socialLinks = [
+    { icon: Instagram, label: "Instagram", href: "https://instagram.com" },
+    { icon: Youtube, label: "YouTube", href: "https://youtube.com" },
+    { icon: Facebook, label: "Facebook", href: "https://facebook.com" },
+    { icon: Twitter, label: "Twitter", href: "https://twitter.com" },
   ];
 
   if (loading) {
@@ -419,6 +467,79 @@ export default function DashboardOverview() {
 
       {/* ================= Discover Ratnagiri ================= */}
       <DiscoverRatnagiri />
+
+      {/* ================= Footer ================= */}
+      <footer className="bg-slate-900 rounded-2xl mt-8">
+        <div className="px-6 sm:px-10 py-12 sm:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
+            {/* Brand column */}
+            <div>
+              <h2 className="font-serif italic text-2xl text-white mb-3">
+                Ratnagiri Tourism
+              </h2>
+              <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
+                Travel sustainably, enjoy fully — guiding visitors through the
+                Konkan coast's beaches, forts, food and culture.
+              </p>
+              <div className="flex gap-3">
+                {socialLinks.map(({ icon: Icon, label, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-orange-600 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    <Icon size={16} />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Link columns */}
+            {footerColumns.map((col) => (
+              <div key={col.heading}>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-500 mb-4">
+                  {col.heading}
+                </p>
+                <ul className="space-y-3">
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      <button
+                        onClick={() => navigate(link.route)}
+                        className="text-sm text-slate-300 hover:text-white transition-colors duration-200 text-left cursor-pointer focus:outline-none focus:underline"
+                      >
+                        {link.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
+            </p>
+            <div className="flex gap-5">
+              <button
+                onClick={() => navigate("/privacy")}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+              >
+                Privacy Policy
+              </button>
+              <button
+                onClick={() => navigate("/terms")}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+              >
+                Terms of Use
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
