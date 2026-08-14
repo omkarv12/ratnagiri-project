@@ -21,11 +21,11 @@ export default function DashboardOverview() {
 
   // Hero background slider images
   const heroImages = [
-    "/assets/Slider1.png",
-    "/assets/Slider2.png", // replace with a Ratnagiri beach photo
-    "/assets/Slider3.png", // replace with a Konkan temple photo
-    "/assets/Slider4.png", // replace with a waterfall photo
-    "/assets/Slider5.png", // replace with a forest/eco-tourism photoj
+    "/public/src/assets/Slider1.png",
+    "/public/src/assets/Slider2.png", // replace with a Ratnagiri beach photo
+    "/public/src/assets/Slider3.png", // replace with a Konkan temple photo
+    "/public/src/assets/Slider4.png", // replace with a waterfall photo
+    "/public/src/assets/Slider5.png", // replace with a forest/eco-tourism photoj
   ];
 
   const [currentSlide, setCurrentSlide] = useState(0);
