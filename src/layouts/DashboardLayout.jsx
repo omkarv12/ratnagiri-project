@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Menu } from "lucide-react";
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -25,13 +25,23 @@ export default function DashboardLayout() {
         }`}
       >
         {/* Updated Header */}
-        <header className="flex items-center justify-between px-10 py-4 bg-white shadow-sm">
-          {/* Left: Logo */}
-          <div
-            className="text-xl font-serif font-semibold cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            Ratnagiri
+        <header className="sticky top-0 z-40 flex items-center justify-between px-10 py-4 bg-white shadow-sm">
+          {/* Left: Hamburger + Logo */}
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#0b3149] hover:bg-[#0a2b3f] text-white transition"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div
+              className="text-xl font-serif font-semibold cursor-pointer"
+              onClick={() => navigate("/dashboard")}
+            >
+              Ratnagiri
+            </div>
           </div>
 
           {/* Center: Navigation Links */}
