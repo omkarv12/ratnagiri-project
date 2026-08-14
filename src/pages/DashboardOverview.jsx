@@ -200,7 +200,7 @@ export default function DashboardOverview() {
           <div className="absolute inset-0 bg-black/35" />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 sm:px-8">
-            <p className="text-base sm:text-lg font-semibold mb-3 tracking-wide">
+            <p className="text-base sm:text-lg font-bold mb-3 tracking-wide">
               येवा आमच्या कोकणात!
             </p>
             <h1 className="font-serif italic text-3xl sm:text-5xl md:text-6xl leading-tight mb-4">
