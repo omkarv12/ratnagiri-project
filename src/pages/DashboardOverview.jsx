@@ -375,7 +375,36 @@ export default function DashboardOverview() {
           ))}
         </div>
       </div>
+{/* ================= Experience Ratnagiri ================= */}
+      <div className="bg-orange-50/60 rounded-2xl shadow-md p-6 sm:p-10 mb-8">
+        <div className="text-center mb-8 sm:mb-10">
+          <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-orange-600 mb-2">
+            Experience Ratnagiri's Warmth and Sweetness
+          </p>
+          <h2 className="font-serif text-3xl sm:text-4xl text-slate-800 mb-2">
+            Experience Ratnagiri
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500">
+            We stand apart by honoring travel as a delicate fine art.
+          </p>
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-6">
+          {experienceItems.map((item) => (
+            <div key={item.title} className="flex flex-col items-start sm:items-center text-left sm:text-center">
+              <h3 className="font-serif text-lg text-slate-800 mb-4">
+                {item.title}
+              </h3>
+              <button
+                onClick={() => navigate(item.route)}
+                className="border border-orange-300 bg-orange-100/70 text-slate-700 text-xs italic font-medium px-4 py-2 rounded-full hover:bg-orange-200 hover:border-orange-400 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                {item.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
       
        
     </div>
