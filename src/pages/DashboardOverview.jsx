@@ -553,23 +553,83 @@ const DiscoverRatnagiri = () => {
           gap: 20,
         }}
       >
-        {cards.map(({ href, imgSrc, alt, title, subtitle }) => (
-          
-            key={href}
-            href={href}
-            style={{
-              display: "flex",
- flexDirection: "column",
- backgroundColor: "#fff",
-              border:4 text: "none              color:inherit             Shadow: "0 0 8px rgb(00 0 / 0.1)",
- transition: "-shadow 0.3s ease",
-                       onMouseEnter={(e) =>
-             e.currentTarget.style.boxShadow = "0 6px 18px rgb(0 0 0 / 0.25)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.boxShadow = "0 0 8px rgb(0 0 0 / 0.1)")
-            }
-          >
+      {cards.map(({ href, imgSrc, alt, title, subtitle }) => (
+  
+    key={href}
+    href={href}
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      backgroundColor: "#fff",
+      borderRadius: 4,
+      color: "inherit",
+      textDecoration: "none",
+      boxShadow: "0 0 8px rgba(0,0,0,0.1)",
+      transition: "box-shadow 0.3s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.25)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.boxShadow = "0 0 8px rgba(0,0,0,0.1)";
+    }}
+  >
+    <img
+      src={imgSrc}
+      alt={alt}
+      style={{
+        width: "100%",
+        height: "auto",
+        borderTopLeftRadius: 4,
+        borderTopRightRadius: 4,
+        objectFit: "cover",
+      }}
+    />
+    <div
+      style={{
+        padding: 16,
+        flexGrow: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "1.1rem",
+          marginBottom: 10,
+          fontWeight: "normal",
+        }}
+      >
+        {title}
+      </div>
+      <div
+        style={{
+          fontSize: 11,
+          textTransform: "uppercase",
+          color: "#999",
+          letterSpacing: "0.05em",
+          marginBottom: 6,
+        }}
+      >
+        {subtitle}
+      </div>
+      <div
+        style={{
+          fontWeight: "bold",
+          fontSize: 13,
+          color: "#396aab",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          marginTop: "auto", // push to bottom
+        }}
+      >
+        Itineraries {arrowIcon}
+      </div>
+    </div>
+  </a>
+))}
             <img
               src={imgSrc}
               alt={alt}
