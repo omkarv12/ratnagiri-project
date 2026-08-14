@@ -37,16 +37,16 @@ export default function DashboardLayout() {
           {/* Center: Navigation Links */}
           <nav className="hidden md:flex space-x-8 text-sm font-medium text-gray-700">
             <a href="#" className="hover:text-gray-900">
-              Destinations
+              Discover
             </a>
             <a href="#" className="hover:text-gray-900">
-              Bespoke Tours
+              Tourism Development Fund 
             </a>
             <a href="#" className="hover:text-gray-900">
-              Atelier Journal
+              Interactive Map
             </a>
             <a href="#" className="hover:text-gray-900">
-              Our Philosophy
+              Select Language 
             </a>
             <a href="#" className="hover:text-gray-900">
               Enquire
