@@ -46,32 +46,31 @@ export default function DashboardLayout() {
 
           {/* Center: Navigation Links */}
           <nav className="hidden md:flex space-x-8 text-sm font-medium text-gray-700">
-            <a href="#" className="hover:text-gray-900">
-              Discover
-            </a>
-            <a href="#" className="hover:text-gray-900">
-              Tourism Development Fund 
-            </a>
-            <a href="#" className="hover:text-gray-900">
-              Interactive Map
-            </a>
-            <a href="#" className="hover:text-gray-900">
-              Select Language 
-            </a>
-            <a href="#" className="hover:text-gray-900">
-              Enquire
-            </a>
-          </nav>
-
+  <a href="#" className="hover:text-gray-900">
+    Discover
+  </a>
+  <a href="#" className="hover:text-gray-900">
+    Tourism Development Fund 
+  </a>
+  <a href="#" className="hover:text-gray-900">
+    Interactive Map
+  </a>
+  <a href="#" className="hover:text-gray-900">
+    Select Language 
+  </a>
+  <a href="#" className="hover:text-gray-900">
+    Enquire
+  </a>
+</nav>
           {/* Right: Admin Login / Logout Button */}
           <div>
             {showLoginButton && (
               <button
-                onClick={() => navigate("/login")}
-                className="bg-[#0b3149] hover:bg-[#0a2b3f] text-white px-4 py-2 rounded-md font-semibold text-sm transition"
-              >
-                ADMIN LOGIN
-              </button>
+  onClick={() => navigate("/login")}
+  className="bg-[#0b3149] hover:bg-orange-500 text-white px-4 py-2 rounded-md font-semibold text-sm transition"
+>
+  ADMIN LOGIN
+</button>
             )}
             {showLogoutButton && (
               <button
