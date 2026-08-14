@@ -20,7 +20,7 @@ const cards = [
   {
     href: "#mountains-orchards",
     imgSrc:
-      "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
     alt: "Mountains, Orchards and Devrais",
     title: (
       <>
@@ -48,7 +48,7 @@ const cards = [
   {
     href: "#cities-villages",
     imgSrc:
-      "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
     alt: "Prominent Cities and Villages",
     title: "Prominent Cities and Villages",
     subtitle: "FULLY INCLUSIVE",
