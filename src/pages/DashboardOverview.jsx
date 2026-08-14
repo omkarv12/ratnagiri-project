@@ -12,6 +12,7 @@ import {
   Download,
   Search,
   Star,
+  Phone,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -65,6 +66,10 @@ function YoutubeIcon({ size = 16 }) {
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
+
+  // TODO: replace with the real Ratnagiri Tourism office number (E.164 format,
+  // no spaces/dashes) — this is what the floating call button dials.
+  const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeCategory, setActiveCategory] = useState("Beaches");
@@ -617,6 +622,16 @@ export default function DashboardOverview() {
           </div>
         </div>
       </footer>
+
+      {/* ================= Floating Call Button ================= */}
+      <a
+        href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
+        aria-label="Call Ratnagiri Tourism"
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-300"
+      >
+        <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
+        <Phone size={24} className="relative fill-white" />
+      </a>
     </div>
   );
 }
