@@ -42,7 +42,7 @@ export default function DashboardOverview() {
     return () => clearInterval(interval);
   }, []);
 
-   // Cards data, each card navigates somewhere on click
+  // Cards data, each card navigates somewhere on click
   const cards = [
     {
       title: "Stories of Ratnagiri",
@@ -81,8 +81,6 @@ export default function DashboardOverview() {
       route: "/rules",
     },
   ];
-
-  
 
   const discoverCategories = [
     {
@@ -317,7 +315,8 @@ export default function DashboardOverview() {
           </div>
         </div>
       </div>
-{/* ================= Learn about Ratnagiri ================= */}
+
+      {/* ================= Learn about Ratnagiri ================= */}
       <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div>
@@ -376,8 +375,246 @@ export default function DashboardOverview() {
           ))}
         </div>
       </div>
-      
 
-      
-  
+      {/* ================= Dashboard Sections ================= */}
+      <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 mb-8">
+        <div className="text-center mb-8 sm:mb-10 px-4 sm:px-auto">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800">Dashboard</h2>
+          <p className="text-sm sm:text-base text-slate-500 mt-1 sm:mt-2">
+            Everything you need to plan, register and explore Ratnagiri.
+          </p>
+        </div>
 
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-5 px-4 sm:px-auto">
+          {dashboardSections.map((section) => {
+            const Icon = section.icon;
+
+            return (
+              <button
+                key={section.title}
+                onClick={() =>
+                  section.external
+                    ? window.open(section.route, "_blank", "noopener,noreferrer")
+                    : navigate(section.route)
+                }
+                className="group relative flex h-full max-w-xs w-full sm:w-auto flex-col items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6 text-center transition-all duration-300 hover:-translate-y-[2px] hover:border-emerald-300 hover:bg-white hover:shadow-lg cursor-pointer"
+              >
+                <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-emerald-500 transition-transform duration-[300ms] group-hover:scale-x-100" />
+
+                <span className="mb-4 flex h-[56px] w-[56px] items-center justify-center rounded-full bg-emerald-100 text-emerald-700 transition-colors duration-[300ms] group-hover:bg-emerald-500 group-hover:text-white">
+                  <Icon size={26} />
+                </span>
+
+                <h3 className="text-base font-semibold text-slate-800 mb-[6px]">
+                  {section.title}
+                </h3>
+
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  {section.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ================= Experiential Activities ================= */}
+      <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8">
+        <div className="text-center mb-[30px] px-4 sm:px-auto">
+          <h2 className="text-xl sm:text-[28px] md:text-[32px] font-bold text-slate-800">
+            Experiential Activities
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 mt-[8px]">
+            Ways to experience Konkan life, not just see it.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] px-[14px] sm:px-auto">
+          {activities.map((activity) => {
+            const Icon = activity.icon;
+
+            return (
+              <button
+                key={activity.title}
+                onClick={() => navigate(activity.route)}
+                className={`group relative flex h-full flex-col items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-[14px] pb-[10px] text-center transition-all duration-[300ms] hover:-translate-y-[2px] hover:bg-white hover:shadow-lg cursor-pointer ${activity.border}`}
+              >
+                <span
+                  className={`absolute inset-x-0 top-[0px] h-[3px] origin-left scale-x-[0] transition-transform duration-[300ms] group-hover:scale-x-[1] ${activity.bar}`}
+                />
+
+                <span
+                  className={`mb-[14px] flex h-[56px] w-[56px] items-center justify-center rounded-full text-current transition-colors duration-[300ms] group-hover:text-white ${activity.badge} ${activity.badgeHover}`}
+                >
+                  <Icon size={26} />
+                </span>
+
+                <h3 className="text-base font-semibold text-slate-800 mb-[6px]">
+                  {activity.title}
+                </h3>
+
+                <p className="text-sm text-slate-500 leading-relaxed mb-[14px]">
+                  {activity.description}
+                </p>
+
+                <span
+                  className={`mt-auto flex items-center gap-[6px] text-xs font-semibold opacity-[0] transition-opacity duration-[300ms] group-hover:opacity-[1] ${activity.cta}`}
+                >
+                  Explore
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ================= Discover Ratnagiri ================= */}
+      <div className="bg-white rounded-xl shadow-md p-[26px] mt-[32px]">
+        <div className="text-center mb-[48px] px-[16px]">
+          <span className="inline-block px-[16px] py-[4px] bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wide rounded-full mb-[12px]">
+            Explore the District
+          </span>
+          <h2 className="text-xl sm:text-[32px] font-bold text-slate-800 mb-[12px]">Discover Ratnagiri</h2>
+          <div className="w-[64px] h-[4px] bg-gradient-to-r from-orange-500 to-amber-500 mx-auto rounded-full mb-[12px]" />
+          <p className="text-sm sm:text-lg text-slate-500">
+            A land of history, coastline, and Konkan heritage.
+          </p>
+        </div>
+
+        <div className="max-w-xl md:max-w-[960px] mx-auto mb-[48px] bg-gradient-to-br from-slate-50 to-orange-50 rounded-xl p-[24px] border border-slate-200" style={{ position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: "0", left: "0", width: "6px", height: "100%", background: "linear-gradient(to bottom, #FB923C, #F59E0B)" }}></div>
+          <div className="flex items-start gap-[12px] mb-[16px]">
+            <span className="text-xl">📜</span>
+            <h3 className="text-lg font-bold text-slate-800 mt-[4px]">A Storied Past</h3>
+          </div>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-[16px]">
+            Ratnagiri is best known as the birthplace of freedom fighter Lokmanya Tilak,
+            and carries strong ties to Swatantryaveer Savarkar and the sage Parshuram.
+            Long before that, the Konkan coastline drew European traders and religious
+            travelers throughout the Middle Ages, while a succession of ruling powers —
+            from the Maurya and Satavahana to the Chalukya, Rashtrakuta, Shilahar, and
+            Yadava dynasties — left their mark on the region. During Satavahana rule, the
+            Panhalakaji caves became an important center for Buddhist learning, and
+            historical accounts describe active maritime trade routes linking Ratnagiri
+            to distant shores.
+          </p>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            The district is proudly home to three Bharat Ratna recipients — Dr. Babasaheb
+            Ambedkar, P.V. Kane, and Maharshi Dhondo Keshav Karve — and once held King
+            Thibaw of Burma in exile under British rule, a history preserved today at
+            Thiba Palace. After Maratha rule gave way to the British in 1818, the region
+            became part of Bombay Presidency, later joining independent India's Bombay
+            State, and finally becoming part of Maharashtra in 1960.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-[12px] mb-[40px] px-[16px]">
+          {discoverCategories.map((cat) => (
+            <button
+              key={cat.name}
+              onClick={() => setActiveCategory(cat.name)}
+              className={`group flex items-center gap-[12px] pl-[12px] pr-[24px] py-[10px] rounded-full font-semibold text-sm transition-all duration-[300ms] border-[2px] ${
+                activeCategory === cat.name
+                  ? `bg-gradient-to-r ${cat.color} text-white border-transparent shadow-lg scale-[1.05]`
+                  : "bg-white text-slate-600 border-slate-200 hover:border-orange-300 hover:shadow-md"
+              }`}
+            >
+              <span
+                className={`flex items-center justify-center w-[32px] h-[32px] rounded-full text-base transition-colors ${
+                  activeCategory === cat.name ? "bg-white/25" : "bg-slate-100 group-hover:bg-slate-200"
+                }`}
+              >
+                {cat.icon}
+              </span>
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-[12px] mb-[48px] px-[16px]">
+          <div className="bg-sky-50 rounded-xl p-5 text-center border border-sky-100">
+            <p className="text-2xl mb-1">🌡️</p>
+            <p className="text-sm text-slate-500 font-medium">Average Weather</p>
+            <p className="text-lg font-bold text-slate-800">25°C – 32°C</p>
+          </div>
+          <div className="bg-emerald-50 rounded-xl p-5 text-center border border-emerald-100">
+            <p className="text-2xl mb-1">🗓️</p>
+            <p className="text-sm text-slate-500 font-medium">Ideal Trip Duration</p>
+            <p className="text-lg font-bold text-slate-800">1 – 2 Days</p>
+          </div>
+          <div className="bg-amber-50 rounded-xl p-5 text-center border border-amber-100">
+            <p className="text-2xl mb-1">☀️</p>
+            <p className="text-sm text-slate-500 font-medium">Best Time to Visit</p>
+            <p className="text-lg font-bold text-slate-800">October – March</p>
+          </div>
+        </div>
+
+        <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-[20px] border-l-4 border-orange-500 pl-[12px] px-[16px]">
+          Best Time to Visit
+        </h3>
+        <div className="overflow-x-auto mb-[12px] px-[16px]">
+          <table className="w-full text-sm text-left border border-slate-200 rounded-xl overflow-hidden">
+            <thead className="bg-slate-100 text-slate-700">
+              <tr>
+                <th className="p-3 font-semibold">Season</th>
+                <th className="p-3 font-semibold">Months</th>
+                <th className="p-3 font-semibold">Weather</th>
+                <th className="p-3 font-semibold">Why Visit</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-600">
+              <tr className="border-t border-slate-200">
+                <td className="p-3 font-medium">Winter</td>
+                <td className="p-3">October – February</td>
+                <td className="p-3">Pleasant, 11°C – 25°C</td>
+                <td className="p-3">Best for sightseeing and outdoor activities</td>
+              </tr>
+              <tr className="border-t border-slate-200 bg-slate-50">
+                <td className="p-3 font-medium">Summer</td>
+                <td className="p-3">March – June</td>
+                <td className="p-3">Hot and humid</td>
+                <td className="p-3">Carry sun protection if traveling</td>
+              </tr>
+              <tr className="border-t border-slate-200">
+                <td className="p-3 font-medium">Monsoon</td>
+                <td className="p-3">June – September</td>
+                <td className="p-3">Heavy rain, strong winds</td>
+                <td className="p-3">Lush green landscapes, waterfalls at their peak</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-[12px] border-l-4 border-orange-500 pl-[12px] px-[16px]">
+          How to Reach
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 px-[16px]">
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <p className="text-lg font-bold text-slate-800 mb-2">✈️ By Air</p>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Ratnagiri Airport is roughly 12 km from the city but has limited flight
+              connectivity. Most travelers fly into Mumbai's Chhatrapati Shivaji Maharaj
+              International Airport, around 330 km away, then continue by road or rail.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <p className="text-lg font-bold text-slate-800 mb-2">🚆 By Train</p>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Ratnagiri Railway Station sits on the Konkan Railway line, with regular
+              services connecting it to Mumbai, Goa, and Mangalore.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <p className="text-lg font-bold text-slate-800 mb-2">🚌 By Road</p>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              National Highway 66 runs through Ratnagiri, linking it to Mumbai, Pune,
+              and Goa. State buses and private taxis serve the district regularly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
