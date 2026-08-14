@@ -82,6 +82,29 @@ export default function DashboardOverview() {
     },
   ];
 
+  const experienceItems = [
+    {
+      title: "Guided Walks",
+      cta: "Self guided tours",
+      route: "/guided-walks",
+    },
+    {
+      title: "Konkani Food",
+      cta: "Recipes",
+      route: "/konkani-food",
+    },
+    {
+      title: "Festivals and cultural events",
+      cta: "Festive products",
+      route: "/cultural-events",
+    },
+    {
+      title: "Village life",
+      cta: "Local businesses",
+      route: "/village-life",
+    },
+  ];
+  
   const discoverCategories = [
     {
       name: "Beaches",
