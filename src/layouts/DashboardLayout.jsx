@@ -62,7 +62,7 @@ export default function DashboardLayout() {
               </button>
             )}
           </div>
-       header>
+       </header>
 
         Main content */}
         <div class="p-8 pt6">
