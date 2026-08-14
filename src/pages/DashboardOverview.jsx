@@ -11,6 +11,7 @@ import {
   MapPin,
   Download,
   Search,
+  Star,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -501,6 +502,48 @@ export default function DashboardOverview() {
 
       {/* ================= Discover Ratnagiri ================= */}
       <DiscoverRatnagiri />
+
+      {/* ================= Traveler Story ================= */}
+      <div className="bg-sky-50/70 rounded-2xl py-10 sm:py-14 px-4 sm:px-8 mt-8">
+        <div className="flex justify-center gap-1 mb-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} size={16} className="fill-orange-500 text-orange-500" />
+          ))}
+        </div>
+
+        <div className="max-w-3xl mx-auto border border-dashed border-sky-300 rounded-lg px-6 sm:px-10 py-8 sm:py-10 bg-sky-50/40">
+          <p className="font-serif text-base sm:text-lg leading-relaxed text-slate-800 text-center">
+            Ratnagiri is best known as the birthplace of freedom fighter
+            Lokmanya Tilak, and carries strong ties to Swatantryaveer Savarkar
+            and the sage Parshuram. Long before that, the Konkan coastline
+            drew European traders and religious travelers throughout the
+            Middle Ages, while a succession of ruling powers — from the
+            Maurya and Satavahana to the Chalukya, Rashtrakuta, Shilahar, and
+            Yadava dynasties — left their mark on the region. During
+            Satavahana rule, the Panhalakaji caves became an important center
+            for Buddhist learning, and historical accounts describe active
+            maritime trade routes linking Ratnagiri to distant shores.
+            <br />
+            <br />
+            The district is proudly home to three Bharat Ratna recipients —
+            Dr. Babasaheb Ambedkar, P.V. Kane, and Maharshi Dhondo Keshav
+            Karve — and once held King Thibaw of Burma in exile under British
+            rule, a history preserved today at Thiba Palace. After Maratha
+            rule gave way to the British in 1818, the region became part of
+            Bombay Presidency, later joining independent India's Bombay
+            State, and finally becoming part of Maharashtra in 1960.
+          </p>
+
+          <div className="text-center mt-6">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
+              Victoria &amp; Arthur Thorne
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Travelers from London, UK · Amalfi &amp; Kyoto alumni
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* ================= Footer ================= */}
       <footer className="bg-slate-900 rounded-2xl mt-8">
