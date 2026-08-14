@@ -25,7 +25,7 @@ export default function DashboardOverview() {
     "/src/assets/Slider2.png", // replace with a Ratnagiri beach photo
     "/src/assets/Slider3.png", // replace with a Konkan temple photo
     "/src/assets/Slider4.png", // replace with a waterfall photo
-    "/src/assets/Slider5.png", // replace with a forest/eco-tourism photo
+    "/src/assets/Slider5.png", // replace with a forest/eco-tourism photoj
   ];
 
   const [currentSlide, setCurrentSlide] = useState(0);
