@@ -42,6 +42,20 @@ export default function DashboardOverview() {
     return () => clearInterval(interval);
   }, []);
 
+     {/* ================= New 2 Image Section ================= */}
+      <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 mb-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div
+          className="h-64 bg-cover bg-center rounded-xl shadow-md"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80')" }}
+          aria-label="Image 1"
+        />
+        <div
+          className="h-64 bg-cover bg-center rounded-xl shadow-md"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80')" }}
+          aria-label="Image 2"
+        />
+      </div>
+
   const discoverCategories = [
     {
       name: "Beaches",
