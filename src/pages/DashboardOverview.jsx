@@ -174,15 +174,16 @@ export default function DashboardOverview() {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="p-8 text-center animate-pulse font-medium text-slate-500">
-        Loading live database...
-      </div>
-    );
-  }
+  let content;
 
-  return (
+if (loading) {
+  content = (
+    <div className="p-8 text-center animate-pulse font-medium text-slate-500">
+      Loading live database...
+    </div>
+  );
+} else {
+  content = (
     <div className="animate-in fade-in duration-500">
       {/* ================= Hero (slider replaced with static background) ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
@@ -197,7 +198,14 @@ export default function DashboardOverview() {
               }}
             />
           ))}
-          <div className="absolute inset-0 bg-black/35" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+return content;
+          
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 sm:px-8">
             <p className="text-base sm:text-lg font-bold mb-3 tracking-wide">
