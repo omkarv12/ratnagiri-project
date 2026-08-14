@@ -162,25 +162,11 @@ export default function DashboardOverview() {
 
   if (loading) {
     return (
-  <>
-    {loading ? (
-      <div className="p-8 space-y-6">
-        <div className="h-8 bg-gray-300 rounded w-1/3 animate-pulse"></div>
-        <div className="rounded-2xl bg-gray-300 h-[420px] sm:h-[520px] animate-pulse"></div>
-        <div className="space-y-4">
-          <div className="h-6 bg-gray-300 rounded w-full animate-pulse"></div>
-          <div className="h-6 bg-gray-300 rounded w-5/6 animate-pulse"></div>
-          <div className="h-6 bg-gray-300 rounded w-4/6 animate-pulse"></div>
-        </div>
+      <div className="p-8 text-center animate-pulse font-medium text-slate-500">
+        Loading live database...
       </div>
-    ) : (
-      // your normal content here
-      <div className="animate-in fade-in duration-500">
-        {/* Your hero slider and other content */}
-      </div>
-    )}
-  </>
-);
+    );
+  }
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -531,5 +517,4 @@ export default function DashboardOverview() {
       </div>
     </div>
   );
-}
 }
