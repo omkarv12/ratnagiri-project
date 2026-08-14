@@ -400,49 +400,7 @@ export default function DashboardOverview() {
           ))}
         </div>
 
-        {/* Active Category Card */}
-        {discoverCategories
-          .filter((cat) => cat.name === activeCategory)
-          .map((cat) => (
-            <div
-              key={cat.name}
-              className="relative rounded-xl overflow-hidden shadow-lg mb-[48px] h-[18rem]"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url('${cat.image}')` }}
-              />
-              <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-[0.8]`} />
-              <div className="relative z-[10] h-full flex flex-col justify-end p-[24px] text-white">
-                <h3 className="text-xl font-bold mb-[12px]">{cat.icon} {cat.name}</h3>
-                <div className="flex flex-wrap gap-[8px]">
-                  {cat.spots.map((spot) => (
-                    <span
-                      key={spot}
-                      className="px-[12px] py-[4px] bg-white/20 backdrop-blur rounded-full text-sm font-medium"
-                    >
-                      {spot}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-
-        {/* Photo Gallery */}
-        <h3 className="text-lg sm:text-xl font-bold text-slate800 mb-[20px] border-l-[4px] border-orange500 pl-[12px] px-[16px]">
-          Photo Gallery
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols6 gap-[12px] mb-[48px] px-[16px]">
-          {galleryImages.map((img, i) => (
-            <div
-              key={i}
-              className="aspect-square rounded-xl overflow-hidden bg-cover bg-center hover:scale105 transition-transform duration300 cursor-pointer"
-              style={{ backgroundImage: `url('${img}')` }}
-            />
-          ))}
-        </div>
-
+        
         {/* Travel Essentials Strip */}
         <div className="grid grid-cols1 sm:grid-cols3 gap[12px] mb[48px] px[16px]">
           <div className="bg-sky50 rounded-xl p5 text-center border border-sky100">
