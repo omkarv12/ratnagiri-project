@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Trees,
   UtensilsCrossed,
@@ -19,9 +19,23 @@ export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
 
-  // Single static hero background (slider removed)
-  const heroImage =
-    "https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg";
+  // Hero background slider images
+  const heroImages = [
+    "https://www.dioregaaloresort.com/images/Aare-Waare%20Beach.jpg",
+    "https://www.trawell.in/images/tours/Ratnagiri.jpg", // replace with a Ratnagiri beach photo
+    "https://rickshawchallenge.gamblingzion.com/uploads/2019/08/62256058_2360594510646637_5546022944985055232_o-1500x1000.jpg", // replace with a Konkan temple photo
+    "https://aarewarebeachresort.com/wp-content/uploads/2024/06/5.jpg", // replace with a waterfall photo
+    "https://live.staticflickr.com/2670/33108029155_c89e7de6b8_b.jpg", // replace with a forest/eco-tourism photo
+  ];
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   const discoverCategories = [
     {
@@ -156,10 +170,16 @@ export default function DashboardOverview() {
       {/* ================= Hero (slider replaced with static background) ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
         <div className="relative h-[420px] sm:h-[520px] overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${heroImage}')` }}
-          />
+          {heroImages.map((img, index) => (
+            <div
+              key={index}
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+              style={{
+                backgroundImage: `url('${img}')`,
+                opacity: index === currentSlide ? 1 : 0,
+              }}
+            />
+          ))}
           <div className="absolute inset-0 bg-black/35" />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 sm:px-8">
@@ -174,33 +194,51 @@ export default function DashboardOverview() {
               and the curious minds!
             </p>
           </div>
+
+          {/* Slide indicator dots */}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* White feature bar under the hero image */}
         <div className="flex flex-col sm:flex-row items-stretch">
           <button
             onClick={() => navigate("/map")}
-            className="flex-1 flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors text-left border-t sm:border-t-0 border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-t sm:border-t-0 border-b sm:border-b-0 sm:border-r border-slate-100"
           >
-            <MapPin className="text-slate-500 shrink-0" size={20} />
+            <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
+            <MapPin className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
             <div>
               <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
                 Explore
               </p>
-              <p className="text-sm font-medium text-slate-800">Interactive Map</p>
+              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
+                Interactive Map
+              </p>
             </div>
           </button>
 
           <button
             onClick={() => navigate("/registration")}
-            className="flex-1 flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
-            <ClipboardPen className="text-slate-500 shrink-0" size={20} />
+            <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
+            <ClipboardPen className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
             <div>
               <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
                 Share
               </p>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
                 Register a location or a homestay
               </p>
             </div>
@@ -209,14 +247,15 @@ export default function DashboardOverview() {
           <a
             href="/ratnagiri-tourism-map.pdf"
             download
-            className="flex-1 flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
-            <Download className="text-slate-500 shrink-0" size={20} />
+            <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
+            <Download className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
             <div>
               <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
                 Download
               </p>
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
                 Ratnagiri's tourist map
               </p>
             </div>
@@ -225,7 +264,7 @@ export default function DashboardOverview() {
           <div className="flex items-center justify-center px-6 py-4">
             <button
               onClick={() => navigate("/map")}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl transition-colors w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.03] w-full sm:w-auto"
             >
               <Search size={18} />
               Search
