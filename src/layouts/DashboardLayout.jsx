@@ -27,17 +27,30 @@ export default function DashboardLayout() {
         {/* Updated Header */}
         <header className="flex items-center justify-between px-10 py-4 bg-white shadow-sm">
           {/* Left: Logo */}
-          <div className="text-xl font-serif font-semibold cursor-pointer" onClick={() => navigate("/dashboard")}>
+          <div
+            className="text-xl font-serif font-semibold cursor-pointer"
+            onClick={() => navigate("/dashboard")}
+          >
             Ratnagiri
           </div>
 
           {/* Center: Navigation Links */}
           <nav className="hidden md:flex space-x-8 text-sm font-medium text-gray-700">
-            <a href="#" className="hover:text-gray-900">Destinations</a>
-            <a href="#" className="hover:text-gray-900">Bespoke Tours</a>
-            <a href="#" className="hover:text-gray-900">Atelier Journal</a>
-            <a href="#" className="hover:text-gray-900">Our Philosophy</a>
-            <a href="#" className="hover:text-gray-900">Enquire</a>
+            <a href="#" className="hover:text-gray-900">
+              Destinations
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Bespoke Tours
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Atelier Journal
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Our Philosophy
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Enquire
+            </a>
           </nav>
 
           {/* Right: Admin Login / Logout Button */}
@@ -62,12 +75,13 @@ export default function DashboardLayout() {
               </button>
             )}
           </div>
-       </header>
+        </header>
 
-        Main content */}
-        <div class="p-8 pt6">
-         Outlet />
-        </div      </main>
+        {/* Main content */}
+        <div className="p-8 pt-6">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }
