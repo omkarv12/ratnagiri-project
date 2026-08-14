@@ -82,68 +82,7 @@ export default function DashboardOverview() {
     },
   ];
 
-  return (
-    <section className="max-w-[1200px] mx-auto px-4 py-8">
-      {/* Header with title, subtitle, and buttons */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-slate-900 mb-1">
-            Learn about Ratnagiri
-          </h2>
-          <p className="text-sm text-slate-600">
-            Everything you need to plan your trip to Ratnagiri.
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={handleTourismFundClick}
-            className="border border-slate-400 text-slate-800 text-xs font-semibold uppercase px-3 py-1 rounded hover:bg-slate-100 transition"
-          >
-            Tourism Fund
-          </button>
-          <button
-            onClick={handleInteractiveMapClick}
-            className="border border-slate-400 text-slate-800 text-xs font-semibold uppercase px-3 py-1 rounded hover:bg-slate-100 transition"
-          >
-            Interactive Map
-          </button>
-        </div>
-      </div>
-
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        {cards.map((card, i) => (
-          <button
-            key={i}
-            onClick={() => navigate(card.route)}
-            className="relative group rounded-lg overflow-hidden shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
-          >
-            {/* Background Image */}
-            <div
-              className="w-full h-[320px] bg-cover bg-center transition-transform duration-300 group-hover:scale-[1.05]"
-              style={{ backgroundImage: `url(${card.imageUrl})` }}
-              aria-label={card.title}
-            />
-
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
-
-            {/* Text content */}
-            <div className="absolute bottom-5 left-5 right-5 text-white pointer-events-none">
-              <div className="flex gap-2 uppercase text-[10px] font-semibold opacity-80 mb-1">
-                <span>{card.subtitleTopLeft1}</span>
-                <span>{card.subtitleTopLeft2}</span>
-              </div>
-              <h3 className="font-serif text-lg leading-tight">{card.title}</h3>
-              <p className="mt-1 text-xs uppercase opacity-70">{card.locationTag}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
+  
 
   const discoverCategories = [
     {
