@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Slider1 from "../assets/Slider1.png";
 import Slider2 from "../assets/Slider2.png";
 import Slider3 from "../assets/Slider3.png";
@@ -35,6 +33,7 @@ export default function DashboardOverview() {
   const navigate = useNavigate();
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeCategory, setActiveCategory] = useState("Beaches");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,17 +41,6 @@ export default function DashboardOverview() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
-
-  return (
-    <div>
-      <img
-        src={heroImages[currentSlide]}
-        alt={`Slide ${currentSlide + 1}`}
-        style={{ width: "100%", height: "auto" }}
-      />
-    </div>
-  );
-}
 
   const discoverCategories = [
     {
@@ -101,8 +89,6 @@ export default function DashboardOverview() {
       ],
     },
   ];
-
-  const [activeCategory, setActiveCategory] = useState("Beaches");
 
   const activities = [
     {
@@ -174,18 +160,17 @@ export default function DashboardOverview() {
     },
   ];
 
-  let content;
+  if (loading) {
+    return (
+      <div className="p-8 text-center animate-pulse font-medium text-slate-500">
+        Loading live database...
+      </div>
+    );
+  }
 
-if (loading) {
-  content = (
-    <div className="p-8 text-center animate-pulse font-medium text-slate-500">
-      Loading live database...
-    </div>
-  );
-} else {
-  content = (
+  return (
     <div className="animate-in fade-in duration-500">
-      {/* ================= Hero (slider replaced with static background) ================= */}
+      {/* ================= Hero (image slider) ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
         <div className="relative h-[420px] sm:h-[520px] overflow-hidden">
           {heroImages.map((img, index) => (
@@ -198,14 +183,7 @@ if (loading) {
               }}
             />
           ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-return content;
-          
+          <div className="absolute inset-0 bg-black/35" />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 sm:px-8">
             <p className="text-base sm:text-lg font-bold mb-3 tracking-wide">
@@ -539,3 +517,4 @@ return content;
       </div>
     </div>
   );
+}
