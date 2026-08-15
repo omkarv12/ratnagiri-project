@@ -22,6 +22,8 @@ import Slider3 from "../assets/Slider3.png";
 import Slider4 from "../assets/Slider4.png";
 import Slider5 from "../assets/Slider5.png";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
+import AnalyticsDashboard from "./AnalyticsDashboard";
+
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5];
 
