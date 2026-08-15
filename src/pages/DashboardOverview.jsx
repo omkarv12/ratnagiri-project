@@ -87,7 +87,7 @@ export default function DashboardOverview() {
       title: "Stories of Ratnagiri",
       subtitleTopLeft1: "CULTURE",
       subtitleTopLeft2: "DESIGN",
-      locationTag: "MOROCCO",
+      locationTag: "DAPOLI",
       imageUrl:
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
       route: "/stories",
@@ -96,7 +96,7 @@ export default function DashboardOverview() {
       title: "Video Topics",
       subtitleTopLeft1: "SCENIC",
       subtitleTopLeft2: "WELLNESS",
-      locationTag: "JAPAN",
+      locationTag: "GUHAGHAR",
       imageUrl:
         "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
       route: "/videos",
@@ -105,7 +105,7 @@ export default function DashboardOverview() {
       title: "Resources",
       subtitleTopLeft1: "SCENIC",
       subtitleTopLeft2: "WELLNESS",
-      locationTag: "JAPAN",
+      locationTag: "RATNAGIRI",
       imageUrl:
         "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
       route: "/resources",
@@ -113,8 +113,8 @@ export default function DashboardOverview() {
     {
       title: "Rules for tourists",
       subtitleTopLeft1: "SCENIC",
-      subtitleTopLeft2: "WELLNESS",
-      locationTag: "JAPAN",
+      subtitleTopLeft2: "KHED",
+      locationTag: "",
       imageUrl:
         "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
       route: "/rules",
