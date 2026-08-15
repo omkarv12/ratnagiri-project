@@ -151,48 +151,67 @@ export default function AdminDashboard() {
 
                   {isEditing ? (
                     <>
-                      <label>
-                        Name:
-                        <input
-                          type="text"
-                          value={editingItem.formData.location_name || ""}
-                          onChange={(e) => handleInputChange("location_name", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      <label>
-                        Village:
-                        <input
-                          type="text"
-                          value={editingItem.formData.located_in || ""}
-                          onChange={(e) => handleInputChange("located_in", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      <label>
-                        Taluka:
-                        <input
-                          type="text"
-                          value={editingItem.formData.taluka_name || ""}
-                          onChange={(e) => handleInputChange("taluka_name", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      {/* Add other fields here similarly */}
-
+                      {[
+                        "location_name",
+                        "located_in",
+                        "village_name",
+                        "taluka_name",
+                        "district_name",
+                        "nearest_landmark",
+                        "attraction_type",
+                        "road_condition",
+                        "signboards_available",
+                        "public_transport",
+                        "nearest_bus_stand",
+                        "nearest_railway_station",
+                        "parking_space",
+                        "food_stalls",
+                        "amenities_available",
+                        "owned_by",
+                        "managed_by",
+                        "entry_fee",
+                        "entry_fee_amount",
+                        "visiting_hours",
+                        "seasonal_availability",
+                        "peak_period",
+                        "avg_time_spent",
+                        "visitor_type",
+                        "crowd_level",
+                        "site_activities",
+                        "formal_regulations",
+                        "local_residents_involved",
+                        "job_type",
+                        "suggestions_improvements",
+                        "email_address",
+                        "user_description",
+                        "google_maps_link",
+                        "latitude",
+                        "longitude",
+                        "photo_location",
+                        "site_photos"
+                      ].map((field) => (
+                        <div key={field} className="mb-2">
+                          <label className="block font-semibold capitalize">
+                            {field.replace(/_/g, ' ')}:
+                          </label>
+                          <input
+                            type="text"
+                            value={editingItem.formData[field] ?? ""}
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                            className="border rounded px-2 py-1 w-full"
+                          />
+                        </div>
+                      ))}
                       <div className="flex gap-3 mt-4">
                         <button
                           onClick={saveLocation}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingItem(null)}
-                          className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
                         >
                           Cancel
                         </button>
@@ -245,48 +264,61 @@ export default function AdminDashboard() {
 
                   {isEditing ? (
                     <>
-                      <label>
-                        Name:
-                        <input
-                          type="text"
-                          value={editingItem.formData.homestay_name || ""}
-                          onChange={(e) => handleInputChange("homestay_name", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      <label>
-                        Owner:
-                        <input
-                          type="text"
-                          value={editingItem.formData.owner_name || ""}
-                          onChange={(e) => handleInputChange("owner_name", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      <label>
-                        Village:
-                        <input
-                          type="text"
-                          value={editingItem.formData.village_town_city || ""}
-                          onChange={(e) => handleInputChange("village_town_city", e.target.value)}
-                          className="border px-2 py-1 ml-2 rounded"
-                        />
-                      </label>
-                      <br />
-                      {/* Add other fields here similarly */}
-
+                      {[
+                        "homestay_name",
+                        "owner_name",
+                        "phone_number",
+                        "situated_in",
+                        "village_town_city",
+                        "taluka_name",
+                        "district_name",
+                        "live_on_premises",
+                        "unit_type",
+                        "homestay_type",
+                        "discoverable_google_map",
+                        "photo_homestay",
+                        "registered_mtdc",
+                        "accept_bookings",
+                        "booking_app",
+                        "listed_booking_airbnb",
+                        "photo_price_list",
+                        "facilities_services",
+                        "digital_payments_upi",
+                        "cancellation_policy",
+                        "veg_meals",
+                        "both_veg_nonveg",
+                        "tourist_attractions",
+                        "guidance_provided",
+                        "guides_available",
+                        "local_experiences",
+                        "social_media_page",
+                        "amenities_photos",
+                        "google_map_link",
+                        "latitude",
+                        "longitude"
+                      ].map((field) => (
+                        <div key={field} className="mb-2">
+                          <label className="block font-semibold capitalize">
+                            {field.replace(/_/g, ' ')}:
+                          </label>
+                          <input
+                            type="text"
+                            value={editingItem.formData[field] ?? ""}
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                            className="border rounded px-2 py-1 w-full"
+                          />
+                        </div>
+                      ))}
                       <div className="flex gap-3 mt-4">
                         <button
                           onClick={saveHomestay}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingItem(null)}
-                          className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
                         >
                           Cancel
                         </button>
