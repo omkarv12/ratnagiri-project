@@ -134,9 +134,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen m-0 p-0">
       {/* Left Sidebar */}
-      <aside className="sticky top-0 h-screen w-64 bg-blue-900 text-white flex flex-col p-6">
+      <aside className="sticky top-0 h-screen w-64 bg-black text-white flex flex-col p-6">
         {/* Greeting */}
         <div className="mb-8">
           <p className="text-sm opacity-70">Hello,</p>
@@ -149,9 +149,9 @@ export default function AdminDashboard() {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`text-left px-4 py-2 rounded transition-colors ${
-                activeTab === key ? "bg-blue-700 font-semibold" : "hover:bg-blue-800"
-              }`}
+              className={`text-left px-4 py-2 rounded transition-colors duration-200 ${
+  activeTab === key ? "bg-blue-600 font-semibold" : "hover:bg-gray-800"
+}`}
             >
               {label}
             </button>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow bg-gray-50 p-8 overflow-auto">
+      <main className="flex-grow bg-gray-50 p-6 overflow-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tourism Administration Panel</h1>
         <p className="text-gray-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
