@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
+import AnalyticsDashboard from "./AnalyticsDashboard";  
 
 export default function AdminDashboard() {
   const { user } = useAuth();
