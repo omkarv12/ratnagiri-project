@@ -7,33 +7,98 @@ export default function AdminDashboard() {
   const [pendingLocations, setPendingLocations] = useState([]);
   const [pendingHomestays, setPendingHomestays] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingItem, setEditingItem] = useState(null); // { type: 'location'|'homestay', id, formData: {...} }
 
-  // Track editing item: { type, id, formData }
-  const [editingItem, setEditingItem] = useState(null);
+  useEffect(() => {
+    const loadPending = async () => {
+      try {
+        const locationResponse = await fetch(`${API_BASE_URL}/api/pending_locations`);
+        const homestayResponse = await fetch(`${API_BASE_URL}/api/pending_homestays`);
 
-  // Fetch data as before (omitted here for brevity)...
+        const locationData = await locationResponse.json();
+        const homestayData = await homestayResponse.json();
 
-  // Approve/Reject functions remain the same (omitted for brevity)...
+        setPendingLocations(locationData);
+        setPendingHomestays(homestayData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPending();
+  }, []);
+
+  // Approve / Reject handlers (same as before)
+  const approveLocation = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/approve`, { method: "POST" });
+      const data = await response.json();
+      setPendingLocations((prev) => prev.filter((loc) => loc.id !== id));
+      alert(data.message);
+    } catch (err) {
+      console.error(err);
+      alert("Approval failed.");
+    }
+  };
+
+  const rejectLocation = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/reject`, { method: "POST" });
+      const data = await response.json();
+      setPendingLocations((prev) => prev.filter((loc) => loc.id !== id));
+      alert(data.message);
+    } catch (err) {
+      console.error(err);
+      alert("Reject failed.");
+    }
+  };
+
+  const approveHomestay = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/approve`, { method: "POST" });
+      const data = await response.json();
+      setPendingHomestays((prev) => prev.filter((hs) => hs.id !== id));
+      alert(data.message);
+    } catch (err) {
+      console.error(err);
+      alert("Approval failed.");
+    }
+  };
+
+  const rejectHomestay = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/reject`, { method: "POST" });
+      const data = await response.json();
+      setPendingHomestays((prev) => prev.filter((hs) => hs.id !== id));
+      alert(data.message);
+    } catch (err) {
+      console.error(err);
+      alert("Reject failed.");
+    }
+  };
+
+  // Handle input changes in edit form
+  const handleInputChange = (field, value) => {
+    setEditingItem((prev) => ({
+      ...prev,
+      formData: { ...prev.formData, [field]: value },
+    }));
+  };
 
   // Save updated location
   const saveLocation = async () => {
     try {
       const { id, formData } = editingItem;
-
       const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}`, {
-        method: "PUT", // Assuming PUT for update
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) throw new Error("Update failed");
-
       const updatedLocation = await response.json();
-
-      setPendingLocations((prev) =>
-        prev.map((loc) => (loc.id === id ? updatedLocation : loc))
-      );
-
+      setPendingLocations((prev) => prev.map((loc) => (loc.id === id ? updatedLocation : loc)));
       setEditingItem(null);
       alert("Location updated successfully");
     } catch (err) {
@@ -46,21 +111,14 @@ export default function AdminDashboard() {
   const saveHomestay = async () => {
     try {
       const { id, formData } = editingItem;
-
       const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) throw new Error("Update failed");
-
       const updatedHomestay = await response.json();
-
-      setPendingHomestays((prev) =>
-        prev.map((hs) => (hs.id === id ? updatedHomestay : hs))
-      );
-
+      setPendingHomestays((prev) => prev.map((hs) => (hs.id === id ? updatedHomestay : hs)));
       setEditingItem(null);
       alert("Homestay updated successfully");
     } catch (err) {
@@ -69,23 +127,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handle input change in edit form
-  const handleInputChange = (field, value) => {
-    setEditingItem((prev) => ({
-      ...prev,
-      formData: { ...prev.formData, [field]: value },
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-slate-100 p-8">
-      <h1 className="text-3xl font-bold text-slate-800 mb-2">
-        Tourism Administration Panel
-      </h1>
-
-      <p className="text-slate-600 mb-8">
-        Manage pending tourist locations, homestays and eco submissions.
-      </p>
+      <h1 className="text-3xl font-bold text-slate-800 mb-2">Tourism Administration Panel</h1>
+      <p className="text-slate-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Pending Submissions</h2>
@@ -98,14 +143,10 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             {/* Locations */}
             {pendingLocations.map((location) => {
-              const isEditing =
-                editingItem?.type === "location" && editingItem.id === location.id;
+              const isEditing = editingItem?.type === "location" && editingItem.id === location.id;
 
               return (
-                <div
-                  key={location.id}
-                  className="border rounded-lg p-4 bg-slate-50"
-                >
+                <div key={location.id} className="border rounded-lg p-4 bg-slate-50">
                   <h3 className="font-bold text-lg">📍 Location</h3>
 
                   {isEditing ? (
@@ -114,10 +155,8 @@ export default function AdminDashboard() {
                         Name:
                         <input
                           type="text"
-                          value={editingItem.formData.location_name}
-                          onChange={(e) =>
-                            handleInputChange("location_name", e.target.value)
-                          }
+                          value={editingItem.formData.location_name || ""}
+                          onChange={(e) => handleInputChange("location_name", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
@@ -126,10 +165,8 @@ export default function AdminDashboard() {
                         Village:
                         <input
                           type="text"
-                          value={editingItem.formData.located_in}
-                          onChange={(e) =>
-                            handleInputChange("located_in", e.target.value)
-                          }
+                          value={editingItem.formData.located_in || ""}
+                          onChange={(e) => handleInputChange("located_in", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
@@ -138,15 +175,14 @@ export default function AdminDashboard() {
                         Taluka:
                         <input
                           type="text"
-                          value={editingItem.formData.taluka_name}
-                          onChange={(e) =>
-                            handleInputChange("taluka_name", e.target.value)
-                          }
+                          value={editingItem.formData.taluka_name || ""}
+                          onChange={(e) => handleInputChange("taluka_name", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
                       <br />
-                      {/* Add other fields similarly */}
+                      {/* Add other fields here similarly */}
+
                       <div className="flex gap-3 mt-4">
                         <button
                           onClick={saveLocation}
@@ -164,44 +200,27 @@ export default function AdminDashboard() {
                     </>
                   ) : (
                     <>
-                      <p>
-                        <strong>Name:</strong> {location.location_name}
- </p>
-
-                      <p>
-                        <strong>Village:</strong> {location.located_in}
-                      </p>
-
-                      <p>
-                        <strong>Taluka:</strong> {location.taluka_name}
-                      </p>
-
-                      <p>
-                        <strong>Status:</strong> {location.status}
-                      </p>
+                      <p><strong>Name:</strong> {location.location_name}</p>
+                      <p><strong>Village:</strong> {location.located_in}</p>
+                      <p><strong>Taluka:</strong> {location.taluka_name}</p>
+                      <p><strong>Status:</strong> {location.status}</p>
 
                       {user?.role === "admin" && (
                         <div className="flex gap-3 mt-4">
                           <button
                             onClick={() =>
-                              setEditingItem({
-                                type: "location",
-                                id: location.id,
-                                formData: { ...location },
-                              })
+                              setEditingItem({ type: "location", id: location.id, formData: { ...location } })
                             }
                             className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                           >
                             Edit
                           </button>
-
                           <button
                             onClick={() => approveLocation(location.id)}
                             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                           >
                             Approve
                           </button>
-
                           <button
                             onClick={() => rejectLocation(location.id)}
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -218,14 +237,10 @@ export default function AdminDashboard() {
 
             {/* Homestays */}
             {pendingHomestays.map((homestay) => {
-              const isEditing =
-                editingItem?.type === "homestay" && editingItem.id === homestay.id;
+              const isEditing = editingItem?.type === "homestay" && editingItem.id === homestay.id;
 
               return (
-                <div
-                  key={homestay.id}
-                  className="border rounded-lg p-4 bg-slate-50 mt-4"
-                >
+                <div key={homestay.id} className="border rounded-lg p-4 bg-slate-50 mt-4">
                   <h3 className="font-bold text-lg">🏠 Homestay</h3>
 
                   {isEditing ? (
@@ -234,10 +249,8 @@ export default function AdminDashboard() {
                         Name:
                         <input
                           type="text"
-                          value={editingItem.formData.homestay_name}
-                          onChange={(e) =>
-                            handleInputChange("homestay_name", e.target.value)
-                          }
+                          value={editingItem.formData.homestay_name || ""}
+                          onChange={(e) => handleInputChange("homestay_name", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
@@ -246,10 +259,8 @@ export default function AdminDashboard() {
                         Owner:
                         <input
                           type="text"
-                          value={editingItem.formData.owner_name}
-                          onChange={(e) =>
-                            handleInputChange("owner_name", e.target.value)
-                          }
+                          value={editingItem.formData.owner_name || ""}
+                          onChange={(e) => handleInputChange("owner_name", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
@@ -258,15 +269,14 @@ export default function AdminDashboard() {
                         Village:
                         <input
                           type="text"
-                          value={editingItem.formData.village_town_city}
-                          onChange={(e) =>
-                            handleInputChange("village_town_city", e.target.value)
-                          }
+                          value={editingItem.formData.village_town_city || ""}
+                          onChange={(e) => handleInputChange("village_town_city", e.target.value)}
                           className="border px-2 py-1 ml-2 rounded"
                         />
                       </label>
- <br />
-                      {/* Add other fields similarly */}
+                      <br />
+                      {/* Add other fields here similarly */}
+
                       <div className="flex gap-3 mt-4">
                         <button
                           onClick={saveHomestay}
@@ -284,44 +294,27 @@ export default function AdminDashboard() {
                     </>
                   ) : (
                     <>
-                      <p>
-                        <strong>Name:</strong> {homestay.homestay_name}
-                      </p>
-
-                      <p>
-                        <strong>Owner:</strong> {homestay.owner_name}
-                      </p>
-
-                      <p>
-                        <strong>Village:</strong> {homestay.village_town_city}
-                      </p>
-
-                      <p>
-                        <strong>Status:</strong> {homestay.status}
-                      </p>
+                      <p><strong>Name:</strong> {homestay.homestay_name}</p>
+                      <p><strong>Owner:</strong> {homestay.owner_name}</p>
+                      <p><strong>Village:</strong> {homestay.village_town_city}</p>
+                      <p><strong>Status:</strong> {homestay.status}</p>
 
                       {user?.role === "admin" && (
                         <div className="flex gap-3 mt-4">
                           <button
                             onClick={() =>
-                              setEditingItem({
-                                type: "homestay",
-                                id: homestay.id,
-                                formData: { ...homestay },
-                              })
+                              setEditingItem({ type: "homestay", id: homestay.id, formData: { ...homestay } })
                             }
                             className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                           >
                             Edit
                           </button>
-
                           <button
                             onClick={() => approveHomestay(homestay.id)}
                             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                           >
                             Approve
                           </button>
-
                           <button
                             onClick={() => rejectHomestay(homestay.id)}
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
