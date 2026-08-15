@@ -40,7 +40,7 @@ export default function DashboardLayout() {
               className="text-xl font-serif font-semibold cursor-pointer"
               onClick={() => navigate("/dashboard")}
             >
-              Ratnagiri
+              Ratnagiri Sustainable Tourism 
             </div>
           </div>
 
