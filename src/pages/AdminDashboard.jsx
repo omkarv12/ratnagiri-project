@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 
+  const [editingItem, setEditingItem] = useState(null); // <-- add here
+
 export default function AdminDashboard() {
 
     const { user } = useAuth();
