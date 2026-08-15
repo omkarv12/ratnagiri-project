@@ -136,7 +136,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen m-0 p-0">
       {/* Left Sidebar */}
-      <aside className="sticky top-0 h-screen w-64 bg-black text-white flex flex-col p-6">
+      <aside className="fixed top-0 left-0 h-screen w-64 bg-black text-white flex flex-col p-4">
         {/* Greeting */}
         <div className="mb-8">
           <p className="text-sm opacity-70">Hello,</p>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow bg-gray-50 p-6 overflow-auto">
+      <main className="ml-64 flex-grow bg-gray-50 p-6 overflow-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tourism Administration Panel</h1>
         <p className="text-gray-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
