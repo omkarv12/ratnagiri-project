@@ -4,13 +4,12 @@ import API_BASE_URL from "../config";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("pendingSubmissions"); // Currently active tab
+  const [activeTab, setActiveTab] = useState("pendingSubmissions");
   const [pendingLocations, setPendingLocations] = useState([]);
   const [pendingHomestays, setPendingHomestays] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState(null); // Tracks item being edited
+  const [editingItem, setEditingItem] = useState(null);
 
-  // Load pending locations and homestays on mount
   useEffect(() => {
     async function loadPending() {
       try {
@@ -29,56 +28,54 @@ export default function AdminDashboard() {
     loadPending();
   }, []);
 
-  // Approve / Reject handlers (reuse your existing implementations)
   const approveLocation = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/approve`, { method: "POST" });
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/approve`, { method: "POST" });
+      const data = await res.json();
       setPendingLocations((prev) => prev.filter((loc) => loc.id !== id));
       alert(data.message);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Approval failed.");
     }
   };
 
   const rejectLocation = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/reject`, { method: "POST" });
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/api/pending_locations/${id}/reject`, { method: "POST" });
+      const data = await res.json();
       setPendingLocations((prev) => prev.filter((loc) => loc.id !== id));
       alert(data.message);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Reject failed.");
     }
   };
 
   const approveHomestay = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/approve`, { method: "POST" });
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/approve`, { method: "POST" });
+      const data = await res.json();
       setPendingHomestays((prev) => prev.filter((hs) => hs.id !== id));
       alert(data.message);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Approval failed.");
     }
   };
 
   const rejectHomestay = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/reject`, { method: "POST" });
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}/reject`, { method: "POST" });
+      const data = await res.json();
       setPendingHomestays((prev) => prev.filter((hs) => hs.id !== id));
       alert(data.message);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Reject failed.");
     }
   };
 
-  // Handle edits form field changes
   const handleInputChange = (field, value) => {
     setEditingItem((prev) => ({
       ...prev,
@@ -86,47 +83,44 @@ export default function AdminDashboard() {
     }));
   };
 
-  // Save updated location
   const saveLocation = async () => {
     try {
       const { id, formData } = editingItem;
-      const response = await fetch(`${API_BASE_URL}/api/pending_locations/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/pending_locations/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error("Update failed");
-      const updatedLocation = await response.json();
+      if (!res.ok) throw new Error("Update failed");
+      const updatedLocation = await res.json();
       setPendingLocations((prev) => prev.map((loc) => (loc.id === id ? updatedLocation : loc)));
       setEditingItem(null);
       alert("Location updated successfully");
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Failed to update location");
     }
   };
 
-  // Save updated homestay
   const saveHomestay = async () => {
     try {
       const { id, formData } = editingItem;
-      const response = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/pending_homestays/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error("Update failed");
-      const updatedHomestay = await response.json();
+      if (!res.ok) throw new Error("Update failed");
+      const updatedHomestay = await res.json();
       setPendingHomestays((prev) => prev.map((hs) => (hs.id === id ? updatedHomestay : hs)));
       setEditingItem(null);
       alert("Homestay updated successfully");
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("Failed to update homestay");
     }
   };
 
-  // Sidebar menu items
   const menuItems = [
     { key: "analytics", label: "Analytics" },
     { key: "pendingSubmissions", label: "Pending Submissions" },
@@ -134,24 +128,22 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen m-0 p-0">
-      {/* Left Sidebar */}
+    <div className="flex min-h-screen m-0 p-0 w-full h-screen">
+      {/* Sidebar */}
       <aside className="fixed top-0 left-0 h-screen w-64 bg-black text-white flex flex-col p-4">
-        {/* Greeting */}
         <div className="mb-8">
           <p className="text-sm opacity-70">Hello,</p>
           <p className="text-lg font-semibold truncate max-w-full">{user?.email || "User"}</p>
         </div>
 
-        {/* Navigation */}
         <nav className="flex flex-col gap-4">
           {menuItems.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`text-left px-4 py-2 rounded transition-colors duration-200 ${
-  activeTab === key ? "bg-blue-600 font-semibold" : "hover:bg-gray-800"
-}`}
+                activeTab === key ? "bg-blue-600 font-semibold" : "hover:bg-gray-800"
+              }`}
             >
               {label}
             </button>
@@ -164,7 +156,6 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tourism Administration Panel</h1>
         <p className="text-gray-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
-        {/* Tab Content */}
         {activeTab === "analytics" && (
           <section>
             <h2 className="text-xl font-semibold mb-4">Analytics</h2>
@@ -182,7 +173,6 @@ export default function AdminDashboard() {
               <p className="text-gray-500">No pending submissions found.</p>
             ) : (
               <div className="space-y-6">
-                {/* Pending Locations */}
                 {pendingLocations.map((location) => {
                   const isEditing = editingItem?.type === "location" && editingItem.id === location.id;
 
@@ -286,7 +276,6 @@ export default function AdminDashboard() {
                   );
                 })}
 
-                {/* Pending Homestays */}
                 {pendingHomestays.map((homestay) => {
                   const isEditing = editingItem?.type === "homestay" && editingItem.id === homestay.id;
 
