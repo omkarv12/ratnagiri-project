@@ -74,7 +74,7 @@ export default function RulesForTourists() {
         </p>
         <ul className="space-y-3">
           {references.map((ref) => (
-            < key={ref.href}>
+            <li key={ref.href}>
               
                 href={ref.href}
                 target="_blank"
