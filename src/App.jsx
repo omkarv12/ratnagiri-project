@@ -31,7 +31,7 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
 
-          <Route element={<DashboardLayout />}>
+          < element={<DashboardLayout />}>
 
             <Route
               path="/registration"
@@ -42,10 +42,9 @@ export default function App() {
               path="/dashboard"
               element={<DashboardOverview />}
             />
-             <Routes>
-  {/* ...your existing routes... */}
+            
              <Route path="/rules" element={<RulesForTourists />} />
-             </Routes>
+             
             <Route
               path="/profile/:type/:id"
               element={<LocationProfile />}
