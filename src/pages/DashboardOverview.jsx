@@ -318,10 +318,10 @@ useEffect(() => {
 
   if (loading) {
   return (
-    <div className="p-8 text-center">
-      <div className="relative w-full h-16 overflow-hidden mb-4">
-        <div className="absolute bottom-0 w-full border-b-2 border-dashed border-slate-300" />
-        <div className="absolute bottom-1 text-3xl animate-[train_2.5s_linear_infinite]">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 text-center">
+      <div className="relative w-full max-w-md h-20 overflow-hidden mb-6">
+        <div className="absolute top-1/2 -translate-y-1/2 w-full border-b-2 border-dashed border-slate-300" />
+        <div className="absolute top-1/2 -translate-y-1/2 text-5xl animate-[train_6s_linear_infinite]">
           🚂
         </div>
       </div>
