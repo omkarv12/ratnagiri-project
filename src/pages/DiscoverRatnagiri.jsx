@@ -152,16 +152,17 @@ const DiscoverRatnagiri = () => {
             }}
           >
             <img
-              src={imgSrc}
-              alt={alt}
-              style={{
-                width: "100%",
-                height: "auto",
-                borderTopLeftRadius: 4,
-                borderTopRightRadius: 4,
-                objectFit: "cover",
-              }}
-            />
+  src={imgSrc}
+  alt={alt}
+  style={{
+    width: "100%",
+    height: 220,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    objectFit: "cover",
+    display: "block",
+  }}
+/>
             <div
               style={{
                 padding: 16,
