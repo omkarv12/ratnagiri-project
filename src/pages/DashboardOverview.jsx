@@ -91,7 +91,7 @@ export default function DashboardOverview() {
       subtitleTopLeft2: "DESIGN",
       locationTag: "DAPOLI",
       imageUrl:
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
+        "https://site.outlookindia.com/traveller/wp-content/uploads/files/2015/08/300615161943-RATNAGIRI1.jpg",
       route: "/stories",
     },
     {
@@ -100,7 +100,7 @@ export default function DashboardOverview() {
       subtitleTopLeft2: "WELLNESS",
       locationTag: "GUHAGHAR",
       imageUrl:
-        "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
+        "https://cf-images.assettype.com/saamtv%2F2024-10-10%2F8l7t7442%2F2.png?rect=0%2C217%2C720%2C960",
       route: "/videos",
     },
     {
@@ -109,7 +109,7 @@ export default function DashboardOverview() {
       subtitleTopLeft2: "WELLNESS",
       locationTag: "RATNAGIRI",
       imageUrl:
-        "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
+        "https://cf-images.assettype.com/saamtv/2024-05/f30db5d8-a27b-4179-87f4-f4279c8cc512/Kokan__3_.jpg?w=1200&h=675&auto=format%2Ccompress&fit=max&enlarge=true",
       route: "/resources",
     },
     {
@@ -118,7 +118,7 @@ export default function DashboardOverview() {
       subtitleTopLeft2: "KHED",
       locationTag: "",
       imageUrl:
-        "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSww8dgS4UHOdGYHkt01HfDaDqAS_DoySws0NZSg-4JTZGMQkRAUIKjOdg&s=10",
       route: "/rules",
     },
   ];
