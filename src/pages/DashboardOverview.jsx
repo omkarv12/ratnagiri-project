@@ -21,7 +21,7 @@ import Slider2 from "../assets/Slider2.png";
 import Slider3 from "../assets/Slider3.png";
 import Slider4 from "../assets/Slider4.png";
 import Slider5 from "../assets/Slider5.png";
-import Slider5 from "../assets/Slider6.jpg";
+import Slider5 from "../assets/Slide6.jpg";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
 
 
