@@ -4,7 +4,7 @@ const cards = [
   {
     href: "#beaches-forts",
     imgSrc:
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+      "https://www.adotrip.com/public/city-images/5e4117bd1fb0f-Ratnagiri_Package_Tour.jpg",
     alt: "Beaches and Forts",
     title: "Beaches and Forts",
     subtitle: "FULLY INCLUSIVE",
@@ -12,7 +12,7 @@ const cards = [
   {
     href: "#sadas-petroglyphs",
     imgSrc:
-      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
+      "https://beag.in/wp-content/uploads/2024/07/beag8.jpg",
     alt: "Sadas and Petroglyphs",
     title: "Sadas and Petroglyphs",
     subtitle: "FULLY INCLUSIVE",
@@ -20,7 +20,7 @@ const cards = [
   {
     href: "#mountains-orchards",
     imgSrc:
-      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaL_A6fDjyfRejRluKKOdV7s1BGMRp1hfRipwMc2O3-6eaiaCSMyppkMM&s=10",
     alt: "Mountains, Orchards and Devrais",
     title: (
       <>
@@ -32,7 +32,7 @@ const cards = [
   {
     href: "#temples-heritage",
     imgSrc:
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+      "https://pilgrimdata.in/wp-content/uploads/2024/11/2-118.jpeg",
     alt: "Temples and Heritage Places",
     title: "Temples and Heritage Places",
     subtitle: "FULLY INCLUSIVE",
@@ -40,7 +40,7 @@ const cards = [
   {
     href: "#season",
     imgSrc:
-      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWSztXSQ3SDDg3eIeIcEtgRT2ebkezbNtARAzLIo97TIaDgtrkzRZhRU0&s=10",
     alt: "Something for every Season",
     title: "Something for every Season",
     subtitle: "FULLY INCLUSIVE",
@@ -48,7 +48,7 @@ const cards = [
   {
     href: "#cities-villages",
     imgSrc:
-      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJ_hGMkg8WVuQlT21bqzllciEHHfH5FTEtBW2y8KuCwu_SNxzbd0ojvo1_&s=10",
     alt: "Prominent Cities and Villages",
     title: "Prominent Cities and Villages",
     subtitle: "FULLY INCLUSIVE",
