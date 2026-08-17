@@ -301,12 +301,42 @@ export default function DashboardOverview() {
   ];
 
   if (loading) {
-    return (
-      <div className="p-8 text-center animate-pulse font-medium text-slate-500">
-        Loading live database...
+  const messages = [
+    "Boarding the Konkan Railway...",
+    "Chugging past the Sahyadris...",
+    "Crossing the ghats to Ratnagiri...",
+    "Passing through mango orchards...",
+    "Ratnagiri approaching...",
+  ];
+  const [msgIndex, setMsgIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % messages.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="p-8 text-center">
+      <div className="relative w-full h-16 overflow-hidden mb-4">
+        <div className="absolute bottom-0 w-full border-b-2 border-dashed border-slate-300" />
+        <div className="absolute bottom-1 text-3xl animate-[train_2.5s_linear_infinite]">
+          🚂
+        </div>
       </div>
-    );
-  }
+      <p className="font-medium text-slate-500 transition-opacity duration-300">
+        {messages[msgIndex]}
+      </p>
+      <style>{`
+        @keyframes train {
+          0% { left: -10%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
   return (
     <div className="animate-in fade-in duration-500">
