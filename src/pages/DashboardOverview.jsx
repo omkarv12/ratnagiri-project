@@ -74,19 +74,7 @@ export default function DashboardOverview() {
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
-const [activeCategory, setActiveCategory] = useState("Beaches");
-
-useEffect(() => {
-  const interval = setInterval(() => {
-    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-  }, 4000);
-  return () => clearInterval(interval);
-}, []);
-
-// Loading screen message rotation — must live at the top level,
-// not inside `if (loading)`, since hooks can't be called conditionally.
-const loadingMessages = [
+  const loadingMessages = [
   "Boarding the Konkan Railway...",
   "Chugging past the Sahyadris...",
   "Crossing the ghats to Ratnagiri...",
