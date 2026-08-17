@@ -31,7 +31,7 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
 
-          < element={<DashboardLayout />}>
+          <Route path="/" element={<DashboardLayout />}>
 
             <Route
               path="/registration"
@@ -43,7 +43,10 @@ export default function App() {
               element={<DashboardOverview />}
             />
             
-             <Route path="/rules" element={<RulesForTourists />} />
+             <Route 
+              path="/rules" 
+              element={<RulesForTourists />} 
+              />
              
             <Route
               path="/profile/:type/:id"
