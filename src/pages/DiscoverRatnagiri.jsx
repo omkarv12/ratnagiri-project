@@ -4,7 +4,7 @@ const cards = [
   {
     href: "#beaches-forts",
     imgSrc:
-      "https://www.adotrip.com/public/city-images/5e4117bd1fb0f-Ratnagiri_Package_Tour.jpg",
+      "https://i0.wp.com/thepanvelite.com/wp-content/uploads/2024/05/ganpatipule-beach-1.webp?fit=1024%2C576&ssl=1",
     alt: "Beaches and Forts",
     title: "Beaches and Forts",
     subtitle: "FULLY INCLUSIVE",
@@ -32,7 +32,7 @@ const cards = [
   {
     href: "#temples-heritage",
     imgSrc:
-      "https://pilgrimdata.in/wp-content/uploads/2024/11/2-118.jpeg",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6kwuX35B5_P1ZgNBOM4YYX4iP7fE_3KGwAvAGHfxEjBL_CvCsMjhRFGsK&s=10",
     alt: "Temples and Heritage Places",
     title: "Temples and Heritage Places",
     subtitle: "FULLY INCLUSIVE",
