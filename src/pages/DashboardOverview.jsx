@@ -144,7 +144,7 @@ export default function DashboardOverview() {
       icon: "🏖️",
       color: "from-sky-500 to-sky-700",
       image:
-        "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+        "https://www.adotrip.com/public/city-images/5e4117bd1fb0f-Ratnagiri_Package_Tour.jpg",
       spots: [
         "Ganpatipule Beach",
         "Bhatye Beach",
