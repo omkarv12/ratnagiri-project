@@ -31,7 +31,6 @@ const references = [
 export default function RulesForTourists() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-      {/* Header */}
       <div className="text-center mb-10 sm:mb-12">
         <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
           <ShieldCheck className="text-orange-600" size={22} />
@@ -51,7 +50,6 @@ export default function RulesForTourists() {
         </p>
       </div>
 
-      {/* Rules list */}
       <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6 sm:p-10 mb-10">
         <ol className="space-y-4 sm:space-y-5">
           {rules.map((rule, i) => (
@@ -67,7 +65,6 @@ export default function RulesForTourists() {
         </ol>
       </div>
 
-      {/* Official references */}
       <div className="bg-orange-50/60 rounded-2xl p-6 sm:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600 mb-4">
           Official References
@@ -79,14 +76,14 @@ export default function RulesForTourists() {
                 href={ref.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-700 transition-colors duration-200">
-              
+                className="group inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-700 transition-colors duration-200"
+              >
                 <span className="underline decoration-orange-300 underline-offset-2 group-hover:decoration-orange-500">
                   {ref.label}
                 </span>
-                <a ExternalLink size={13} className="text-slate-400 group-hover:text-orange-600 shrink-0" />
+                <ExternalLink size={13} className="text-slate-400 group-hover:text-orange-600 shrink-0" />
               </a>
-            
+            </li>
           ))}
         </ul>
       </div>
