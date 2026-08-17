@@ -84,9 +84,9 @@ export default function RulesForTourists() {
                 <span className="underline decoration-orange-300 underline-offset-2 group-hover:decoration-orange-500">
                   {ref.label}
                 </span>
-                <ExternalLink size={13} className="text-slate-400 group-hover:text-orange-600 shrink-0" />
+                <a ExternalLink size={13} className="text-slate-400 group-hover:text-orange-600 shrink-0" />
               </a>
-            </li>
+            
           ))}
         </ul>
       </div>
