@@ -16,6 +16,7 @@ import CommunityExperience from "./pages/CommunityExperience";
 import Stories from "./pages/Stories";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import RulesForTourists from "./pages/RulesForTourists"; // adjust path to wherever you save the file
 
 import { LocationsProvider } from "./context/LocationsContext";
 import Registration from "./pages/Registration";
@@ -41,7 +42,10 @@ export default function App() {
               path="/dashboard"
               element={<DashboardOverview />}
             />
-
+             <Routes>
+  {/* ...your existing routes... */}
+             <Route path="/rules" element={<RulesForTourists />} />
+             </Routes>
             <Route
               path="/profile/:type/:id"
               element={<LocationProfile />}
