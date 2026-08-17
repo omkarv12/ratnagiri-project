@@ -77,7 +77,7 @@ export default function RulesForTourists() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-700 transition-colors duration-200"
-              >
+              
                 <span className="underline decoration-orange-300 underline-offset-2 group-hover:decoration-orange-500">
                   {ref.label}
                 </span>
