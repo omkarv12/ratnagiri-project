@@ -74,6 +74,34 @@ export default function DashboardOverview() {
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+const [activeCategory, setActiveCategory] = useState("Beaches");
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+  }, 4000);
+  return () => clearInterval(interval);
+}, []);
+
+// Loading screen message rotation — must live at the top level,
+// not inside `if (loading)`, since hooks can't be called conditionally.
+const loadingMessages = [
+  "Boarding the Konkan Railway...",
+  "Chugging past the Sahyadris...",
+  "Crossing the ghats to Ratnagiri...",
+  "Passing through mango orchards...",
+  "Ratnagiri approaching...",
+];
+const [msgIndex, setMsgIndex] = useState(0);
+
+useEffect(() => {
+  if (!loading) return;
+  const interval = setInterval(() => {
+    setMsgIndex((prev) => (prev + 1) % loadingMessages.length);
+  }, 1800);
+  return () => clearInterval(interval);
+}, [loading]);
   const [activeCategory, setActiveCategory] = useState("Beaches");
 
   useEffect(() => {
@@ -301,22 +329,6 @@ export default function DashboardOverview() {
   ];
 
   if (loading) {
-  const messages = [
-    "Boarding the Konkan Railway...",
-    "Chugging past the Sahyadris...",
-    "Crossing the ghats to Ratnagiri...",
-    "Passing through mango orchards...",
-    "Ratnagiri approaching...",
-  ];
-  const [msgIndex, setMsgIndex] = React.useState(0);
-
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setMsgIndex((prev) => (prev + 1) % messages.length);
-    }, 1800);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="p-8 text-center">
       <div className="relative w-full h-16 overflow-hidden mb-4">
@@ -326,7 +338,7 @@ export default function DashboardOverview() {
         </div>
       </div>
       <p className="font-medium text-slate-500 transition-opacity duration-300">
-        {messages[msgIndex]}
+        {loadingMessages[msgIndex]}
       </p>
       <style>{`
         @keyframes train {
