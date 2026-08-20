@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
-import AnalyticsDashboard from "./AnalyticsDashboard";  
+import AnalyticsDashboard from "./AnalyticsDashboard";
+import AdminBlogForm from "../components/forms/AdminBlogForm";
+import { blogApi } from "../api/blogApi";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -10,6 +12,12 @@ export default function AdminDashboard() {
   const [pendingHomestays, setPendingHomestays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
+
+  // --- Stories (blog) state ---
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogsLoading, setBlogsLoading] = useState(true);
+  const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" | blog object being edited
+  const [blogActionError, setBlogActionError] = useState(null);
 
   useEffect(() => {
     async function loadPending() {
@@ -28,6 +36,53 @@ export default function AdminDashboard() {
     }
     loadPending();
   }, []);
+
+  // Load stories once the Itineraries & Stories tab is opened
+  useEffect(() => {
+    if (activeTab === "addEditItineraries") {
+      loadBlogs();
+    }
+  }, [activeTab]);
+
+  const loadBlogs = async () => {
+    setBlogsLoading(true);
+    setBlogActionError(null);
+    try {
+      const data = await blogApi.adminListBlogs();
+      setBlogPosts(data);
+    } catch (err) {
+      setBlogActionError(err.message);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  const handleBlogSaved = () => {
+    setBlogFormMode(null);
+    loadBlogs();
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (!window.confirm("Delete this story? This can't be undone.")) return;
+    try {
+      await blogApi.adminDeleteBlog(id);
+      setBlogPosts((prev) => prev.filter((b) => b.id !== id));
+    } catch (err) {
+      setBlogActionError(err.message);
+    }
+  };
+
+  const toggleBlogStatus = async (blog) => {
+    const nextStatus = blog.status === "published" ? "draft" : "published";
+    try {
+      await blogApi.adminUpdateBlog(blog.id, { ...blog, category_id: blog.category?.id, status: nextStatus });
+      setBlogPosts((prev) =>
+        prev.map((b) => (b.id === blog.id ? { ...b, status: nextStatus } : b))
+      );
+    } catch (err) {
+      setBlogActionError(err.message);
+    }
+  };
 
   const approveLocation = async (id) => {
     try {
@@ -125,7 +180,7 @@ export default function AdminDashboard() {
   const menuItems = [
     { key: "analytics", label: "Analytics" },
     { key: "pendingSubmissions", label: "Pending Submissions" },
-    { key: "addEditItineraries", label: "Add/Edit Itineraries" },
+    { key: "addEditItineraries", label: "Itineraries & Stories" },
   ];
 
   return (
@@ -376,7 +431,82 @@ export default function AdminDashboard() {
         {activeTab === "addEditItineraries" && (
           <section>
             <h2 className="text-xl font-semibold mb-4">Add / Edit Itineraries</h2>
-            <p>This section will allow you to add or edit itineraries.</p>
+            <p className="text-gray-500 mb-8">This section will allow you to add or edit itineraries.</p>
+
+            {/* --- Stories / Blog management --- */}
+            <div className="border-t pt-8">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <h2 className="text-xl font-semibold">Stories</h2>
+                {!blogFormMode && (
+                  <button
+                    onClick={() => setBlogFormMode("new")}
+                    className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-semibold"
+                  >
+                    + Write New Story
+                  </button>
+                )}
+              </div>
+
+              {blogActionError && (
+                <p className="text-sm text-red-500 mb-4">{blogActionError}</p>
+              )}
+
+              {blogFormMode && (
+                <div className="bg-white p-5 rounded shadow mb-8">
+                  <AdminBlogForm
+                    existingBlog={blogFormMode === "new" ? null : blogFormMode}
+                    onSaved={handleBlogSaved}
+                    onCancel={() => setBlogFormMode(null)}
+                  />
+                </div>
+              )}
+
+              {blogsLoading ? (
+                <p className="text-gray-500">Loading stories...</p>
+              ) : blogPosts.length === 0 ? (
+                <p className="text-gray-500">No stories yet. Write your first one above.</p>
+              ) : (
+                <div className="space-y-4">
+                  {blogPosts.map((blog) => (
+                    <div key={blog.id} className="bg-white p-4 rounded shadow flex items-start justify-between gap-4 flex-wrap">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="font-semibold text-lg">{blog.title}</h3>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
+                            blog.status === "published" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                          }`}>
+                            {blog.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {blog.category?.name || "No category"} · {blog.comment_count} comments · {blog.views} views
+                        </p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => setBlogFormMode(blog)}
+                          className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => toggleBlogStatus(blog)}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                        >
+                          {blog.status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBlog(blog.id)}
+                          className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         )}
       </main>
