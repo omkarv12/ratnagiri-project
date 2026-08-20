@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
-
+const MIN_PHOTO_SIZE = 500 * 1024;
 
 export default function LocationForm({ onSuccess }) {
     const [formData, setFormData] = useState({
