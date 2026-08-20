@@ -3,23 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus } from 'lucide-react';
+import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import RegistrationForm from '../components/forms/RegistrationForm';
 
 function MapLegend() {
   return (
-    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur px-5 py-2 rounded-xl shadow-lg border border-slate-200 flex items-center gap-4 whitespace-nowrap overflow-x-auto max-w-[95%]">
+    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur px-2.5 py-1.5 sm:px-5 sm:py-2 rounded-xl shadow-lg border border-slate-200 flex items-center gap-2 sm:gap-4 whitespace-nowrap overflow-x-auto max-w-[95%]">
       {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
-        <div key={category} className="flex items-center gap-1.5 shrink-0">
+        <div key={category} className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <div
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shrink-0"
             style={{ backgroundColor: color }}
           >
-            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
+            <span style={{ fontSize: '9px', lineHeight: 1 }} className="sm:text-[10px]">{emoji}</span>
           </div>
-          <span className="text-xs font-semibold text-slate-700">
+          <span className="text-[10px] sm:text-xs font-semibold text-slate-700 hidden xs:inline">
             {category}
           </span>
         </div>
@@ -196,6 +196,8 @@ const markerRefs = useRef({});
 const [districtBorder, setDistrictBorder] = useState(null);   // 👈 ADD THIS LINE
 const [userLocation, setUserLocation] = useState(null);
 const [activeRoute, setActiveRoute] = useState(null);
+// Mobile: which pane is visible — 'list' (sidebar) or 'map'. Ignored on md+ where both show.
+const [mobileView, setMobileView] = useState('list');
 
 const handleShowRoute = async (destLat, destLng) => {
   if (!userLocation) {
@@ -206,6 +208,7 @@ const handleShowRoute = async (destLat, destLng) => {
   if (route) {
     setActiveRoute(route);
     setMapPosition([destLat, destLng]);
+    setMobileView('map'); // jump to the map so the user actually sees the route
   } else {
     alert("Could not calculate route.");
   }
@@ -253,6 +256,7 @@ useEffect(() => {
 
   const handleFlyTo = (lat, lng) => {
     setMapPosition([lat, lng]);
+    setMobileView('map'); // tapping a list item on mobile should switch to the map
   };
   
   useEffect(() => {
@@ -318,12 +322,6 @@ const filteredLocations = locations.filter((loc) => {
   return talukaMatch && tourismTypeMatch && searchMatch;
 
 });
-console.log("selectedTourismType:", JSON.stringify(selectedTourismType));
-console.log("Sample category:", JSON.stringify(locations[0]?.category));
-console.log("All categories:", locations.map(l => l.category));
-console.log("filteredLocations count:", filteredLocations.length);
-console.log("Full first location object:", JSON.stringify(locations[0], null, 2));
-
 
 const homestayTypes = [
   "All",
@@ -426,7 +424,6 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
           <Popup>
   <div className="text-center">
-    {console.log("photo_location:", loc.photo_location, "-> converted:", driveIdToImageUrl(loc.photo_location))}
     {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
   <img
     src={driveIdToImageUrl(loc.photo_location)}
@@ -597,38 +594,41 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500">
+    <div className="flex flex-col md:flex-row h-[100dvh] md:h-[calc(100vh-4rem)] bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
       
-      {/* INNER SIDEBAR */}
-      <div className="w-96 flex flex-col border-r border-slate-200 bg-slate-50 z-10">
-        <div className="p-6 bg-gradient-to-br from-orange-600 to-amber-600 text-white shadow-md relative overflow-hidden">
+      {/* INNER SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
+      <div
+        className={`w-full md:w-96 flex-col border-r border-slate-200 bg-slate-50 z-10 min-h-0
+          ${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none`}
+      >
+        <div className="p-4 md:p-6 bg-gradient-to-br from-orange-600 to-amber-600 text-white shadow-md relative overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=600&q=80')] opacity-30 bg-cover bg-center"></div>
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold tracking-tight mb-1">Ratnagiri Tourism</h1>
-            <p className="text-sm font-light italic opacity-90">Explore the Jewel of Konkan Ecosystem</p>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight mb-1">Ratnagiri Tourism</h1>
+            <p className="text-xs md:text-sm font-light italic opacity-90">Explore the Jewel of Konkan Ecosystem</p>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex overflow-x-auto bg-slate-800 text-slate-400 hide-scrollbar">
+        <div className="flex overflow-x-auto bg-slate-800 text-slate-400 hide-scrollbar shrink-0">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-all border-b-2 shrink-0 ${
                   activeTab === tab.id ? 'bg-slate-700 text-white border-orange-500' : 'border-transparent hover:text-white hover:bg-slate-700/50'
                 }`}
               >
-                <Icon size={16} /> {tab.label}
+                <Icon size={15} className="sm:w-4 sm:h-4" /> {tab.label}
               </button>
             )
           })}
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 min-h-0">
           
           {/* VILLAGES TAB */}
           {activeTab === 'villages' && (
@@ -653,7 +653,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           placeholder="Search location..."
           value={locationSearch}
           onChange={(e) => setLocationSearch(e.target.value)}
-          className="outline-none text-xs w-32 bg-transparent"
+          className="outline-none text-xs w-24 sm:w-32 bg-transparent"
         />
         <button
           onClick={() => { setIsSearchOpen(false); setLocationSearch(""); }}
@@ -676,7 +676,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   <select
     value={selectedTaluka}
     onChange={(e) => setSelectedTaluka(e.target.value)}
-    className="w-full border rounded-lg p-2"
+    className="w-full border rounded-lg p-2 text-sm"
   >
     {talukas.map((taluka) => (
       <option key={taluka} value={taluka}>
@@ -692,7 +692,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   <select
     value={selectedTourismType}
     onChange={(e) => setSelectedTourismType(e.target.value)}
-    className="w-full border rounded-lg p-2"
+    className="w-full border rounded-lg p-2 text-sm"
   >
     {tourismTypes.map((type) => (
       <option key={type.value} value={type.value}>
@@ -710,7 +710,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     key={loc.id} 
                     onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); }}
                     
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -722,16 +722,16 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     </span>
   )}
 </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
   <button 
     onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
-    className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800"
+    className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800 py-1"
   >
     <ImageIcon size={14} /> View Profile
   </button>
   <button
     onClick={(e) => { e.stopPropagation(); handleShowRoute(loc.latitude, loc.longitude); }}
-    className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+    className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
   >
     🧭 Show Route
   </button>
@@ -763,7 +763,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
               placeholder="Search homestay..."
               value={homestaySearch}
               onChange={(e) => setHomestaySearch(e.target.value)}
-              className="outline-none text-xs w-32 bg-transparent"
+              className="outline-none text-xs w-24 sm:w-32 bg-transparent"
             />
             <button
               onClick={() => { setIsHomestaySearchOpen(false); setHomestaySearch(""); }}
@@ -786,7 +786,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       <select
         value={selectedHomestayTaluka}
         onChange={(e) => setSelectedHomestayTaluka(e.target.value)}
-        className="w-full border rounded-lg p-2"
+        className="w-full border rounded-lg p-2 text-sm"
       >
         {talukas.map((taluka) => (
           <option key={taluka} value={taluka}>
@@ -802,7 +802,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       <select
         value={selectedHomestayType}
         onChange={(e) => setSelectedHomestayType(e.target.value)}
-        className="w-full border rounded-lg p-2"
+        className="w-full border rounded-lg p-2 text-sm"
       >
         {homestayTypes.map((type) => (
           <option key={type} value={type}>
@@ -818,7 +818,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
         <div 
           key={home.id}
           onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
-          className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
+          className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
         >
           <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
             {home.name} <ShieldCheck size={14} className="text-emerald-500" />
@@ -826,7 +826,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           <p className="text-sm text-slate-600 mb-1">
   <strong>Location:</strong> {home.village}, {home.taluka}
   {userLocation && (
-  <span className="ml-2 text-emerald-700 font-medium">
+  <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
     · {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
   </span>
 )}
@@ -839,7 +839,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   )
 </p>
           <p className="text-xs text-slate-500 mb-3 italic">{home.amenities.substring(0, 60)}...</p>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap justify-between items-center gap-2">
   <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
   <div className="flex items-center gap-3">
     <a
@@ -847,7 +847,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       target="_blank"
       rel="noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700"
+      className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700 py-1"
       title="Chat on WhatsApp"
     >
       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -858,7 +858,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     </a>
     <button
       onClick={(e) => { e.stopPropagation(); handleShowRoute(home.latitude, home.longitude); }}
-      className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+      className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
     >
       🧭 Show Route
     </button>
@@ -884,7 +884,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                   <div 
                     key={e.id}
                     onClick={() => { handleFlyTo(e.latitude, e.longitude); setSelectedItem({ data: e, type: 'eco' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">{e.name}</h3>
                     <div className="text-sm text-slate-600 space-y-3 mt-3">
@@ -953,7 +953,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                   <div
                     key={d.id}
                     onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all"
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
                       {d.name} <ShieldCheck size={14} className="text-emerald-500" />
@@ -961,7 +961,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     <p className="text-sm text-slate-600 mb-1">
                       <strong>Base:</strong> {d.village}, {d.taluka}
                       {userLocation && (
-                        <span className="ml-2 text-emerald-700 font-medium">
+                        <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
                           · {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away
                         </span>
                       )}
@@ -973,7 +973,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                       </a>
                       )
                     </p>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap justify-between items-center gap-2">
                       <span className="px-2 py-1 bg-lime-100 text-lime-800 text-xs rounded font-bold">{d.vehicleType}</span>
                       <div className="flex items-center gap-3">
                         
@@ -982,7 +982,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700"
+                          className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700 py-1"
                           title="Chat on WhatsApp"
                         >
                           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -993,7 +993,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                         </a>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleShowRoute(d.lat, d.lng); }}
-                          className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800"
+                          className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
                         >
                           🧭 Show Route
                         </button>
@@ -1033,7 +1033,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                   <div
                     key={b.id}
                     onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all"
+                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
                       🚏 {b.name}
@@ -1041,7 +1041,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                     <p className="text-sm text-slate-600 mb-2">
                       <strong>Taluka:</strong> {b.taluka}
                       {userLocation && (
-                        <span className="ml-2 text-emerald-700 font-medium">
+                        <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
                           · {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away
                         </span>
                       )}
@@ -1086,12 +1086,15 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 </div>
       </div>
 
-      {/* MAP AREA */}
-<div className="flex-1 relative bg-slate-200" style={{ cursor: pinMode ? 'crosshair' : 'grab' }}>
+      {/* MAP AREA — full-screen pane on mobile (toggled), flexible column on desktop */}
+<div
+  className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}
+  style={{ cursor: pinMode ? 'crosshair' : 'grab' }}
+>
   <MapLegend />
 {activeRoute && (
-  <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-4 py-2 flex items-center gap-3">
-    <span className="text-sm font-bold text-slate-800">
+  <div className="absolute top-14 sm:top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2 sm:gap-3">
+    <span className="text-xs sm:text-sm font-bold text-slate-800">
       🚗 {activeRoute.distance} km · {activeRoute.duration} min
     </span>
     <button
@@ -1170,8 +1173,20 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   </MapContainer>
 </div>
 
+{/* Floating List/Map toggle — mobile only */}
+<button
+  onClick={() => setMobileView(v => (v === 'list' ? 'map' : 'list'))}
+  className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[1500] flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-full shadow-xl font-semibold text-sm active:scale-95 transition-transform"
+>
+  {mobileView === 'list' ? (
+    <><MapIcon size={16} /> View Map</>
+  ) : (
+    <><List size={16} /> View List</>
+  )}
+</button>
+
 {selectedItem && (
-  <div className="w-[420px] border-l border-slate-200 bg-white overflow-y-auto">
+  <div className="fixed inset-0 z-[2000] bg-white overflow-y-auto md:static md:inset-auto md:z-auto md:w-[420px] md:border-l md:border-slate-200">
     <ProfileDetails
       loc={selectedItem.data}
       type={selectedItem.type}
