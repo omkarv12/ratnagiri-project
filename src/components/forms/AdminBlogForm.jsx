@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { blogApi } from "../../api/blogapi";
-
+import { blogApi } from "../../api/blogApi";
 /**
  * Drop this into your admin panel (next to wherever RegistrationForm-style
  * "add location" forms live). On submit it POSTs straight to the same
