@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
-import AdminBlogForm from "../src/components/forms/AdminBlogForm";
+import AdminBlogForm from "../components/forms/AdminBlogForm";
 import { blogApi } from "../api/blogapi";
 
 export default function AdminDashboard() {
