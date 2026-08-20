@@ -37,7 +37,7 @@ export const blogApi = {
       body: JSON.stringify({ name, email, comment }),
     }),
 
-  // admin
+  // admin//
   adminListBlogs: () => request("/admin/blogs"),
   adminCreateBlog: (payload) =>
     request("/admin/blogs", { method: "POST", body: JSON.stringify(payload) }),
