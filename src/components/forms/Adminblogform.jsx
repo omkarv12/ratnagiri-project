@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { blogApi } from "../../api/Blogapi";
+import { blogApi } from "../../api/blogapi";
 
 /**
  * Drop this into your admin panel (next to wherever RegistrationForm-style

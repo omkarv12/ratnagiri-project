@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookText, Search, Eye, MessageCircle, Calendar, User } from "lucide-react";
-import { blogApi } from "../api/Blogapi";
+import { blogApi } from "../api/blogapi";
 
 function timeAgo(dateStr) {
   if (!dateStr) return "";
