@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
-import AdminBlogForm from "../components/forms/AdminBlogForm";
+import AdminBlogForm from "../components/forms/Adminblogform";
 import { blogApi } from "../api/blogapi";
 
 export default function AdminDashboard() {
@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   // --- Stories (blog) state ---
   const [blogPosts, setBlogPosts] = useState([]);
   const [blogsLoading, setBlogsLoading] = useState(true);
-  const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" | blog object being edited
+  const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" |k blog object being edited
   const [blogActionError, setBlogActionError] = useState(null);
 
   useEffect(() => {
