@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
-import AdminBlogForm from "../components/forms/Adminblogform";
-import { blogApi } from "../api/blogapi";
+import AdminBlogForm from "../components/forms/AdminBlogForm";
+import { blogApi } from "../api/blogApi";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
