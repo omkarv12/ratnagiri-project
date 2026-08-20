@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import AdminBlogForm from "../components/forms/AdminBlogForm";
-import { blogApi } from "../api/blogApi";
+import { blogApi } from "../api/Blogapi";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
