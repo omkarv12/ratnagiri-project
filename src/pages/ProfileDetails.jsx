@@ -22,7 +22,12 @@ function parseDrivePhotoField(field) {
     .split(",")
     .map((link) => link.trim())
     .filter(Boolean)
-    .map((link) => ({ url: driveIdToImageUrl(link) }))
+    .map((link) => {
+      const isDirectImageUrl =
+        /^https?:\/\/res\.cloudinary\.com\//.test(link) ||
+        /\.(jpe?g|png|webp|gif)$/i.test(link);
+      return { url: isDirectImageUrl ? link : driveIdToImageUrl(link) };
+    })
     .filter((p) => p.url);
 }
 
