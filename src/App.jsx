@@ -14,6 +14,7 @@ import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
 import CommunityExperience from "./pages/CommunityExperience";
 import Stories from "./pages/Stories";
+import StoryDetail from "./pages/StoryDetail";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists"; // adjust path to wherever you save the file
@@ -81,7 +82,10 @@ export default function App() {
   path="/stories"
   element={<Stories />}
 />
-
+<Route
+  path="/stories/:slug"
+  element={<StoryDetail />}
+/>
             <Route
               path="/admin"
               element={
