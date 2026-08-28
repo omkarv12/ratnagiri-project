@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON} from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import RegistrationForm from '../components/forms/RegistrationForm';
+import API_BASE_URL from '../config';
 
 function MapLegend() {
   return (
@@ -198,6 +199,7 @@ const [userLocation, setUserLocation] = useState(null);
 const [activeRoute, setActiveRoute] = useState(null);
 // Mobile: which pane is visible — 'list' (sidebar) or 'map'. Ignored on md+ where both show.
 const [mobileView, setMobileView] = useState('list');
+const [nearbyLocations, setNearbyLocations] = useState([]);
 
 const handleShowRoute = async (destLat, destLng) => {
   if (!userLocation) {
@@ -258,6 +260,17 @@ useEffect(() => {
     setMapPosition([lat, lng]);
     setMobileView('map'); // tapping a list item on mobile should switch to the map
   };
+
+  const fetchNearbyLocations = async (locationName) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/nearby-locations/${encodeURIComponent(locationName)}`);
+    const data = await response.json();
+    setNearbyLocations(data.success ? data.nearby : []);
+  } catch (err) {
+    console.error("Failed to fetch nearby locations:", err);
+    setNearbyLocations([]);
+  }
+};
   
   useEffect(() => {
     if (selectedItem?.data?.id) {
@@ -708,8 +721,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 {filteredLocations.map(loc => (
                      <div 
                     key={loc.id} 
-                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); }}
-                    
+                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name); }}
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
@@ -724,9 +736,9 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 </div>
       <div className="flex items-center gap-3 flex-wrap">
   <button 
-    onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); }}
-    className="text-blue-600 text-xs font-medium flex items-center gap-1 hover:text-blue-800 py-1"
-  >
+  onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name); }}
+  className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+>
     <ImageIcon size={14} /> View Profile
   </button>
   <button
@@ -1146,6 +1158,19 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     {/* Render Active Data Pins */}
 {renderActivePins()}
 
+{nearbyLocations.map((n, idx) => (
+  <Circle
+    key={`nearby-${idx}`}
+    center={[n.lat, n.lng]}
+    radius={300}
+    pathOptions={{ color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.25, weight: 2 }}
+  >
+    <Tooltip direction="top" permanent className="text-xs font-semibold bg-white/90 shadow-sm border-0 text-red-700">
+      {n.name}
+    </Tooltip>
+  </Circle>
+))}
+
 {/* User's current location marker */}
 {userLocation && (
   <Marker position={[userLocation.lat, userLocation.lng]}>
@@ -1190,7 +1215,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     <ProfileDetails
       loc={selectedItem.data}
       type={selectedItem.type}
-      onBack={() => setSelectedItem(null)}
+      onBack={() => { setSelectedItem(null); setNearbyLocations([]); }}
       compact
     />
   </div>
