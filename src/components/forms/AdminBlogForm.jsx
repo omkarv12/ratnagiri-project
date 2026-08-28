@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { blogApi } from "../../api/blogApi";
+import API_BASE_URL from "../../config";
 /**
  * Drop this into your admin panel (next to wherever RegistrationForm-style
  * "add location" forms live). On submit it POSTs straight to the same
@@ -29,6 +30,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     blogApi.listCategories().then(setCategories).catch(() => {});
@@ -46,6 +48,32 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
       setError(err.message);
     } finally {
       setAddingCategory(false);
+    }
+  };
+
+  // 👇 ADD handleImageUpload HERE 👇
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCoverImage(data.url);
+      } else {
+        setError(data.error || "Image upload failed.");
+      }
+    } catch (err) {
+      setError("Image upload failed.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -150,18 +178,19 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Cover image URL</label>
-        <input
-          type="text"
-          value={coverImage}
-          onChange={(e) => setCoverImage(e.target.value)}
-          placeholder="https://... (Cloudinary / Drive thumbnail link, same as your other images)"
-          className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-        />
-        {coverImage && (
-          <img src={coverImage} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border border-slate-200" />
-        )}
-      </div>
+  <label className="block text-sm font-semibold text-slate-700 mb-1">Cover Image</label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleImageUpload}
+    disabled={uploading}
+    className="w-full border rounded-lg p-2.5 text-sm file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-orange-100 file:text-orange-700 file:font-semibold"
+  />
+  {uploading && <p className="text-xs text-slate-400 mt-1">Uploading...</p>}
+  {coverImage && (
+    <img src={coverImage} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border border-slate-200" />
+  )}
+</div>
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1">Excerpt</label>
