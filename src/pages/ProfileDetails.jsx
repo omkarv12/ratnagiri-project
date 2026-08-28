@@ -98,7 +98,7 @@ if (type === "busstop") {
 
 const allPhotos = [...photos, ...extraPhotos];
 const heroImages = allPhotos.length > 0 ? allPhotos.map((p) => p.url) : [placeholderImage];
-const galleryPhotos = allPhotos.slice(1);
+const galleryPhotos = allPhotos;
 
   useEffect(() => {
     setHeroSlide(0);
