@@ -96,9 +96,9 @@ if (type === "busstop") {
     return parseDrivePhotoField(loc.site_photos);
   }, [loc, type]);
 
-  const galleryPhotos = [...photos.slice(1), ...extraPhotos];
-
-  const heroImages = photos.length > 0 ? photos.map((p) => p.url) : [placeholderImage];
+const allPhotos = [...photos, ...extraPhotos];
+const heroImages = allPhotos.length > 0 ? allPhotos.map((p) => p.url) : [placeholderImage];
+const galleryPhotos = allPhotos.slice(1);
 
   useEffect(() => {
     setHeroSlide(0);
