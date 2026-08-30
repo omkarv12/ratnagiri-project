@@ -292,19 +292,14 @@ useEffect(() => {
       return;
     }
 
-    const withRoutes = await Promise.all(
-      data.nearby.map(async (n) => {
-        const route = await fetchRoute(mainLat, mainLng, n.lat, n.lng);
-        return {
-          ...n,
-          distance: route?.distance ?? calculateDistance(mainLat, mainLng, n.lat, n.lng)?.toFixed(1),
-          duration: route?.duration ?? null,
-        };
-      })
-    );
+   const withDistance = data.nearby.map((n) => ({
+  ...n,
+  distance: calculateDistance(mainLat, mainLng, n.lat, n.lng)?.toFixed(1),
+  duration: null,
+}));
 
-    setNearbyLocations(withRoutes);
-    setNearbyOrigin({ lat: mainLat, lng: mainLng });
+setNearbyLocations(withDistance);
+setNearbyOrigin({ lat: mainLat, lng: mainLng });
   } catch (err) {
     console.error("Failed to fetch nearby locations:", err);
     setNearbyLocations([]);
