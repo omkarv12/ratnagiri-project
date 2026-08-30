@@ -494,11 +494,11 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       </span>
     )}
     <button 
-      onClick={() => setSelectedItem({ data: loc, type: 'village' })}
-      className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
-    >
-      View Detailed Profile
-    </button>
+  onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
+  className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+>
+  View Detailed Profile
+</button>
   </div>
 </Popup>
         </Marker>
