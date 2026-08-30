@@ -281,27 +281,34 @@ useEffect(() => {
     setMobileView('map'); // tapping a list item on mobile should switch to the map
   };
 
- const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
+const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
+  console.log("STEP 1: fetchNearbyLocations called with", locationName, mainLat, mainLng);
   try {
-    const response = await fetch(`${API_BASE_URL}/api/nearby-locations/${encodeURIComponent(locationName)}`);
+    const url = `${API_BASE_URL}/api/nearby-locations/${encodeURIComponent(locationName)}`;
+    console.log("STEP 2: fetching URL", url);
+    const response = await fetch(url);
+    console.log("STEP 3: response status", response.status);
     const data = await response.json();
+    console.log("STEP 4: response data", data);
 
     if (!data.success) {
+      console.log("STEP 5: data.success was false, clearing state");
       setNearbyLocations([]);
       setNearbyOrigin(null);
       return;
     }
 
-   const withDistance = data.nearby.map((n) => ({
-  ...n,
-  distance: calculateDistance(mainLat, mainLng, n.lat, n.lng)?.toFixed(1),
-  duration: null,
-}));
+    const withDistance = data.nearby.map((n) => ({
+      ...n,
+      distance: calculateDistance(mainLat, mainLng, n.lat, n.lng)?.toFixed(1),
+      duration: null,
+    }));
 
-setNearbyLocations(withDistance);
-setNearbyOrigin({ lat: mainLat, lng: mainLng });
+    console.log("STEP 6: setting nearbyLocations to", withDistance);
+    setNearbyLocations(withDistance);
+    setNearbyOrigin({ lat: mainLat, lng: mainLng });
   } catch (err) {
-    console.error("Failed to fetch nearby locations:", err);
+    console.log("STEP ERROR: caught exception", err);
     setNearbyLocations([]);
     setNearbyOrigin(null);
   }
