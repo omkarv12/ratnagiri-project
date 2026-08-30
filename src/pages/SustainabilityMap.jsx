@@ -304,7 +304,8 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
       duration: null,
     }));
 
-    console.log("STEP 6: setting nearbyLocations to", withDistance);
+    console.log("STEP 6: setting nearbyLocations to", JSON.stringify(withDistance));
+    console.log("STEP 7: mapPosition is", mapPosition, "mobileView is", mobileView);
     setNearbyLocations(withDistance);
     setNearbyOrigin({ lat: mainLat, lng: mainLng });
   } catch (err) {
