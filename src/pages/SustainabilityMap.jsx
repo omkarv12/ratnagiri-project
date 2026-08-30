@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, LayersControl, GeoJSON, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
@@ -85,6 +85,25 @@ function createMarkerIcon(category, isSelected) {
     popupAnchor: [0, -size],
   });
 }
+function createNearbyIcon() {
+  const html = `
+    <div style="
+      width: 26px;
+      height: 26px;
+      background: #2563eb;
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    ">📍</div>
+  `;
+  return L.divIcon({ html, className: "", iconSize: [26, 26], iconAnchor: [13, 13] });
+}
+
+
 // ⬇️ ADD fetchRoute HERE ⬇️
 async function fetchRoute(lat1, lon1, lat2, lon2) {
   try {
@@ -200,6 +219,7 @@ const [activeRoute, setActiveRoute] = useState(null);
 // Mobile: which pane is visible — 'list' (sidebar) or 'map'. Ignored on md+ where both show.
 const [mobileView, setMobileView] = useState('list');
 const [nearbyLocations, setNearbyLocations] = useState([]);
+const [nearbyOrigin, setNearbyOrigin] = useState(null);
 
 const handleShowRoute = async (destLat, destLng) => {
   if (!userLocation) {
@@ -261,14 +281,34 @@ useEffect(() => {
     setMobileView('map'); // tapping a list item on mobile should switch to the map
   };
 
-  const fetchNearbyLocations = async (locationName) => {
+ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/nearby-locations/${encodeURIComponent(locationName)}`);
     const data = await response.json();
-    setNearbyLocations(data.success ? data.nearby : []);
+
+    if (!data.success) {
+      setNearbyLocations([]);
+      setNearbyOrigin(null);
+      return;
+    }
+
+    const withRoutes = await Promise.all(
+      data.nearby.map(async (n) => {
+        const route = await fetchRoute(mainLat, mainLng, n.lat, n.lng);
+        return {
+          ...n,
+          distance: route?.distance ?? calculateDistance(mainLat, mainLng, n.lat, n.lng)?.toFixed(1),
+          duration: route?.duration ?? null,
+        };
+      })
+    );
+
+    setNearbyLocations(withRoutes);
+    setNearbyOrigin({ lat: mainLat, lng: mainLng });
   } catch (err) {
     console.error("Failed to fetch nearby locations:", err);
     setNearbyLocations([]);
+    setNearbyOrigin(null);
   }
 };
   
@@ -721,7 +761,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 {filteredLocations.map(loc => (
                      <div 
                     key={loc.id} 
-                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name); }}
+                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
@@ -736,7 +776,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 </div>
       <div className="flex items-center gap-3 flex-wrap">
   <button 
-  onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name); }}
+  onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
   className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
 >
     <ImageIcon size={14} /> View Profile
@@ -1158,17 +1198,26 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     {/* Render Active Data Pins */}
 {renderActivePins()}
 
+{nearbyOrigin && nearbyLocations.map((n, idx) => (
+  <Polyline
+    key={`nearby-line-${idx}`}
+    positions={[[nearbyOrigin.lat, nearbyOrigin.lng], [n.lat, n.lng]]}
+    pathOptions={{ color: '#2563eb', weight: 2, dashArray: '6, 6', opacity: 0.8 }}
+  />
+))}
+
 {nearbyLocations.map((n, idx) => (
-  <Circle
-    key={`nearby-${idx}`}
-    center={[n.lat, n.lng]}
-    radius={300}
-    pathOptions={{ color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.25, weight: 2 }}
-  >
-    <Tooltip direction="top" permanent className="text-xs font-semibold bg-white/90 shadow-sm border-0 text-red-700">
-      {n.name}
+  <Marker key={`nearby-marker-${idx}`} position={[n.lat, n.lng]} icon={createNearbyIcon()}>
+    <Tooltip
+      direction="top"
+      offset={[0, -16]}
+      opacity={1}
+      permanent
+      className="text-xs font-semibold bg-blue-600 !text-white shadow-sm border-0 rounded px-2 py-1"
+    >
+      {n.name}{n.duration ? ` · ${n.duration} min` : n.distance ? ` · ${n.distance} km` : ''}
     </Tooltip>
-  </Circle>
+  </Marker>
 ))}
 
 {/* User's current location marker */}
@@ -1215,7 +1264,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     <ProfileDetails
       loc={selectedItem.data}
       type={selectedItem.type}
-      onBack={() => { setSelectedItem(null); setNearbyLocations([]); }}
+      onBack={() => { setSelectedItem(null); setNearbyLocations([]); setNearbyOrigin(null); }}
       compact
     />
   </div>
