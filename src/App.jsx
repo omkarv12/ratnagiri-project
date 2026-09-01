@@ -21,6 +21,7 @@ import RulesForTourists from "./pages/RulesForTourists"; // adjust path to where
 
 import { LocationsProvider } from "./context/LocationsContext";
 import Registration from "./pages/Registration";
+import Videos from "./pages/Videos";
 
 export default function App() {
   return (
@@ -94,6 +95,11 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+  path="/videos"
+  element={<Videos />}
+/>
 
           </Route>
 
