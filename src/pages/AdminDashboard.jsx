@@ -3,7 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import AdminBlogForm from "../components/forms/AdminBlogForm";
-import { blogApi } from "../api/blogApi";
+import AdminVillageProfileForm from "../components/forms/AdminVillageProfileForm";
+import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -18,6 +19,12 @@ export default function AdminDashboard() {
   const [blogsLoading, setBlogsLoading] = useState(true);
   const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" |k blog object being edited
   const [blogActionError, setBlogActionError] = useState(null);
+
+  // --- Village profiles state ---
+  const [villageProfiles, setVillageProfiles] = useState([]);
+  const [villageProfilesLoading, setVillageProfilesLoading] = useState(true);
+  const [villageFormOpen, setVillageFormOpen] = useState(false);
+  const [villageActionError, setVillageActionError] = useState(null);
 
   useEffect(() => {
     async function loadPending() {
@@ -43,6 +50,31 @@ export default function AdminDashboard() {
       loadBlogs();
     }
   }, [activeTab]);
+
+  // Load village profiles once that tab is opened
+  useEffect(() => {
+    if (activeTab === "villageProfiles") {
+      loadVillageProfiles();
+    }
+  }, [activeTab]);
+
+  const loadVillageProfiles = async () => {
+    setVillageProfilesLoading(true);
+    setVillageActionError(null);
+    try {
+      const data = await adminListVillageProfiles();
+      setVillageProfiles(data);
+    } catch (err) {
+      setVillageActionError(err.message);
+    } finally {
+      setVillageProfilesLoading(false);
+    }
+  };
+
+  const handleVillageProfileSaved = () => {
+    setVillageFormOpen(false);
+    loadVillageProfiles();
+  };
 
   const loadBlogs = async () => {
     setBlogsLoading(true);
@@ -181,6 +213,7 @@ export default function AdminDashboard() {
     { key: "analytics", label: "Analytics" },
     { key: "pendingSubmissions", label: "Pending Submissions" },
     { key: "addEditItineraries", label: "Itineraries & Stories" },
+    { key: "villageProfiles", label: "Village Profiles" },
   ];
 
   return (
@@ -507,6 +540,67 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          </section>
+         )}
+
+        {activeTab === "villageProfiles" && (
+          <section>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Village Profiles</h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Create the rich, curated page shown for a village. Taluka and village name must exactly match what's used in the Locations table.
+                </p>
+              </div>
+              {!villageFormOpen && (
+                <button
+                  onClick={() => setVillageFormOpen(true)}
+                  className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-semibold"
+                >
+                  + New Village Profile
+                </button>
+              )}
+            </div>
+
+            {villageActionError && (
+              <p className="text-sm text-red-500 mb-4">{villageActionError}</p>
+            )}
+
+            {villageFormOpen && (
+              <div className="bg-white p-5 rounded shadow mb-8">
+                <AdminVillageProfileForm
+                  onSaved={handleVillageProfileSaved}
+                />
+                <button
+                  onClick={() => setVillageFormOpen(false)}
+                  className="mt-4 px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {villageProfilesLoading ? (
+              <p className="text-gray-500">Loading village profiles...</p>
+            ) : villageProfiles.length === 0 ? (
+              <p className="text-gray-500">No village profiles yet. Create your first one above.</p>
+            ) : (
+              <div className="space-y-3">
+                {villageProfiles.map((v) => (
+                  <div key={v.id} className="bg-white p-4 rounded shadow flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                      <h3 className="font-semibold">{v.village_name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {v.taluka_name} Taluka{v.tagline ? ` · ${v.tagline}` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      Updated {new Date(v.updated_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </main>

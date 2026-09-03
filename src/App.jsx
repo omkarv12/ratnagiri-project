@@ -22,6 +22,9 @@ import RulesForTourists from "./pages/RulesForTourists"; // adjust path to where
 import { LocationsProvider } from "./context/LocationsContext";
 import Registration from "./pages/Registration";
 import Videos from "./pages/Videos";
+import VillagesTaluka from "./pages/VillagesTaluka";
+import VillageList from "./pages/VillageList";
+import VillageDetail from "./pages/VillageDetail";
 
 export default function App() {
   return (
@@ -54,6 +57,9 @@ export default function App() {
               path="/profile/:type/:id"
               element={<LocationProfile />}
             />
+            <Route path="/villages" element={<VillagesTaluka />} />
+<Route path="/villages/:taluka" element={<VillageList />} />
+<Route path="/villages/:taluka/:village" element={<VillageDetail />} />
 
             <Route
               path="/map"

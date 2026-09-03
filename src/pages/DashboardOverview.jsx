@@ -435,6 +435,22 @@ useEffect(() => {
             </div>
           </a>
 
+           <button
+            onClick={() => navigate("/villages")}
+            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+          >
+            <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
+            <Trees className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
+            <div>
+              <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+                Explore
+              </p>
+              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
+                Ratnagiri's Villages
+              </p>
+            </div>
+          </button>
+
           <div className="flex items-center justify-center px-6 py-4">
             <button
               onClick={() => navigate("/map")}

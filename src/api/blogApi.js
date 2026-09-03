@@ -48,3 +48,11 @@ export const blogApi = {
   adminCreateCategory: (name) =>
     request("/admin/blog-categories", { method: "POST", body: JSON.stringify({ name }) }),
 };
+
+export const getVillageProfile = (taluka, village) =>
+  request(`/village-profile/${encodeURIComponent(taluka)}/${encodeURIComponent(village)}`);
+
+export const adminListVillageProfiles = () => request("/admin/village-profiles");
+
+export const adminSaveVillageProfile = (payload) =>
+  request("/admin/village-profile", { method: "POST", body: JSON.stringify(payload) });
