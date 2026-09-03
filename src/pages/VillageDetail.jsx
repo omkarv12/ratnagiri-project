@@ -118,11 +118,37 @@ export default function VillageDetail() {
           )}
         </div>
 
-        {/* ===== SERVICES WE PROMOTE ===== */}
+        {/* ===== TOP ATTRACTIONS ===== */}
+        {profile.top_attractions?.length > 0 && (
+          <div className="mb-10">
+            <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold text-emerald-900 mb-1">
+              <Compass size={22} className="text-orange-600" /> Top Attractions
+            </h2>
+            <div className="h-1 w-16 bg-emerald-700 rounded-full mb-5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {profile.top_attractions.map((a, i) => (
+                <div key={i} className="bg-[#f6f1e4] border border-[#e8dfc8] rounded-2xl overflow-hidden">
+                  <div className="relative h-44">
+                    {a.image && <img src={a.image} alt={a.title} className="w-full h-full object-cover" />}
+                    <span className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-emerald-800 flex items-center justify-center shadow">
+                      <MapPin size={13} className="text-white" />
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="font-extrabold text-slate-800 text-sm uppercase tracking-wide mb-1">{a.title}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{a.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===== THINGS TO DO ===== */}
         {profile.services?.length > 0 && (
           <div className="mb-10">
             <div className="bg-emerald-900 text-white text-center py-3 rounded-full mb-7 text-sm sm:text-base font-extrabold uppercase tracking-widest shadow-md">
-              Services We Promote at Village Level
+              Things to Do
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {profile.services.map((cat, i) => {
@@ -154,32 +180,6 @@ export default function VillageDetail() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* ===== TOP ATTRACTIONS ===== */}
-        {profile.top_attractions?.length > 0 && (
-          <div className="mb-10">
-            <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold text-emerald-900 mb-1">
-              <Compass size={22} className="text-orange-600" /> Top Attractions
-            </h2>
-            <div className="h-1 w-16 bg-emerald-700 rounded-full mb-5" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {profile.top_attractions.map((a, i) => (
-                <div key={i} className="bg-[#f6f1e4] border border-[#e8dfc8] rounded-2xl overflow-hidden">
-                  <div className="relative h-44">
-                    {a.image && <img src={a.image} alt={a.title} className="w-full h-full object-cover" />}
-                    <span className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-emerald-800 flex items-center justify-center shadow">
-                      <MapPin size={13} className="text-white" />
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="font-extrabold text-slate-800 text-sm uppercase tracking-wide mb-1">{a.title}</p>
-                    <p className="text-xs text-slate-600 leading-relaxed">{a.description}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}
