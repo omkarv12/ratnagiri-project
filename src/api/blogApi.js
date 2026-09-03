@@ -57,3 +57,8 @@ export const adminListVillageProfiles = () => request("/admin/village-profiles")
 
 export const adminSaveVillageProfile = (payload) =>
   request("/admin/village-profile", { method: "POST", body: JSON.stringify(payload) });
+
+export const adminDeleteVillageProfile = (taluka, village) =>
+  request(`/admin/village-profile/${encodeURIComponent(taluka)}/${encodeURIComponent(village)}`, {
+    method: "DELETE",
+  });
