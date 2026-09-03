@@ -1,5 +1,6 @@
 import API_BASE_URL from "../config";
 export const getYoutubeVideos = () => request("/youtube-videos");
+export const listVillageProfiles = () => request("/village-profiles");
 
 // Shared fetch helper for the blog/stories endpoints — matches the
 // fetch(`${API_BASE_URL}/api/...`) pattern used by AdminDashboard.jsx.

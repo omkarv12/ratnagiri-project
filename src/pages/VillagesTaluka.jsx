@@ -1,16 +1,25 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
-import { useLocations } from "../context/LocationsContext";
+import { listVillageProfiles } from "../api/blogApi";
 
 export default function VillagesTaluka() {
-  const { locations, loading } = useLocations();
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    listVillageProfiles()
+      .then(setProfiles)
+      .catch(() => setProfiles([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500 animate-pulse">Loading talukas...</div>;
   }
 
-  const talukas = [...new Set(locations.map((l) => l.taluka_name).filter(Boolean))].sort();
+  const talukas = [...new Set(profiles.map((p) => p.taluka_name).filter(Boolean))].sort();
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-8 lg:p-10">
