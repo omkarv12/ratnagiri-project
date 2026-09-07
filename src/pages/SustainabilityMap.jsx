@@ -1215,7 +1215,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
       offset={[0, -16]}
       opacity={1}
       permanent
-      className="text-xs font-semibold bg-blue-600 !text-white shadow-sm border-0 rounded px-2 py-1"
+      className="text-xs font-semibold !bg-blue-600 !text-white shadow-sm border-0 rounded px-2 py-1"
     >
       {n.name}{n.duration ? ` · ${n.duration} min` : n.distance ? ` · ${n.distance} km` : ''}
     </Tooltip>
