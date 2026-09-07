@@ -178,6 +178,20 @@ function MapController({ position }) {
   return null;
 }
 
+function NearbyBoundsController({ origin, nearby }) {
+  const map = useMap();
+  useEffect(() => {
+    if (origin && nearby.length > 0) {
+      const bounds = L.latLngBounds([
+        [origin.lat, origin.lng],
+        ...nearby.map((n) => [n.lat, n.lng]),
+      ]);
+      map.flyToBounds(bounds, { padding: [70, 70], maxZoom: 15, duration: 1.2 });
+    }
+  }, [origin, nearby, map]);
+  return null;
+}
+
 // Component to handle map click events
 function MapClickHandler({ isActive, onPinDropped }) {
   useMapEvents({
@@ -1194,7 +1208,8 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
       />
     )}
 
-    <MapController position={mapPosition} />
+        <MapController position={mapPosition} />
+    <NearbyBoundsController origin={nearbyOrigin} nearby={nearbyLocations} />
     <MapClickHandler isActive={pinMode} onPinDropped={handlePinDropped} />
 
     {/* Render Active Data Pins */}
