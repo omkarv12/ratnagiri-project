@@ -85,11 +85,14 @@ function createMarkerIcon(category, isSelected) {
     popupAnchor: [0, -size],
   });
 }
-function createNearbyIcon() {
+function createNearbyIcon(zoom) {
+  const scale = Math.max(0.55, Math.min(1, (zoom - 9) / 5));
+  const size = Math.round(26 * scale);
+  const fontSize = Math.round(13 * scale);
   const html = `
     <div style="
-      width: 26px;
-      height: 26px;
+      width: ${size}px;
+      height: ${size}px;
       background: #2563eb;
       border: 2px solid white;
       border-radius: 50%;
@@ -97,10 +100,10 @@ function createNearbyIcon() {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: ${fontSize}px;
     ">📍</div>
   `;
-  return L.divIcon({ html, className: "", iconSize: [26, 26], iconAnchor: [13, 13] });
+  return L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
 }
 
 
@@ -204,6 +207,16 @@ function MapClickHandler({ isActive, onPinDropped }) {
   return null;
 }
 
+function ZoomWatcher({ onZoomChange }) {
+  const map = useMapEvents({
+    zoomend: () => onZoomChange(map.getZoom()),
+  });
+  useEffect(() => {
+    onZoomChange(map.getZoom());
+  }, [map]);
+  return null;
+}
+
 export default function SustainabilityMap() {
   const navigate = useNavigate();
   const { locations, homestays, eco, drivers, busStops, loading } = useLocations();
@@ -234,6 +247,7 @@ const [activeRoute, setActiveRoute] = useState(null);
 const [mobileView, setMobileView] = useState('list');
 const [nearbyLocations, setNearbyLocations] = useState([]);
 const [nearbyOrigin, setNearbyOrigin] = useState(null);
+const [currentZoom, setCurrentZoom] = useState(11);
 
 const handleShowRoute = async (destLat, destLng) => {
   if (!userLocation) {
@@ -1208,8 +1222,9 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
       />
     )}
 
-        <MapController position={mapPosition} />
+    <MapController position={mapPosition} />
     <NearbyBoundsController origin={nearbyOrigin} nearby={nearbyLocations} />
+    <ZoomWatcher onZoomChange={setCurrentZoom} />
     <MapClickHandler isActive={pinMode} onPinDropped={handlePinDropped} />
 
     {/* Render Active Data Pins */}
@@ -1224,16 +1239,18 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
 ))}
 
 {nearbyLocations.map((n, idx) => (
-  <Marker key={`nearby-marker-${idx}`} position={[n.lat, n.lng]} icon={createNearbyIcon()}>
-    <Tooltip
-      direction="top"
-      offset={[0, -16]}
-      opacity={1}
-      permanent
-      className="text-xs font-semibold !bg-blue-600 !text-white shadow-sm border-0 rounded px-2 py-1"
-    >
-      {n.name}{n.duration ? ` · ${n.duration} min` : n.distance ? ` · ${n.distance} km` : ''}
-    </Tooltip>
+  <Marker key={`nearby-marker-${idx}`} position={[n.lat, n.lng]} icon={createNearbyIcon(currentZoom)}>
+    {currentZoom >= 12 && (
+      <Tooltip
+        direction="top"
+        offset={[0, -16]}
+        opacity={1}
+        permanent
+        className="text-xs font-semibold !bg-blue-600 !text-white shadow-sm border-0 rounded px-2 py-1"
+      >
+        {n.name}{n.duration ? ` · ${n.duration} min` : n.distance ? ` · ${n.distance} km` : ''}
+      </Tooltip>
+    )}
   </Marker>
 ))}
 
