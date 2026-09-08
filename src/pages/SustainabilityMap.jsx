@@ -522,12 +522,26 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
         {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away from your current location
       </span>
     )}
-    <button 
-  onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-  className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
->
-  View Detailed Profile
-</button>
+    <div className="flex items-center gap-2 mt-1">
+  <button 
+    onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
+    className="flex-1 py-1.5 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+  >
+    View Detailed Profile
+  </button>
+
+  <button
+    onClick={() => {
+      fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
+      const marker = markerRefs.current[loc.id];
+      if (marker) marker.closePopup();
+    }}
+    title="Show nearby locations"
+    className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+  >
+    📍
+  </button>
+</div>
   </div>
 </Popup>
         </Marker>
