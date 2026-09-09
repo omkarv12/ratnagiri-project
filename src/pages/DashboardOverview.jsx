@@ -16,18 +16,17 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
-import Slider1 from "../assets/Slide1.jpg";
-import Slider2 from "../assets/Slide2.jpg";
-import Slider3 from "../assets/Slide3.jpg";
-import Slider4 from "../assets/Slide4.jpg";
-import Slider5 from "../assets/Slide5.jpg";
+import Slider1 from "../assets/Slider1.png";
+import Slider2 from "../assets/Slider2.png";
+import Slider3 from "../assets/Slider3.png";
+import Slider4 from "../assets/Slider4.png";
+import Slider5 from "../assets/Slider5.png";
 import Slider6 from "../assets/Slide6.jpg";
-import Slider7 from "../assets/Slide7.jpg";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
 
 
 
-const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6, Slider7];
+const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
 // lucide-react no longer ships trademarked brand icons (Instagram, Facebook,
 // Twitter, YouTube, etc). These small inline SVGs are drop-in replacements
@@ -341,7 +340,7 @@ useEffect(() => {
 }
 
   return (
-    <div className="animate-in fade-in duration-500"/>)
+    <div className="animate-in fade-in duration-500">
       {/* ================= Hero (image slider) ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
         <div className="relative h-[420px] sm:h-[520px] overflow-hidden">
@@ -419,8 +418,8 @@ useEffect(() => {
             </div>
           </button>
 
-          
-          <a  href="/ratnagiri-tourism-map.pdf"
+          <a
+            href="/ratnagiri-tourism-map.pdf"
             download
             className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
@@ -615,9 +614,9 @@ useEffect(() => {
               </p>
               <div className="flex gap-3">
                 {socialLinks.map(({ icon: Icon, label, href }) => (
-                  
-                    
-                   <a href={href}
+                  <a
+                    key={label}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
@@ -671,4 +670,20 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      </footer>}
+      </footer>
+
+      {/* ================= Floating Call Button ================= */}
+      <a
+        href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
+        aria-label="Call Ratnagiri Tourism — Emergency Help"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 pl-4 pr-5 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-300"
+      >
+        <span className="absolute left-0 top-0 w-14 h-14 rounded-full bg-emerald-500 animate-ping opacity-40" />
+        <Phone size={22} className="relative fill-white shrink-0" />
+        <span className="relative text-sm font-semibold whitespace-nowrap">
+          Emergency Help
+        </span>
+      </a>
+    </div>
+  );
+}
