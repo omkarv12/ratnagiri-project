@@ -16,17 +16,18 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
-import Slider1 from "../assets/Slider1.png";
-import Slider2 from "../assets/Slider2.png";
-import Slider3 from "../assets/Slider3.png";
-import Slider4 from "../assets/Slider4.png";
-import Slider5 from "../assets/Slider5.png";
-import Slider6 from "../assets/Slide6.jpg";
+import Slider1 from "../assets/Slider1.jpg";
+import Slider2 from "../assets/Slider2.jpg";
+import Slider3 from "../assets/Slider3.jpg";
+import Slider4 from "../assets/Slider4.jpg";
+import Slider5 from "../assets/Slider5.jpg";
+import Slider6 from "../assets/Slider6.jpg";
+import Slider6 from "../assets/Slider7.jpg";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
 
 
 
-const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
+const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6, Slider7];
 
 // lucide-react no longer ships trademarked brand icons (Instagram, Facebook,
 // Twitter, YouTube, etc). These small inline SVGs are drop-in replacements
