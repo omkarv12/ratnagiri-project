@@ -23,9 +23,7 @@ import Slider4 from "../assets/Slide4.jpg";
 import Slider5 from "../assets/Slide5.jpg";
 import Slider6 from "../assets/Slide6.jpg";
 import Slider7 from "../assets/Slide7.jpg";
-import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
-
-
+import DiscoverRatnagiri from "./DiscoverRatnagiri";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6, Slider7];
 
@@ -77,21 +75,22 @@ export default function DashboardOverview() {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const loadingMessages = [
-  "Boarding the Konkan Railway...",
-  "Chugging past the Sahyadris...",
-  "Crossing the ghats to Ratnagiri...",
-  "Passing through mango orchards...",
-  "Ratnagiri approaching...",
-];
-const [msgIndex, setMsgIndex] = useState(0);
+    "Boarding the Konkan Railway...",
+    "Chugging past the Sahyadris...",
+    "Crossing the ghats to Ratnagiri...",
+    "Passing through mango orchards...",
+    "Ratnagiri approaching...",
+  ];
+  const [msgIndex, setMsgIndex] = useState(0);
 
-useEffect(() => {
-  if (!loading) return;
-  const interval = setInterval(() => {
-    setMsgIndex((prev) => (prev + 1) % loadingMessages.length);
-  }, 1800);
-  return () => clearInterval(interval);
-}, [loading]);
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [loading]);
+
   const [activeCategory, setActiveCategory] = useState("Beaches");
 
   useEffect(() => {
@@ -319,66 +318,71 @@ useEffect(() => {
   ];
 
   if (loading) {
-  return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 text-center">
-      <div className="relative w-full max-w-md h-20 overflow-hidden mb-6">
-        <div className="absolute top-1/2 -translate-y-1/2 w-full border-b-2 border-dashed border-slate-300" />
-        <div className="absolute top-1/2 -translate-y-1/2 text-5xl animate-[train_6s_linear_infinite]">
-          🚂
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 text-center">
+        <div className="relative w-full max-w-md h-20 overflow-hidden mb-6">
+          <div className="absolute top-1/2 -translate-y-1/2 w-full border-b-2 border-dashed border-slate-300" />
+          <div className="absolute top-1/2 -translate-y-1/2 text-5xl animate-[train_6s_linear_infinite]">
+            🚂
+          </div>
         </div>
+        <p className="font-medium text-slate-500 transition-opacity duration-300">
+          {loadingMessages[msgIndex]}
+        </p>
+        <style>{`
+          @keyframes train {
+            0% { left: -10%; }
+            100% { left: 100%; }
+          }
+        `}</style>
       </div>
-      <p className="font-medium text-slate-500 transition-opacity duration-300">
-        {loadingMessages[msgIndex]}
-      </p>
-      <style>{`
-        @keyframes train {
-          0% { left: -10%; }
-          100% { left: 100%; }
-        }
-      `}</style>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="animate-in fade-in duration-500">
       {/* ================= Hero (image slider) ================= */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
-        <div className="relative h-[420px] sm:h-[520px] overflow-hidden">
+        <div className="relative h-[440px] sm:h-[560px] overflow-hidden">
           {heroImages.map((img, index) => (
             <div
               key={index}
-              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms] ease-in-out"
               style={{
                 backgroundImage: `url('${img}')`,
                 opacity: index === currentSlide ? 1 : 0,
               }}
             />
           ))}
-          <div className="absolute inset-0 bg-black/35" />
+
+          {/* Layered navy overlay instead of flat black */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b2f45]/80 via-[#0b2f45]/25 to-[#0b2f45]/10" />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 sm:px-8">
-            <p className="text-base sm:text-lg font-bold mb-3 tracking-wide">
-              येवा कोंकण आपलोच आसा!!
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.25em] uppercase text-orange-300 mb-4">
+              येवा कोंकण आपलोच आसा
             </p>
-            <h1 className="font-serif italic text-3xl sm:text-5xl md:text-6xl leading-tight mb-4">
-              Travel sustainably, enjoy fully
+            <h1 className="font-serif italic text-4xl sm:text-6xl md:text-7xl leading-[1.05] mb-5 tracking-tight">
+              Travel sustainably,
+              <br className="hidden sm:block" /> enjoy fully
             </h1>
-            <p className="max-w-xl sm:max-w-2xl text-sm sm:text-base leading-relaxed text-slate-100">
-              Inviting all travelers, backpackers, families, children, students
-              and the curious minds!
+            <p className="max-w-xl sm:max-w-2xl text-sm sm:text-base leading-relaxed text-slate-200 font-light">
+              Inviting all travelers, backpackers, families, children,
+              students and the curious minds.
             </p>
           </div>
 
           {/* Slide indicator dots */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
             {heroImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 aria-label={`Go to slide ${index + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === currentSlide
+                    ? "w-7 bg-orange-400"
+                    : "w-1.5 bg-white/50 hover:bg-white/80"
                 }`}
               />
             ))}
@@ -386,18 +390,21 @@ useEffect(() => {
         </div>
 
         {/* White feature bar under the hero image */}
-        <div className="flex flex-col sm:flex-row items-stretch">
+        <div className="flex flex-col sm:flex-row items-stretch border-t border-slate-100">
           <button
             onClick={() => navigate("/map")}
-            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-t sm:border-t-0 border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-5 hover:bg-slate-50 transition-colors duration-200 text-left border-t sm:border-t-0 border-b sm:border-b-0 sm:border-r border-slate-100"
           >
             <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
-            <MapPin className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
+            <MapPin
+              className="text-slate-400 shrink-0 transition-colors duration-200 group-hover:text-[#0b2f45]"
+              size={19}
+            />
             <div>
-              <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+              <p className="text-[10.5px] font-bold text-orange-500 uppercase tracking-[0.14em] mb-0.5">
                 Explore
               </p>
-              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
+              <p className="text-sm font-medium text-slate-800">
                 Interactive Map
               </p>
             </div>
@@ -405,59 +412,68 @@ useEffect(() => {
 
           <button
             onClick={() => navigate("/registration")}
-            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-5 hover:bg-slate-50 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
             <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
-            <ClipboardPen className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
+            <ClipboardPen
+              className="text-slate-400 shrink-0 transition-colors duration-200 group-hover:text-[#0b2f45]"
+              size={19}
+            />
             <div>
-              <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+              <p className="text-[10.5px] font-bold text-orange-500 uppercase tracking-[0.14em] mb-0.5">
                 Share
               </p>
-              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
-                Register a location or a homestay
+              <p className="text-sm font-medium text-slate-800">
+                Register a location or homestay
               </p>
             </div>
           </button>
 
-          <a
+          
             href="/ratnagiri-tourism-map.pdf"
             download
-            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-5 hover:bg-slate-50 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
             <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
-            <Download className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
+            <Download
+              className="text-slate-400 shrink-0 transition-colors duration-200 group-hover:text-[#0b2f45]"
+              size={19}
+            />
             <div>
-              <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+              <p className="text-[10.5px] font-bold text-orange-500 uppercase tracking-[0.14em] mb-0.5">
                 Download
               </p>
-              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
+              <p className="text-sm font-medium text-slate-800">
                 Ratnagiri's tourist map
               </p>
             </div>
           </a>
 
-           <button
+          <button
             onClick={() => navigate("/villages")}
-            className="group relative flex-1 flex items-center gap-3 px-6 py-4 hover:bg-orange-50/60 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
+            className="group relative flex-1 flex items-center gap-3 px-6 py-5 hover:bg-slate-50 transition-colors duration-200 text-left border-b sm:border-b-0 sm:border-r border-slate-100"
           >
             <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-orange-500 transition-transform duration-300 group-hover:scale-x-100" />
-            <Trees className="text-slate-500 shrink-0 transition-colors duration-200 group-hover:text-orange-600" size={20} />
+            <Trees
+              className="text-slate-400 shrink-0 transition-colors duration-200 group-hover:text-[#0b2f45]"
+              size={19}
+            />
             <div>
-              <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wide">
+              <p className="text-[10.5px] font-bold text-orange-500 uppercase tracking-[0.14em] mb-0.5">
                 Explore
               </p>
-              <p className="text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-orange-700">
+              <p className="text-sm font-medium text-slate-800">
                 Ratnagiri's Villages
               </p>
             </div>
           </button>
 
-          <div className="flex items-center justify-center px-6 py-4">
+          <div className="flex items-center justify-center px-6 py-5">
             <button
               onClick={() => navigate("/map")}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.03] w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#0b2f45] hover:bg-orange-500 text-white font-semibold text-sm rounded-full transition-all duration-200 hover:scale-[1.03] w-full sm:w-auto"
             >
-              <Search size={18} />
+              <Search size={17} />
               Search
             </button>
           </div>
@@ -479,13 +495,13 @@ useEffect(() => {
           <div className="flex gap-3">
             <button
               onClick={() => navigate("/tourism-fund")}
-              className="border border-slate-400 text-slate-800 text-xs font-semibold uppercase px-3 py-1 rounded hover:bg-slate-100 transition"
+              className="border border-slate-300 text-slate-700 text-[11px] font-semibold uppercase tracking-wide px-4 py-2 rounded-full hover:border-[#0b2f45] hover:text-[#0b2f45] transition-colors duration-200"
             >
               Tourism Fund
             </button>
             <button
               onClick={() => navigate("/map")}
-              className="border border-slate-400 text-slate-800 text-xs font-semibold uppercase px-3 py-1 rounded hover:bg-slate-100 transition"
+              className="border border-slate-300 text-slate-700 text-[11px] font-semibold uppercase tracking-wide px-4 py-2 rounded-full hover:border-[#0b2f45] hover:text-[#0b2f45] transition-colors duration-200"
             >
               Interactive Map
             </button>
@@ -498,7 +514,7 @@ useEffect(() => {
             <button
               key={i}
               onClick={() => navigate(card.route)}
-              className="relative group rounded-lg overflow-hidden shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="relative group rounded-xl overflow-hidden shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               {/* Background Image */}
               <div
@@ -508,16 +524,16 @@ useEffect(() => {
               />
 
               {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b2f45]/85 via-[#0b2f45]/25 to-transparent pointer-events-none" />
 
               {/* Text content */}
               <div className="absolute bottom-5 left-5 right-5 text-white pointer-events-none">
-                <div className="flex gap-2 uppercase text-[10px] font-semibold opacity-80 mb-1">
+                <div className="flex gap-2 uppercase text-[10px] font-semibold text-orange-300 tracking-[0.14em] mb-1">
                   <span>{card.subtitleTopLeft1}</span>
                   <span>{card.subtitleTopLeft2}</span>
                 </div>
-                <h3 className="font-serif text-lg leading-tight text-left">{card.title}</h3>
-                <p className="mt-1 text-xs uppercase opacity-70 text-left">{card.locationTag}</p>
+                <h3 className="font-serif italic text-lg leading-tight text-left">{card.title}</h3>
+                <p className="mt-1 text-xs uppercase opacity-70 text-left tracking-wide">{card.locationTag}</p>
               </div>
             </button>
           ))}
@@ -527,10 +543,10 @@ useEffect(() => {
       {/* ================= Experience Ratnagiri ================= */}
       <div className="bg-orange-50/60 rounded-2xl shadow-md p-6 sm:p-10 mb-8">
         <div className="text-center mb-8 sm:mb-10">
-          <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wide text-orange-600 mb-2">
+          <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-orange-500 mb-2">
             Experience Ratnagiri's Warmth and Sweetness
           </p>
-          <h2 className="font-serif text-3xl sm:text-4xl text-slate-800 mb-2">
+          <h2 className="font-serif italic text-3xl sm:text-4xl text-[#0b2f45] mb-2">
             Experience Ratnagiri
           </h2>
           <p className="text-sm sm:text-base text-slate-500">
@@ -541,12 +557,12 @@ useEffect(() => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-6">
           {experienceItems.map((item) => (
             <div key={item.title} className="flex flex-col items-start sm:items-center text-left sm:text-center">
-              <h3 className="font-serif text-lg text-slate-800 mb-4">
+              <h3 className="font-serif italic text-lg text-[#0b2f45] mb-4">
                 {item.title}
               </h3>
               <button
                 onClick={() => navigate(item.route)}
-                className="border border-orange-300 bg-orange-100/70 text-slate-700 text-xs italic font-medium px-4 py-2 rounded-full hover:bg-orange-200 hover:border-orange-400 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="border border-orange-300 bg-white text-slate-700 text-xs italic font-medium px-4 py-2 rounded-full hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 {item.cta}
               </button>
@@ -601,7 +617,7 @@ useEffect(() => {
       </div>
 
       {/* ================= Footer ================= */}
-      <footer className="bg-slate-900 rounded-2xl mt-8">
+      <footer className="bg-[#0b2f45] rounded-2xl mt-8">
         <div className="px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
             {/* Brand column */}
@@ -609,19 +625,19 @@ useEffect(() => {
               <h2 className="font-serif italic text-2xl text-white mb-3">
                 Ratnagiri Tourism
               </h2>
-              <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
+              <p className="text-sm text-slate-300 leading-relaxed mb-6 max-w-xs">
                 Travel sustainably, enjoy fully — guiding visitors through the
                 Konkan coast's beaches, forts, food and culture.
               </p>
               <div className="flex gap-3">
                 {socialLinks.map(({ icon: Icon, label, href }) => (
-                  <a
+                  
                     key={label}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-orange-600 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-slate-300 hover:bg-orange-500 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
                   >
                     <Icon size={16} />
                   </a>
@@ -632,7 +648,7 @@ useEffect(() => {
             {/* Link columns */}
             {footerColumns.map((col) => (
               <div key={col.heading}>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-500 mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-400 mb-4">
                   {col.heading}
                 </p>
                 <ul className="space-y-3">
@@ -651,20 +667,20 @@ useEffect(() => {
             ))}
           </div>
 
-          <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-slate-500">
+          <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-slate-400">
               © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
             </p>
             <div className="flex gap-5">
               <button
                 onClick={() => navigate("/privacy")}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+                className="text-xs text-slate-400 hover:text-white transition-colors duration-200"
               >
                 Privacy Policy
               </button>
               <button
                 onClick={() => navigate("/terms")}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+                className="text-xs text-slate-400 hover:text-white transition-colors duration-200"
               >
                 Terms of Use
               </button>
@@ -674,7 +690,7 @@ useEffect(() => {
       </footer>
 
       {/* ================= Floating Call Button ================= */}
-      <a
+      
         href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
         aria-label="Call Ratnagiri Tourism — Emergency Help"
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 pl-4 pr-5 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-300"
