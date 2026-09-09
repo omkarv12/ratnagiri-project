@@ -15,14 +15,6 @@ export default function DashboardLayout() {
     user &&
     (location.pathname === "/dashboard" || location.pathname === "/admin");
 
-  const navLinks = [
-    { label: "Discover", href: "#" },
-    { label: "Tourism Fund", href: "#" },
-    { label: "Interactive Map", href: "#" },
-    { label: "Language", href: "#" },
-    { label: "Enquire", href: "#" },
-  ];
-
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -32,53 +24,53 @@ export default function DashboardLayout() {
           sidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
-        {/* ================= Header ================= */}
-        <header className="sticky top-0 z-40 flex items-center justify-between px-6 sm:px-10 h-[72px] bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        {/* Updated Header */}
+        <header className="sticky top-0 z-40 flex items-center justify-between px-10 py-4 bg-white shadow-sm">
           {/* Left: Hamburger + Logo */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-5">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label="Toggle sidebar"
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-[#0b2f45] text-white hover:bg-[#123d5c] active:scale-95 transition-all duration-200"
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#0b3149] hover:bg-[#0a2b3f] text-white transition"
             >
-              {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <button
+            <div
+              className="text-xl font-serif font-semibold cursor-pointer"
               onClick={() => navigate("/dashboard")}
-              className="flex flex-col items-start leading-none group"
             >
-              <span className="font-serif italic text-[19px] sm:text-[21px] text-[#0b2f45] tracking-tight group-hover:text-[#123d5c] transition-colors">
-                Ratnagiri
-                <span className="text-orange-500 not-italic font-sans font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.18em] block mt-0.5">
-                  Sustainable Tourism
-                </span>
-              </span>
-            </button>
+              Ratnagiri Sustainable Tourism 
+            </div>
           </div>
 
           {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-slate-600">
-            {navLinks.map((link) => (
-              
-                key={link.label}
-                href={link.href}
-                className="relative px-4 py-2 rounded-full uppercase tracking-wide text-[11.5px] font-semibold transition-colors duration-200 hover:text-[#0b2f45] hover:bg-slate-100"
-              >
-                {link.label}
-              </a>
-            ))}
+          <nav className="hidden md:flex space-x-8 text-sm font-medium text-gray-700">
+            <a href="#" className="hover:text-gray-900">
+              Discover
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Tourism Development Fund 
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Interactive Map
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Select Language 
+            </a>
+            <a href="#" className="hover:text-gray-900">
+              Enquire
+            </a>
           </nav>
 
           {/* Right: Admin Login / Logout Button */}
-          <div className="flex items-center">
+          <div>
             {showLoginButton && (
               <button
                 onClick={() => navigate("/login")}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#0b2f45] to-[#12405e] hover:from-orange-500 hover:to-orange-600 text-white pl-4 pr-5 py-2.5 rounded-full font-semibold text-[12px] uppercase tracking-wide shadow-sm hover:shadow-md transition-all duration-200"
+                className="bg-[#0b3149] hover:bg-orange-500 text-white px-4 py-2 rounded-md font-semibold text-sm transition"
               >
-                <LogIn size={15} />
-                Admin Login
+                ADMIN LOGIN
               </button>
             )}
             {showLogoutButton && (
@@ -87,10 +79,9 @@ export default function DashboardLayout() {
                   logout();
                   navigate("/dashboard");
                 }}
-                className="flex items-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 pl-4 pr-5 py-2.5 rounded-full font-semibold text-[12px] uppercase tracking-wide transition-all duration-200"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-semibold text-sm transition"
               >
-                <LogOut size={15} />
-                Logout
+                LOGOUT
               </button>
             )}
           </div>
