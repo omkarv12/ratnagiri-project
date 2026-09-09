@@ -16,13 +16,13 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
-import Slider1 from "../assets/Slider1.jpg";
-import Slider2 from "../assets/Slider2.jpg";
-import Slider3 from "../assets/Slider3.jpg";
-import Slider4 from "../assets/Slider4.jpg";
-import Slider5 from "../assets/Slider5.jpg";
-import Slider6 from "../assets/Slider6.jpg";
-import Slider6 from "../assets/Slider7.jpg";
+import Slider1 from "../assets/Slide1.jpg";
+import Slider2 from "../assets/Slide2.jpg";
+import Slider3 from "../assets/Slide3.jpg";
+import Slider4 from "../assets/Slide4.jpg";
+import Slider5 from "../assets/Slide5.jpg";
+import Slider6 from "../assets/Slide6.jpg";
+import Slider6 from "../assets/Slide7.jpg";
 import DiscoverRatnagiri from "./DiscoverRatnagiri";   // 👈 add this line
 
 
