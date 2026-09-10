@@ -4,7 +4,7 @@ import {
   ArrowLeft, MapPin, Sparkles, Compass, Calendar, Leaf,
   BedDouble, Car, Train, Plane,
 } from "lucide-react";
-import { getVillageProfile } from ".../api/blogApi";
+import { getVillageProfile } from "../api/blogApi";
 
 const COLOR_MAP = {
   emerald: { bar: "bg-emerald-700", ring: "ring-emerald-100" },
