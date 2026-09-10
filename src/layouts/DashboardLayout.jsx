@@ -219,65 +219,61 @@ export default function DashboardLayout() {
         </div>
 
         {/* Border-only animated glow for the "Plan with Interactive Map" CTA.
-            Two synced conic-gradient rings spin behind the button, masked so
-            only the border-width ring is visible (no fill behind the
-            button). The gradient has uneven stops around the full circle, so
-            as it rotates, brightness shifts from side to side instead of a
-            single dot chasing around — ::after is a softly blurred, slightly
-            larger copy for ambient glow. Scoped here since this is the only
-            place it's used; move to your global stylesheet (e.g. index.css)
-            if reused elsewhere. */}
+            No masking/blur tricks (those can bleed outside the button on
+            wide pill shapes) — instead:
+              1. ::before/::after stack two solid backgrounds so only a 2px
+                 ring shows, and that ring's gradient flows via
+                 background-position (always clipped to border-radius, can't
+                 escape the box).
+              2. An animated box-shadow on the button itself shifts which
+                 side is brightest over the cycle (top → right → bottom →
+                 left), so the glow visibly moves around all sides instead of
+                 sitting evenly or streaking off in one direction.
+            Scoped here since this is the only place it's used; move to your
+            global stylesheet (e.g. index.css) if reused elsewhere. */}
         <style>{`
           .glow-cta {
             position: relative;
             z-index: 0;
-            border: 1px solid rgba(15, 23, 42, 0.08);
+            animation: glowShift 5s ease-in-out infinite;
           }
           .glow-cta::before,
           .glow-cta::after {
             content: "";
             position: absolute;
-            border-radius: 9999px;
-            background: conic-gradient(
-              from 0deg,
-              #22c55e 0deg,
-              #bbf7d0 55deg,
-              transparent 100deg,
-              transparent 140deg,
-              #86efac 195deg,
-              #22c55e 235deg,
-              transparent 280deg,
-              transparent 320deg,
-              #4ade80 350deg,
-              #22c55e 360deg
-            );
-            animation: spinBorder 5s linear infinite;
+            border-radius: inherit;
             pointer-events: none;
           }
           .glow-cta::before {
             inset: -2px;
-            padding: 2px;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-                    mask-composite: exclude;
-            z-index: -1;
-          }
-          .glow-cta::after {
-            inset: -4px;
-            padding: 4px;
-            filter: blur(4px);
-            opacity: 0.6;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-                    mask-composite: exclude;
+            background: linear-gradient(
+              120deg,
+              #16a34a, #bbf7d0, #4ade80, #86efac, #16a34a
+            );
+            background-size: 300% 300%;
+            animation: borderFlow 6s ease-in-out infinite;
             z-index: -2;
           }
-          @keyframes spinBorder {
-            to { transform: rotate(360deg); }
+          .glow-cta::after {
+            inset: 0;
+            background: #ffffff;
+            z-index: -1;
+          }
+          @keyframes borderFlow {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          @keyframes glowShift {
+            0%   { box-shadow: 0 -3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15); }
+            25%  { box-shadow: 3px 0 12px 0 rgba(34,197,94,0.5),  0 -3px 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15); }
+            50%  { box-shadow: 0 3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 -3px 8px 0 rgba(34,197,94,0.15); }
+            75%  { box-shadow: -3px 0 12px 0 rgba(34,197,94,0.5), 0 -3px 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15), 3px 0 8px 0 rgba(34,197,94,0.15); }
+            100% { box-shadow: 0 -3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15); }
           }
           @media (prefers-reduced-motion: reduce) {
-            .glow-cta::before,
-            .glow-cta::after { animation: none; }
+            .glow-cta,
+            .glow-cta::before { animation: none; }
           }
         `}</style>
       </main>
