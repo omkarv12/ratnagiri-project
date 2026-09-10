@@ -17,7 +17,7 @@ import {
 
 function LogoMark() {
   return (
-    <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+    <svg width="46" height="46" viewBox="0 0 38 38" fill="none">
       <circle cx="19" cy="19" r="19" fill="#0b3149" />
       <path
         d="M6 22c3-4 6-4 9 0s6 4 9 0 6-4 8 0"
@@ -30,6 +30,11 @@ function LogoMark() {
     </svg>
   );
 }
+
+// Shared classes for every plain-text nav item: dark text, grey rounded-pill
+// hover state, text grows slightly on hover — matches the Tripadvisor ref.
+const NAV_ITEM_CLASS =
+  "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
 
 // Dropdown parents, matching the Discover / Review branches from the site map.
 const NAV_MENUS = [
@@ -61,13 +66,9 @@ function NavDropdown({ menu, active, navigate }) {
     <div className="relative group">
       <button
         onClick={() => navigate(menu.route)}
-        className={`flex items-center gap-1.5 pb-1 border-b-2 transition-colors ${
-          active
-            ? "border-teal-500 text-[#0b3149]"
-            : "border-transparent hover:text-[#0b3149]"
-        }`}
+        className={`${NAV_ITEM_CLASS} ${active ? "bg-slate-100" : ""}`}
       >
-        <Icon size={15} className={active ? "text-teal-600" : "text-slate-400"} />
+        <Icon size={16} className={active ? "text-teal-600" : "text-slate-500"} />
         {menu.label}
         <ChevronDown size={13} className="text-slate-400 group-hover:rotate-180 transition-transform" />
       </button>
@@ -79,7 +80,7 @@ function NavDropdown({ menu, active, navigate }) {
             <button
               key={child.label}
               onClick={() => navigate(child.route)}
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#0b3149] transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100 hover:text-[#0b3149] rounded-lg mx-1 w-[calc(100%-8px)] transition-colors"
             >
               {child.label}
             </button>
@@ -125,14 +126,14 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-2.5 shrink-0"
+                className="flex items-center gap-3 shrink-0"
               >
                 <LogoMark />
                 <span className="text-left leading-tight">
-                  <span className="block font-serif text-lg font-bold text-[#0b3149]">
+                  <span className="block font-serif text-2xl font-bold text-[#0b3149]">
                     Ratnagiri
                   </span>
-                  <span className="block text-[11px] font-medium text-teal-600 -mt-0.5">
+                  <span className="block text-xs font-medium text-teal-600 -mt-0.5">
                     Tourism Dashboard
                   </span>
                 </span>
@@ -140,11 +141,11 @@ export default function DashboardLayout() {
             </div>
 
             {/* Center: nav */}
-            <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
-              {/* Plan with Interactive Map — animated glow CTA */}
+            <nav className="hidden md:flex items-center gap-2 text-sm">
+              {/* Plan with Interactive Map — border-only animated glow CTA */}
               <button
                 onClick={() => navigate("/map")}
-                className="glow-cta flex items-center gap-2 bg-white text-[#0b3149] font-semibold text-sm pl-4 pr-5 py-2 rounded-full"
+                className="glow-cta flex items-center gap-2 bg-white text-slate-900 font-semibold text-[15px] hover:text-base pl-4 pr-5 py-2 rounded-full transition-all duration-150 mr-2"
               >
                 <Sparkles size={16} className="text-emerald-500" />
                 Plan with Interactive Map
@@ -161,15 +162,13 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => navigate("/forum")}
-                className={`flex items-center gap-1.5 pb-1 border-b-2 transition-colors ${
-                  location.pathname.startsWith("/forum")
-                    ? "border-teal-500 text-[#0b3149]"
-                    : "border-transparent hover:text-[#0b3149]"
+                className={`${NAV_ITEM_CLASS} ${
+                  location.pathname.startsWith("/forum") ? "bg-slate-100" : ""
                 }`}
               >
                 <MessageSquare
-                  size={15}
-                  className={location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-400"}
+                  size={16}
+                  className={location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-500"}
                 />
                 Forum
               </button>
@@ -177,7 +176,7 @@ export default function DashboardLayout() {
 
             {/* Right: language, search, login/logout */}
             <div className="flex items-center gap-4 shrink-0">
-              <button className="hidden sm:flex items-center gap-1 text-sm text-slate-600 hover:text-[#0b3149] transition">
+              <button className="hidden sm:flex items-center gap-1 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-lg px-2.5 py-2 transition">
                 <Globe size={16} />
                 EN
                 <ChevronDown size={14} />
@@ -185,7 +184,7 @@ export default function DashboardLayout() {
 
               <button
                 aria-label="Search"
-                className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:bg-slate-100 transition"
+                className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full text-slate-700 hover:bg-slate-100 transition"
               >
                 <Search size={18} />
               </button>
@@ -219,45 +218,45 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
 
-        {/* Animated glow for the "Plan with Interactive Map" CTA.
-            Scoped here since this is the only place it's used; move to your
-            global stylesheet (e.g. index.css) if you reuse it elsewhere. */}
+        {/* Border-only animated glow for the "Plan with Interactive Map" CTA.
+            A conic-gradient ring is spun behind the button and masked so only
+            the border-width ring itself is visible — no blurred fill behind
+            the button. Scoped here since this is the only place it's used;
+            move to your global stylesheet (e.g. index.css) if reused elsewhere. */}
         <style>{`
           .glow-cta {
             position: relative;
             z-index: 0;
-            animation: glowPulse 2.4s ease-in-out infinite;
+            border: 1px solid rgba(15, 23, 42, 0.08);
           }
           .glow-cta::before {
             content: "";
             position: absolute;
-            inset: -3px;
+            inset: -2px;
             border-radius: 9999px;
-            background: linear-gradient(120deg, #22c55e, #6ee7b7, #22c55e);
-            z-index: -2;
-            filter: blur(6px);
-            opacity: 0.55;
-          }
-          .glow-cta::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 9999px;
-            border: 1.5px solid rgba(34, 197, 94, 0.45);
+            padding: 2px;
+            background: conic-gradient(
+              from 0deg,
+              transparent 0%,
+              transparent 55%,
+              #bbf7d0 65%,
+              #22c55e 72%,
+              #bbf7d0 79%,
+              transparent 88%,
+              transparent 100%
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            animation: spinBorder 3.2s linear infinite;
+            pointer-events: none;
             z-index: -1;
           }
-          @keyframes glowPulse {
-            0%, 100% {
-              box-shadow: 0 0 8px 1px rgba(34, 197, 94, 0.35),
-                          0 0 18px 5px rgba(34, 197, 94, 0.18);
-            }
-            50% {
-              box-shadow: 0 0 14px 3px rgba(34, 197, 94, 0.55),
-                          0 0 28px 10px rgba(34, 197, 94, 0.3);
-            }
+          @keyframes spinBorder {
+            to { transform: rotate(360deg); }
           }
           @media (prefers-reduced-motion: reduce) {
-            .glow-cta { animation: none; }
+            .glow-cta::before { animation: none; }
           }
         `}</style>
       </main>
