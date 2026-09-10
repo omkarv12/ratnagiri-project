@@ -219,44 +219,65 @@ export default function DashboardLayout() {
         </div>
 
         {/* Border-only animated glow for the "Plan with Interactive Map" CTA.
-            A conic-gradient ring is spun behind the button and masked so only
-            the border-width ring itself is visible — no blurred fill behind
-            the button. Scoped here since this is the only place it's used;
-            move to your global stylesheet (e.g. index.css) if reused elsewhere. */}
+            Two synced conic-gradient rings spin behind the button, masked so
+            only the border-width ring is visible (no fill behind the
+            button). The gradient has uneven stops around the full circle, so
+            as it rotates, brightness shifts from side to side instead of a
+            single dot chasing around — ::after is a softly blurred, slightly
+            larger copy for ambient glow. Scoped here since this is the only
+            place it's used; move to your global stylesheet (e.g. index.css)
+            if reused elsewhere. */}
         <style>{`
           .glow-cta {
             position: relative;
             z-index: 0;
             border: 1px solid rgba(15, 23, 42, 0.08);
           }
-          .glow-cta::before {
+          .glow-cta::before,
+          .glow-cta::after {
             content: "";
             position: absolute;
-            inset: -2px;
             border-radius: 9999px;
-            padding: 2px;
             background: conic-gradient(
               from 0deg,
-              transparent 0%,
-              transparent 55%,
-              #bbf7d0 65%,
-              #22c55e 72%,
-              #bbf7d0 79%,
-              transparent 88%,
-              transparent 100%
+              #22c55e 0deg,
+              #bbf7d0 55deg,
+              transparent 100deg,
+              transparent 140deg,
+              #86efac 195deg,
+              #22c55e 235deg,
+              transparent 280deg,
+              transparent 320deg,
+              #4ade80 350deg,
+              #22c55e 360deg
             );
+            animation: spinBorder 5s linear infinite;
+            pointer-events: none;
+          }
+          .glow-cta::before {
+            inset: -2px;
+            padding: 2px;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
                     mask-composite: exclude;
-            animation: spinBorder 3.2s linear infinite;
-            pointer-events: none;
             z-index: -1;
+          }
+          .glow-cta::after {
+            inset: -4px;
+            padding: 4px;
+            filter: blur(4px);
+            opacity: 0.6;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            z-index: -2;
           }
           @keyframes spinBorder {
             to { transform: rotate(360deg); }
           }
           @media (prefers-reduced-motion: reduce) {
-            .glow-cta::before { animation: none; }
+            .glow-cta::before,
+            .glow-cta::after { animation: none; }
           }
         `}</style>
       </main>
