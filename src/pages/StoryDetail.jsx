@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Eye, MessageCircle, User } from "lucide-react";
-import { blogApi } from "../api/blogApi";
+import { blogApi } from ".../api/blogApi";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";

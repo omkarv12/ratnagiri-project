@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { PlayCircle, Video } from "lucide-react";
-import { getYoutubeVideos } from "../api/blogApi";
+import { getYoutubeVideos } from ".../api/blogApi";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
