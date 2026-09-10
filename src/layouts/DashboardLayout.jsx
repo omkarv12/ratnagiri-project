@@ -5,14 +5,14 @@ import { useAuth } from "../context/AuthContext";
 import {
   Menu,
   X,
-  MapPin,
-  Map as MapIcon,
-  CalendarDays,
-  Info,
   Search,
   Globe,
   ChevronDown,
   UserRound,
+  Sparkles,
+  Compass,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 
 function LogoMark() {
@@ -31,12 +31,64 @@ function LogoMark() {
   );
 }
 
-const NAV_LINKS = [
-  { label: "Discover", icon: MapPin, route: "/dashboard" },
-  { label: "Interactive Map", icon: MapIcon, route: "/map" },
-  { label: "Plan Your Trip", icon: CalendarDays, route: "/plan-your-trip" },
-  { label: "About", icon: Info, route: "/about" },
+// Dropdown parents, matching the Discover / Review branches from the site map.
+const NAV_MENUS = [
+  {
+    label: "Discover",
+    route: "/discover",
+    icon: Compass,
+    children: [
+      { label: "Travelers' Choice", route: "/discover/travelers-choice" },
+      { label: "Travel Stories", route: "/stories" },
+      { label: "Travel Games", route: "/discover/travel-games" },
+    ],
+  },
+  {
+    label: "Review",
+    route: "/review",
+    icon: Star,
+    children: [
+      { label: "Write a review", route: "/review/write" },
+      { label: "Post photos", route: "/review/photos" },
+      { label: "Add a place", route: "/review/add-place" },
+    ],
+  },
 ];
+
+function NavDropdown({ menu, active, navigate }) {
+  const Icon = menu.icon;
+  return (
+    <div className="relative group">
+      <button
+        onClick={() => navigate(menu.route)}
+        className={`flex items-center gap-1.5 pb-1 border-b-2 transition-colors ${
+          active
+            ? "border-teal-500 text-[#0b3149]"
+            : "border-transparent hover:text-[#0b3149]"
+        }`}
+      >
+        <Icon size={15} className={active ? "text-teal-600" : "text-slate-400"} />
+        {menu.label}
+        <ChevronDown size={13} className="text-slate-400 group-hover:rotate-180 transition-transform" />
+      </button>
+
+      {/* Dropdown panel */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-150 z-50">
+        <div className="w-52 bg-white rounded-xl shadow-lg border border-slate-100 py-2">
+          {menu.children.map((child) => (
+            <button
+              key={child.label}
+              onClick={() => navigate(child.route)}
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#0b3149] transition-colors"
+            >
+              {child.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -87,25 +139,40 @@ export default function DashboardLayout() {
               </button>
             </div>
 
-            {/* Center: nav links */}
+            {/* Center: nav */}
             <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
-              {NAV_LINKS.map(({ label, icon: Icon, route }) => {
-                const active = location.pathname === route;
-                return (
-                  <button
-                    key={label}
-                    onClick={() => navigate(route)}
-                    className={`flex items-center gap-1.5 pb-1 border-b-2 transition-colors ${
-                      active
-                        ? "border-teal-500 text-[#0b3149]"
-                        : "border-transparent hover:text-[#0b3149]"
-                    }`}
-                  >
-                    <Icon size={15} className={active ? "text-teal-600" : "text-slate-400"} />
-                    {label}
-                  </button>
-                );
-              })}
+              {/* Plan with Interactive Map — animated glow CTA */}
+              <button
+                onClick={() => navigate("/map")}
+                className="glow-cta flex items-center gap-2 bg-white text-[#0b3149] font-semibold text-sm pl-4 pr-5 py-2 rounded-full"
+              >
+                <Sparkles size={16} className="text-emerald-500" />
+                Plan with Interactive Map
+              </button>
+
+              {NAV_MENUS.map((menu) => (
+                <NavDropdown
+                  key={menu.label}
+                  menu={menu}
+                  active={location.pathname.startsWith(menu.route)}
+                  navigate={navigate}
+                />
+              ))}
+
+              <button
+                onClick={() => navigate("/forum")}
+                className={`flex items-center gap-1.5 pb-1 border-b-2 transition-colors ${
+                  location.pathname.startsWith("/forum")
+                    ? "border-teal-500 text-[#0b3149]"
+                    : "border-transparent hover:text-[#0b3149]"
+                }`}
+              >
+                <MessageSquare
+                  size={15}
+                  className={location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-400"}
+                />
+                Forum
+              </button>
             </nav>
 
             {/* Right: language, search, login/logout */}
@@ -151,6 +218,48 @@ export default function DashboardLayout() {
         <div className="pb-8">
           <Outlet />
         </div>
+
+        {/* Animated glow for the "Plan with Interactive Map" CTA.
+            Scoped here since this is the only place it's used; move to your
+            global stylesheet (e.g. index.css) if you reuse it elsewhere. */}
+        <style>{`
+          .glow-cta {
+            position: relative;
+            z-index: 0;
+            animation: glowPulse 2.4s ease-in-out infinite;
+          }
+          .glow-cta::before {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            border-radius: 9999px;
+            background: linear-gradient(120deg, #22c55e, #6ee7b7, #22c55e);
+            z-index: -2;
+            filter: blur(6px);
+            opacity: 0.55;
+          }
+          .glow-cta::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            border: 1.5px solid rgba(34, 197, 94, 0.45);
+            z-index: -1;
+          }
+          @keyframes glowPulse {
+            0%, 100% {
+              box-shadow: 0 0 8px 1px rgba(34, 197, 94, 0.35),
+                          0 0 18px 5px rgba(34, 197, 94, 0.18);
+            }
+            50% {
+              box-shadow: 0 0 14px 3px rgba(34, 197, 94, 0.55),
+                          0 0 28px 10px rgba(34, 197, 94, 0.3);
+            }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .glow-cta { animation: none; }
+          }
+        `}</style>
       </main>
     </div>
   );
