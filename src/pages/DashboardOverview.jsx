@@ -676,7 +676,11 @@ export default function DashboardOverview() {
         </div>
       </footer>
 
-      
+     
+    </div>
+  );
+}
+
 // Small helper icon for the "PLAN YOUR TRIP" eyebrow in the Everything You
 // Need section (kept separate since lucide's route-style icon name can vary
 // across versions — swap for `Route` from lucide-react if you prefer).
