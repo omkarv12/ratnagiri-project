@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import L from "leaflet";
-import { MapContainer, TileLayer, Marker, useMap, LayersControl, GeoJSON } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import {
   Compass,
@@ -177,27 +174,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// All 9 Ratnagiri district talukas with approximate HQ coordinates.
-const RATNAGIRI_TALUKAS = [
-  { name: "Ratnagiri",    lat: 16.9902, lng: 73.3120 },
-  { name: "Sangameshwar", lat: 17.1667, lng: 73.5500 },
-  { name: "Lanja",        lat: 16.8167, lng: 73.5667 },
-  { name: "Rajapur",      lat: 16.6500, lng: 73.5167 },
-  { name: "Chiplun",      lat: 17.5333, lng: 73.5167 },
-  { name: "Guhagar",      lat: 17.4833, lng: 73.2000 },
-  { name: "Dapoli",       lat: 17.7500, lng: 73.1833 },
-  { name: "Khed",         lat: 17.7167, lng: 73.3833 },
-  { name: "Mandangad",    lat: 17.8500, lng: 73.2833 },
-];
 
-// Flies the embedded map to a taluka's coordinates when clicked.
-function TalukaFlyController({ position }) {
-  const map = useMap();
-  useEffect(() => {
-    if (position) map.flyTo(position, 11, { animate: true, duration: 1.3 });
-  }, [position, map]);
-  return null;
-}
 
 const [exploreTaluka, setExploreTaluka] = useState(null);
 const [exploreDistrictBorder, setExploreDistrictBorder] = useState(null);
