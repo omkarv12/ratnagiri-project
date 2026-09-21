@@ -692,7 +692,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] md:h-[calc(100vh-4rem)] bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
+     <div className="flex flex-col md:flex-row h-full bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
       
       {/* INNER SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
       <div
