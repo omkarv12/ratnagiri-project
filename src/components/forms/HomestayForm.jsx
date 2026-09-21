@@ -30,6 +30,7 @@ const REQUIRED_BY_STEP = {
         "homestay_name",
         "owner_name",
         "phone_number",
+        "email",
         "situated_in",
         "village_name",
         "taluka_name",
@@ -170,6 +171,7 @@ export default function HomestayForm({ onSuccess }) {
         homestay_name: "",
         owner_name: "",
         phone_number: "",
+        email: "",
         situated_in: "",
         village_name: "",
         taluka_name: "",
@@ -427,6 +429,7 @@ export default function HomestayForm({ onSuccess }) {
                 homestay_name: "",
                 owner_name: "",
                 phone_number: "",
+                email: "",
                 situated_in: "",
                 village_name: "",
                 taluka_name: "",
@@ -583,10 +586,7 @@ export default function HomestayForm({ onSuccess }) {
                 </div>
 
                 <div>
-                    <label className={labelCls}>
-                        Contact Number<Required />
-                        <InternalTag />
-                    </label>
+                    <label className={labelCls}>Contact Number<Required /></label>
                     <input
                         type="text"
                         name="phone_number"
@@ -596,7 +596,21 @@ export default function HomestayForm({ onSuccess }) {
                         placeholder="e.g. 9876543210"
                         required
                     />
-                    <p className={helpCls}>Used only to verify details or reach you about your listing — never published.</p>
+                    <p className={helpCls}>We'll use this number to contact you about your registration or booking queries.</p>
+                </div>
+
+                <div>
+                    <label className={labelCls}>Email Address<Required /></label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className={inputCls}
+                        placeholder="e.g. ramesh.patil@example.com"
+                        required
+                    />
+                    <p className={helpCls}>We'll use this to send updates about your registration.</p>
                 </div>
 
                 <Full>

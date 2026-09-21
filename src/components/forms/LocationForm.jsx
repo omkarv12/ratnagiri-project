@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 const MIN_PHOTO_SIZE = 500 * 1024;
+const MAX_GALLERY_PHOTOS = 6;
 const DRAFT_KEY = "ratnagiri_location_form_draft";
 
 const STEP_LABELS = [
@@ -15,6 +16,8 @@ const REQUIRED_BY_STEP = {
     1: [
         "user_type",
         "location_name",
+        "phone_number",
+        "email_address",
         "located_in",
         "village_name",
         "taluka_name",
@@ -60,6 +63,7 @@ const isEmptyValue = (value) => (Array.isArray(value) ? value.length === 0 : !va
 const inputCls =
     "w-full px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none";
 const labelCls = "block text-xs font-semibold text-slate-600 mb-1";
+const helpCls = "text-[11px] text-slate-400 mt-1";
 const sectionHeadingCls = "text-base font-bold text-slate-800 border-b border-slate-200 pb-1.5";
 const sectionSubCls = "text-xs text-slate-500 mt-1 mb-1";
 const gridCls = "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4";
@@ -100,12 +104,76 @@ function Full({ children }) {
     return <div className="sm:col-span-2">{children}</div>;
 }
 
+// Single required-photo upload block — same "Choose Photo" + pop-in preview
+// pattern used for the header/cover photo in DriverForm and HomestayForm.
+function PhotoSlot({ id, label, helperText, file, preview, onSelect, onRemove }) {
+    return (
+        <div>
+            <label className={labelCls}>
+                {label}
+                <Required />
+            </label>
+            <p className={helpCls}>{helperText}</p>
+
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+                <label
+                    htmlFor={id}
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                >
+                    <span aria-hidden="true">📷</span> {file ? "Change Photo" : "Choose Photo"}
+                </label>
+                <input
+                    id={id}
+                    type="file"
+                    accept="image/*"
+                    onChange={onSelect}
+                    className="hidden"
+                />
+
+                <span
+                    key={file ? "selected" : "empty"}
+                    className={`lf-pop inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                        file
+                            ? "text-green-700 bg-green-50 border border-green-200"
+                            : "text-slate-500 bg-slate-100 border border-slate-200"
+                    }`}
+                >
+                    {file && <span aria-hidden="true">✓</span>}
+                    {file ? "Photo selected" : "No photo selected"}
+                </span>
+            </div>
+
+            {preview && (
+                <div className="relative inline-block lf-pop mt-3">
+                    <img
+                        src={preview}
+                        alt={label}
+                        className="w-20 h-20 object-cover rounded border border-slate-300"
+                    />
+                    <span className="absolute -bottom-1 -left-1 bg-green-600 text-white rounded-full w-4 h-4 text-[9px] font-bold flex items-center justify-center border border-white">
+                        ✓
+                    </span>
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function LocationForm({ onSuccess }) {
     const [formData, setFormData] = useState({
 
     // Basic Information
     user_type: "",
     location_name: "",
+    phone_number: "",
+    email_address: "",
     located_in: "",
     village_name: "",
     taluka_name: "",
@@ -150,7 +218,6 @@ export default function LocationForm({ onSuccess }) {
     suggestions_improvements: "",
 
     // Contact
-    email_address: "",
     user_description: "",
     google_maps_link: "",
 
@@ -159,6 +226,7 @@ export default function LocationForm({ onSuccess }) {
     longitude: null,
 
     // Photos
+    header_photo: "",
     site_photos: ""
 
 });
@@ -178,6 +246,11 @@ const flashError = (message) => {
     setTimeout(() => setShake(false), 500);
 };
 
+// Single required cover/header photo — separate from the gallery below.
+const [headerPhoto, setHeaderPhoto] = useState(null);
+const [headerPhotoPreview, setHeaderPhotoPreview] = useState(null);
+
+// Gallery of additional location photos (up to MAX_GALLERY_PHOTOS).
 const [selectedPhotos, setSelectedPhotos] = useState([]);
 const [photoPreviews, setPhotoPreviews] = useState([]);
 const [uploading, setUploading] = useState(false);
@@ -219,11 +292,33 @@ useEffect(() => {
     }
 }, [formData]);
 
+const handleHeaderPhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size < MIN_PHOTO_SIZE) {
+        alert(`This photo is smaller than 500 KB and was skipped: ${file.name}`);
+        e.target.value = "";
+        return;
+    }
+
+    if (formError) setFormError("");
+
+    setHeaderPhoto(file);
+    setHeaderPhotoPreview(URL.createObjectURL(file));
+    e.target.value = "";
+};
+
+const removeHeaderPhoto = () => {
+    setHeaderPhoto(null);
+    setHeaderPhotoPreview(null);
+};
+
 const handlePhotoSelect = (e) => {
     const files = Array.from(e.target.files);
 
-    if (selectedPhotos.length + files.length > 5) {
-        alert("You can upload a maximum of 5 photos.");
+    if (selectedPhotos.length + files.length > MAX_GALLERY_PHOTOS) {
+        alert(`You can upload a maximum of ${MAX_GALLERY_PHOTOS} photos.`);
         e.target.value = "";
         return;
     }
@@ -256,25 +351,30 @@ const removePhoto = (index) => {
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
 };
 
+const uploadSinglePhoto = async (file) => {
+    const uploadData = new FormData();
+    uploadData.append("photo", file);
+
+    const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+        method: "POST",
+        body: uploadData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data.error || "Photo upload failed");
+    }
+
+    return data.url;
+};
+
 const uploadPhotos = async () => {
     const uploadedUrls = [];
 
     for (const file of selectedPhotos) {
-        const uploadData = new FormData();
-        uploadData.append("photo", file);
-
-        const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
-            method: "POST",
-            body: uploadData,
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.error || "Photo upload failed");
-        }
-
-        uploadedUrls.push(data.url);
+        const url = await uploadSinglePhoto(file);
+        uploadedUrls.push(url);
     }
 
     return uploadedUrls;
@@ -324,6 +424,11 @@ const handleSubmit = async (e) => {
       return;
   }
 
+  if (!headerPhoto) {
+      flashError("Please add a header photo before submitting.");
+      return;
+  }
+
   if (selectedPhotos.length === 0) {
       flashError("Please add at least one location photo before submitting.");
       return;
@@ -337,13 +442,14 @@ const handleSubmit = async (e) => {
   try {
     setUploading(true);
 
-    let photoUrls = [];
-    if (selectedPhotos.length > 0) {
-        photoUrls = await uploadPhotos();
-    }
+    const [headerPhotoUrl, photoUrls] = await Promise.all([
+        uploadSinglePhoto(headerPhoto),
+        uploadPhotos(),
+    ]);
 
     const payload = {
         ...formData,
+        header_photo: headerPhotoUrl,
         site_photos: photoUrls.join(","),
     };
 
@@ -377,6 +483,8 @@ const handleSubmit = async (e) => {
   // Basic Information
   user_type: "",
   location_name: "",
+  phone_number: "",
+  email_address: "",
   located_in: "",
   village_name: "",
   taluka_name: "",
@@ -411,6 +519,7 @@ const handleSubmit = async (e) => {
   crowd_level: "",
   site_activities: "",
   site_activity_details_doc: "",
+  header_photo: "",
   site_photos: "",
 
   // Sustainability
@@ -420,19 +529,22 @@ const handleSubmit = async (e) => {
   suggestions_improvements: "",
 
   // Contact
-  email_address: "",
   user_description: "",
   google_maps_link: "",
 
+  latitude: null,
+  longitude: null,
+
 });
 
+    removeHeaderPhoto();
     setSelectedPhotos([]);
     setPhotoPreviews([]);
     setFormError("");
     setStep(1);
 
   } catch (err) {
-    alert(err.message);
+    flashError(err.message);
   } finally {
     setUploading(false);
   }
@@ -539,6 +651,34 @@ const handleSubmit = async (e) => {
                 />
             </div>
 
+            <div>
+                <label className={labelCls}>Contact Number<Required /></label>
+                <input
+                    type="text"
+                    name="phone_number"
+                    value={formData.phone_number}
+                    onChange={handleChange}
+                    className={inputCls}
+                    placeholder="e.g. 9876543210"
+                    required
+                />
+                <p className={helpCls}>We'll use this number to contact you about this submission.</p>
+            </div>
+
+            <div>
+                <label className={labelCls}>Email Address<Required /></label>
+                <input
+                    type="email"
+                    name="email_address"
+                    value={formData.email_address}
+                    onChange={handleChange}
+                    className={inputCls}
+                    placeholder="e.g. you@example.com"
+                    required
+                />
+                <p className={helpCls}>We'll use this to send updates about this submission.</p>
+            </div>
+
             <Full>
                 <label className={labelCls}>Located In<Required /></label>
                 <div className={chipGroupCls}>
@@ -603,7 +743,6 @@ const handleSubmit = async (e) => {
                     value={formData.nearest_landmark}
                     onChange={handleChange}
                     className={inputCls}
-                    placeholder="e.g. Near Murud Beach"
                     placeholder="e.g. Near Murud Beach"
                     required
                 />
@@ -797,7 +936,6 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Dapoli Bus Stand"
-                    placeholder="e.g. Dapoli Bus Stand"
                     required
                 />
             </div>
@@ -810,7 +948,6 @@ const handleSubmit = async (e) => {
                     value={formData.nearest_railway_station}
                     onChange={handleChange}
                     className={inputCls}
-                    placeholder="e.g. Khed Railway Station"
                     placeholder="e.g. Khed Railway Station"
                     required
                 />
@@ -897,7 +1034,6 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. 20 Rs."
-                    placeholder="e.g. 20 Rs."
                     required
                 />
             </div>
@@ -910,7 +1046,6 @@ const handleSubmit = async (e) => {
                     value={formData.visiting_hours}
                     onChange={handleChange}
                     className={inputCls}
-                    placeholder="e.g. 8 AM - 6 PM"
                     placeholder="e.g. 8 AM - 6 PM"
                     required
                 />
@@ -943,7 +1078,6 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. October - February"
-                    placeholder="e.g. October - February"
                     required
                 />
             </div>
@@ -956,7 +1090,6 @@ const handleSubmit = async (e) => {
                     value={formData.avg_time_spent}
                     onChange={handleChange}
                     className={inputCls}
-                    placeholder="e.g. 2 Hours"
                     placeholder="e.g. 2 Hours"
                     required
                 />
@@ -1118,7 +1251,6 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Guide, Boat Service, Food Stall"
-                    placeholder="e.g. Guide, Boat Service, Food Stall"
                     required
                 />
             </div>
@@ -1137,12 +1269,23 @@ const handleSubmit = async (e) => {
             <p className={sectionSubCls}>Photos help visitors discover this place; your note goes directly to the tourism department.</p>
         </div>
 
-        <div className={shake ? "lf-shake" : ""}>
+        <div className={`space-y-6 ${shake ? "lf-shake" : ""}`}>
+
+        <PhotoSlot
+            id="header-photo-upload-input"
+            label="Header Photo (min 500 KB)"
+            helperText="This location's main cover photo — shown first on its listing card and at the top of its profile."
+            file={headerPhoto}
+            preview={headerPhotoPreview}
+            onSelect={handleHeaderPhotoSelect}
+            onRemove={removeHeaderPhoto}
+        />
 
         <div>
-            <label className={labelCls}>Location Photos (up to 5, min 500 KB each)<Required /></label>
+            <label className={labelCls}>Location Photos (up to {MAX_GALLERY_PHOTOS}, min 500 KB each)<Required /></label>
+            <p className={helpCls}>Additional photos of the site and surroundings — shown in the listing's photo gallery below the header photo.</p>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 mt-2">
                 <label
                     htmlFor="photo-upload-input"
                     className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
@@ -1169,7 +1312,7 @@ const handleSubmit = async (e) => {
                     {selectedPhotos.length > 0 && <span aria-hidden="true">✓</span>}
                     {selectedPhotos.length > 0
                         ? `${selectedPhotos.length} photo${selectedPhotos.length > 1 ? "s" : ""} selected`
-                        : "0/5 photos selected"}
+                        : `0/${MAX_GALLERY_PHOTOS} photos selected`}
                 </span>
             </div>
 
@@ -1198,7 +1341,7 @@ const handleSubmit = async (e) => {
             )}
         </div>
 
-        <div className="mt-6">
+        <div>
             <label className={labelCls}>
                 Suggestions / Improvements<Required />
                 <InternalTag />

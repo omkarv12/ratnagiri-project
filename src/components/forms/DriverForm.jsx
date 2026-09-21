@@ -25,6 +25,7 @@ const REQUIRED_BY_STEP = {
     1: [
         "driver_name",
         "phone_number",
+        "email",
         "vehicle_type",
         "vehicle_number",
         "base_village",
@@ -137,6 +138,7 @@ export default function DriverForm({ onSuccess }) {
     const [formData, setFormData] = useState({
         driver_name: "",
         phone_number: "",
+        email: "",
         vehicle_type: "",
         vehicle_number: "",
         base_village: "",
@@ -298,6 +300,7 @@ export default function DriverForm({ onSuccess }) {
             setFormData({
                 driver_name: "",
                 phone_number: "",
+                email: "",
                 vehicle_type: "",
                 vehicle_number: "",
                 base_village: "",
@@ -403,10 +406,7 @@ export default function DriverForm({ onSuccess }) {
                 </div>
 
                 <div>
-                    <label className={labelCls}>
-                        Contact Number<Required />
-                        <InternalTag />
-                    </label>
+                    <label className={labelCls}>Contact Number<Required /></label>
                     <input
                         type="text"
                         name="phone_number"
@@ -416,7 +416,21 @@ export default function DriverForm({ onSuccess }) {
                         placeholder="e.g. 9876543210"
                         required
                     />
-                    <p className={helpCls}>Used only to verify details or reach you about your listing — never published.</p>
+                    <p className={helpCls}>We'll use this number to contact you about your registration or booking queries.</p>
+                </div>
+
+                <div>
+                    <label className={labelCls}>Email Address<Required /></label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className={inputCls}
+                        placeholder="e.g. suresh.kadam@example.com"
+                        required
+                    />
+                    <p className={helpCls}>We'll use this to send updates about your registration.</p>
                 </div>
 
                 <Full>
