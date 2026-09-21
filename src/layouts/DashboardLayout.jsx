@@ -9,40 +9,85 @@ import {
   Globe,
   ChevronDown,
   UserRound,
-  MessageSquare,
   MapPlus,
 } from "lucide-react";
 
+// Compact coastal mark: navy tile, sun over a wave. Small enough to sit
+// quietly next to the (now smaller) wordmark.
 function LogoMark() {
   return (
-    <svg width="46" height="46" viewBox="0 0 38 38" fill="none">
-      <circle cx="19" cy="19" r="19" fill="#0b3149" />
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+      <rect width="34" height="34" rx="10" fill="#0b3149" />
+      <circle cx="21.5" cy="12" r="4" fill="#FBBF24" />
       <path
-        d="M6 22c3-4 6-4 9 0s6 4 9 0 6-4 8 0"
+        d="M5 21c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 9 0"
         stroke="#5EEAD4"
-        strokeWidth="2.4"
+        strokeWidth="2.2"
         strokeLinecap="round"
         fill="none"
       />
-      <circle cx="14" cy="13" r="3.2" fill="#FBBF24" />
+      <path
+        d="M5 27c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 9 0"
+        stroke="#5EEAD4"
+        strokeOpacity="0.45"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }
 
-// Shared classes for every plain-text nav item: dark text, grey rounded-pill
-// hover state, text grows slightly on hover — matches the Tripadvisor ref.
+// Shared classes for every plain-text nav item. `whitespace-nowrap` keeps each
+// label on a single line so the whole bar never wraps.
 const NAV_ITEM_CLASS =
-  "flex items-center px-3.5 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
+  "flex items-center whitespace-nowrap px-3 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
 
-// Plain nav links before the Resources dropdown.
-const NAV_LINKS_BEFORE = [
-  { label: "Plan Your Trip", route: "/plan-your-trip" },
-  { label: "Experiences", route: "/experiences" },
-  { label: "Stories", route: "/stories" },
-];
+// Explore dropdown — its own pages live under /explore/*.
+const EXPLORE_MENU = {
+  label: "Explore",
+  route: "/explore",
+  children: [
+    { label: "Guided Walks", route: "/explore/guided-walks" },
+    { label: "Konkani Food", route: "/explore/konkani-food" },
+    { label: "Community Interaction Events", route: "/explore/community-events" },
+    { label: "Calendar", route: "/explore/calendar" },
+  ],
+};
 
-// Plain nav links after the Resources dropdown.
-const NAV_LINKS_AFTER = [{ label: "About", route: "/about" }];
+// Experiences dropdown — its own pages live under /experiences/*.
+const EXPERIENCES_MENU = {
+  label: "Experiences",
+  route: "/experiences",
+  children: [
+    { label: "Hidden Paths", route: "/experiences/hidden-paths" },
+    { label: "Explore Villages", route: "/experiences/explore-villages" },
+    { label: "Itineraries", route: "/experiences/itineraries" },
+    { label: "Circuits", route: "/experiences/circuits" },
+  ],
+};
+
+// Stories dropdown — its own pages live under /stories/*.
+const STORIES_MENU = {
+  label: "Stories",
+  route: "/stories",
+  children: [
+    { label: "Videos", route: "/stories/videos" },
+    { label: "Reels", route: "/stories/reels" },
+    { label: "Written Stories", route: "/stories/written" },
+  ],
+};
+
+// About dropdown — its own pages live under /about/*.
+const ABOUT_MENU = {
+  label: "About",
+  route: "/about",
+  children: [
+    { label: "Society and Economy", route: "/about/society-and-economy" },
+    { label: "Culture", route: "/about/culture" },
+    { label: "Good Governance", route: "/about/good-governance" },
+  ],
+};
 
 // Resources dropdown — its own pages live under /resources/*.
 const RESOURCES_MENU = {
@@ -69,12 +114,12 @@ function NavDropdown({ menu, active, navigate }) {
 
       {/* Dropdown panel */}
       <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-150 z-50">
-        <div className="w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-2">
+        <div className="w-64 bg-white rounded-xl shadow-lg border border-slate-100 py-2">
           {menu.children.map((child) => (
             <button
               key={child.label}
               onClick={() => navigate(child.route)}
-              className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100 hover:text-[#0b3149] rounded-lg mx-1 w-[calc(100%-8px)] transition-colors"
+              className="text-left px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100 hover:text-[#0b3149] rounded-lg mx-1 w-[calc(100%-8px)] transition-colors"
             >
               {child.label}
             </button>
@@ -96,97 +141,92 @@ export default function DashboardLayout() {
     user &&
     (location.pathname === "/dashboard" || location.pathname === "/admin");
 
+  const isActive = (route) => location.pathname.startsWith(route);
+
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <main
-        className={`flex-1 transition-all duration-300 ${
+        className={`flex-1 min-w-0 transition-all duration-300 ${
           sidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
         {/* ================= Header ================= */}
         <header className="sticky top-0 z-40 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-4 px-5 sm:px-8 lg:px-10 py-3 max-w-[1680px] mx-auto">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 h-16 max-w-[1680px] mx-auto">
             {/* Left: hamburger + logo */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 shrink-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle sidebar"
-                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#0b3149] hover:bg-[#0a2b3f] text-white transition shrink-0"
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0b3149] hover:bg-[#0a2b3f] text-white transition shrink-0"
               >
-                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
 
               <button
                 onClick={() => navigate("/dashboard")}
-                className="flex items-center gap-3 shrink-0"
+                className="flex items-center gap-2.5 shrink-0"
               >
                 <LogoMark />
-                <span className="font-serif text-2xl font-bold text-[#0b3149]">
+                <span className="font-serif text-lg font-bold tracking-tight text-[#0b3149] whitespace-nowrap">
                   Ratnagiri Tourism
                 </span>
               </button>
             </div>
 
-            {/* Center: nav */}
-            <nav className="hidden md:flex items-center gap-2 text-sm">
-              {NAV_LINKS_BEFORE.map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => navigate(link.route)}
-                  className={`${NAV_ITEM_CLASS} ${
-                    location.pathname.startsWith(link.route) ? "bg-slate-100" : ""
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
-
+            {/* Center: nav — single line, takes the free space and centres itself */}
+            <nav className="hidden lg:flex flex-1 min-w-0 items-center justify-center gap-0.5 text-sm">
               <NavDropdown
-                menu={RESOURCES_MENU}
-                active={location.pathname.startsWith(RESOURCES_MENU.route)}
+                menu={EXPLORE_MENU}
+                active={isActive(EXPLORE_MENU.route)}
                 navigate={navigate}
               />
 
-              {NAV_LINKS_AFTER.map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => navigate(link.route)}
-                  className={`${NAV_ITEM_CLASS} ${
-                    location.pathname.startsWith(link.route) ? "bg-slate-100" : ""
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
+              <NavDropdown
+                menu={EXPERIENCES_MENU}
+                active={isActive(EXPERIENCES_MENU.route)}
+                navigate={navigate}
+              />
+
+              <NavDropdown
+                menu={STORIES_MENU}
+                active={isActive(STORIES_MENU.route)}
+                navigate={navigate}
+              />
+
+              <NavDropdown
+                menu={RESOURCES_MENU}
+                active={isActive(RESOURCES_MENU.route)}
+                navigate={navigate}
+              />
+
+              <NavDropdown
+                menu={ABOUT_MENU}
+                active={isActive(ABOUT_MENU.route)}
+                navigate={navigate}
+              />
 
               <button
                 onClick={() => navigate("/forum")}
-                className={`${NAV_ITEM_CLASS} ${
-                  location.pathname.startsWith("/forum") ? "bg-slate-100" : ""
-                }`}
+                className={`${NAV_ITEM_CLASS} ${isActive("/forum") ? "bg-slate-100" : ""}`}
               >
-                <MessageSquare
-                  size={16}
-                  className={`mr-1.5 ${
-                    location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-500"
-                  }`}
-                />
                 Forum
               </button>
 
               <button
                 onClick={() => navigate("/review/add-place")}
-                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[15px] px-4 py-2 rounded-full transition-colors duration-150 ml-1"
+                className="flex items-center gap-2 whitespace-nowrap bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm px-4 py-2 rounded-full transition-colors duration-150 ml-2"
               >
                 <MapPlus size={16} />
-                Add location and services
+                <span className="hidden xl:inline">Add location and services</span>
+                <span className="xl:hidden">Add place</span>
               </button>
             </nav>
 
             {/* Right: language, search, login/logout */}
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <button className="hidden sm:flex items-center gap-1 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-lg px-2.5 py-2 transition">
                 <Globe size={16} />
                 EN
@@ -203,7 +243,7 @@ export default function DashboardLayout() {
               {showLoginButton && (
                 <button
                   onClick={() => navigate("/login")}
-                  className="flex items-center gap-2 bg-[#0b3149] hover:bg-[#0a2b3f] text-white pl-3 pr-4 py-2 rounded-full font-semibold text-sm transition"
+                  className="flex items-center gap-2 whitespace-nowrap bg-[#0b3149] hover:bg-[#0a2b3f] text-white pl-3 pr-4 py-2 rounded-full font-semibold text-sm transition"
                 >
                   <UserRound size={16} />
                   Login
@@ -215,7 +255,7 @@ export default function DashboardLayout() {
                     logout();
                     navigate("/dashboard");
                   }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full font-semibold text-sm transition"
+                  className="whitespace-nowrap bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full font-semibold text-sm transition"
                 >
                   Logout
                 </button>
