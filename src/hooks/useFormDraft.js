@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 /**
  * Handles draft save/detect/restore for a registration form.
@@ -16,6 +16,13 @@ export function useFormDraft(key, formData, setFormData) {
     const [pendingDraft, setPendingDraft] = useState(null); // { data, savedAt } | null
     const [ready, setReady] = useState(false);
 
+    // Snapshot the form's untouched defaults on first render (e.g. a
+    // district field that starts pre-filled as "Ratnagiri"). A field only
+    // counts as real draft content if it differs from this baseline —
+    // otherwise a form nobody has touched yet still "has content" just
+    // because of its defaults, and the resume modal pops up on a blank form.
+    const defaultsRef = useRef(formData);
+
     // One-time check on mount.
     useEffect(() => {
         try {
@@ -23,9 +30,12 @@ export function useFormDraft(key, formData, setFormData) {
             if (saved) {
                 const parsed = JSON.parse(saved);
                 const data = parsed && parsed.data ? parsed.data : parsed;
-                const hasContent = Object.values(data || {}).some((v) =>
-                    Array.isArray(v) ? v.length > 0 : !!v
-                );
+                const defaults = defaultsRef.current || {};
+                const hasContent = Object.entries(data || {}).some(([field, v]) => {
+                    const isFilled = Array.isArray(v) ? v.length > 0 : !!v;
+                    if (!isFilled) return false;
+                    return JSON.stringify(v) !== JSON.stringify(defaults[field]);
+                });
 
                 if (hasContent) {
                     setPendingDraft({ data, savedAt: parsed.savedAt || Date.now() });

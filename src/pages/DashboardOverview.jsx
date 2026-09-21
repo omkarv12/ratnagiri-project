@@ -594,14 +594,7 @@ export default function DashboardOverview() {
             State, and finally becoming part of Maharashtra in 1960.
           </p>
 
-          <div className="text-center mt-6">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-              Victoria &amp; Arthur Thorne
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Travelers from London, UK · Amalfi &amp; Kyoto alumni
-            </p>
-          </div>
+          
         </div>
       </div>
 
