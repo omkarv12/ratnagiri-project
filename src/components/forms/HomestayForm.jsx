@@ -3,6 +3,7 @@ import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 
 const MIN_PHOTO_SIZE = 500 * 1024;
+const MAX_GALLERY_PHOTOS = 6;
 
 const STEP_LABELS = [
     "Basic Information",
@@ -99,6 +100,69 @@ function Full({ children }) {
     return <div className="sm:col-span-2">{children}</div>;
 }
 
+// Single required-photo upload block — same "Choose Photo" + pop-in preview
+// pattern as DriverForm's driver / vehicle / number-plate photo slots, used
+// here for the one header/cover photo.
+function PhotoSlot({ id, label, helperText, file, preview, onSelect, onRemove }) {
+    return (
+        <div>
+            <label className={labelCls}>
+                {label}
+                <Required />
+            </label>
+            <p className={helpCls}>{helperText}</p>
+
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+                <label
+                    htmlFor={id}
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                >
+                    <span aria-hidden="true">📷</span> {file ? "Change Photo" : "Choose Photo"}
+                </label>
+                <input
+                    id={id}
+                    type="file"
+                    accept="image/*"
+                    onChange={onSelect}
+                    className="hidden"
+                />
+
+                <span
+                    key={file ? "selected" : "empty"}
+                    className={`lf-pop inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                        file
+                            ? "text-green-700 bg-green-50 border border-green-200"
+                            : "text-slate-500 bg-slate-100 border border-slate-200"
+                    }`}
+                >
+                    {file && <span aria-hidden="true">✓</span>}
+                    {file ? "Photo selected" : "No photo selected"}
+                </span>
+            </div>
+
+            {preview && (
+                <div className="relative inline-block lf-pop mt-3">
+                    <img
+                        src={preview}
+                        alt={label}
+                        className="w-20 h-20 object-cover rounded border border-slate-300"
+                    />
+                    <span className="absolute -bottom-1 -left-1 bg-green-600 text-white rounded-full w-4 h-4 text-[9px] font-bold flex items-center justify-center border border-white">
+                        ✓
+                    </span>
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function HomestayForm({ onSuccess }) {
 
     const [formData, setFormData] = useState({
@@ -136,6 +200,7 @@ export default function HomestayForm({ onSuccess }) {
         price_range: "",
         activity_details_doc: "",
         suggestions_improvements: "",
+        header_photo: "",
         site_photos: "",
 
         // Coordinates, picked on the map below (new)
@@ -147,6 +212,11 @@ export default function HomestayForm({ onSuccess }) {
     const [step, setStep] = useState(1);
     const totalSteps = 4;
 
+    // Single required cover/header photo — separate from the gallery below.
+    const [headerPhoto, setHeaderPhoto] = useState(null);
+    const [headerPhotoPreview, setHeaderPhotoPreview] = useState(null);
+
+    // Gallery of additional homestay photos (up to MAX_GALLERY_PHOTOS).
     const [selectedPhotos, setSelectedPhotos] = useState([]);
     const [photoPreviews, setPhotoPreviews] = useState([]);
     const [uploading, setUploading] = useState(false);
@@ -163,11 +233,33 @@ export default function HomestayForm({ onSuccess }) {
         setTimeout(() => setShake(false), 500);
     };
 
+    const handleHeaderPhotoSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size < MIN_PHOTO_SIZE) {
+            alert(`This photo is smaller than 500 KB and was skipped: ${file.name}`);
+            e.target.value = "";
+            return;
+        }
+
+        if (formError) setFormError("");
+
+        setHeaderPhoto(file);
+        setHeaderPhotoPreview(URL.createObjectURL(file));
+        e.target.value = "";
+    };
+
+    const removeHeaderPhoto = () => {
+        setHeaderPhoto(null);
+        setHeaderPhotoPreview(null);
+    };
+
     const handlePhotoSelect = (e) => {
         const files = Array.from(e.target.files);
 
-        if (selectedPhotos.length + files.length > 5) {
-            alert("You can upload a maximum of 5 photos.");
+        if (selectedPhotos.length + files.length > MAX_GALLERY_PHOTOS) {
+            alert(`You can upload a maximum of ${MAX_GALLERY_PHOTOS} photos.`);
             e.target.value = "";
             return;
         }
@@ -200,25 +292,30 @@ export default function HomestayForm({ onSuccess }) {
         setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
     };
 
+    const uploadSinglePhoto = async (file) => {
+        const uploadData = new FormData();
+        uploadData.append("photo", file);
+
+        const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+            method: "POST",
+            body: uploadData,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Photo upload failed");
+        }
+
+        return data.url;
+    };
+
     const uploadPhotos = async () => {
         const uploadedUrls = [];
 
         for (const file of selectedPhotos) {
-            const uploadData = new FormData();
-            uploadData.append("photo", file);
-
-            const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
-                method: "POST",
-                body: uploadData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || "Photo upload failed");
-            }
-
-            uploadedUrls.push(data.url);
+            const url = await uploadSinglePhoto(file);
+            uploadedUrls.push(url);
         }
 
         return uploadedUrls;
@@ -272,6 +369,11 @@ export default function HomestayForm({ onSuccess }) {
             return;
         }
 
+        if (!headerPhoto) {
+            flashError("Please add a header photo before submitting.");
+            return;
+        }
+
         if (selectedPhotos.length === 0) {
             flashError("Please add at least one homestay photo before submitting.");
             return;
@@ -286,13 +388,14 @@ export default function HomestayForm({ onSuccess }) {
 
             setUploading(true);
 
-            let photoUrls = [];
-            if (selectedPhotos.length > 0) {
-                photoUrls = await uploadPhotos();
-            }
+            const [headerPhotoUrl, photoUrls] = await Promise.all([
+                uploadSinglePhoto(headerPhoto),
+                uploadPhotos(),
+            ]);
 
             const payload = {
                 ...formData,
+                header_photo: headerPhotoUrl,
                 site_photos: photoUrls.join(","),
             };
 
@@ -359,6 +462,7 @@ export default function HomestayForm({ onSuccess }) {
                 price_range: "",
                 activity_details_doc: "",
                 suggestions_improvements: "",
+                header_photo: "",
                 site_photos: "",
 
                 latitude: null,
@@ -366,6 +470,7 @@ export default function HomestayForm({ onSuccess }) {
 
             });
 
+            removeHeaderPhoto();
             setSelectedPhotos([]);
             setPhotoPreviews([]);
             setFormError("");
@@ -990,12 +1095,23 @@ export default function HomestayForm({ onSuccess }) {
                 </p>
             </div>
 
-            <div className={shake ? "lf-shake" : ""}>
+            <div className={`space-y-6 ${shake ? "lf-shake" : ""}`}>
+
+            <PhotoSlot
+                id="header-photo-upload-input"
+                label="Header Photo (min 500 KB)"
+                helperText="Your homestay's main cover photo — shown first on your listing card and at the top of your profile."
+                file={headerPhoto}
+                preview={headerPhotoPreview}
+                onSelect={handleHeaderPhotoSelect}
+                onRemove={removeHeaderPhoto}
+            />
 
             <div>
-                <label className={labelCls}>Homestay Photos (up to 5, min 500 KB each)<Required /></label>
+                <label className={labelCls}>Homestay Photos (up to {MAX_GALLERY_PHOTOS}, min 500 KB each)<Required /></label>
+                <p className={helpCls}>Additional photos of rooms, surroundings, and amenities — shown in your listing's photo gallery below the header photo.</p>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 mt-2">
                     <label
                         htmlFor="homestay-photo-upload-input"
                         className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
@@ -1022,7 +1138,7 @@ export default function HomestayForm({ onSuccess }) {
                         {selectedPhotos.length > 0 && <span aria-hidden="true">✓</span>}
                         {selectedPhotos.length > 0
                             ? `${selectedPhotos.length} photo${selectedPhotos.length > 1 ? "s" : ""} selected`
-                            : "0/5 photos selected"}
+                            : `0/${MAX_GALLERY_PHOTOS} photos selected`}
                     </span>
                 </div>
 
@@ -1051,7 +1167,7 @@ export default function HomestayForm({ onSuccess }) {
                 )}
             </div>
 
-            <div className="mt-6">
+            <div>
                 <label className={labelCls}>Homestay's own booking website (if any)<Required /></label>
                 <input
                     type="text"
@@ -1064,7 +1180,7 @@ export default function HomestayForm({ onSuccess }) {
                 />
             </div>
 
-            <div className="mt-6">
+            <div>
                 <label className={labelCls}>
                     Suggestions / Query<Required />
                     <InternalTag />
