@@ -285,7 +285,7 @@ export default function DashboardLayout() {
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle sidebar"
-                className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0b3149] hover:bg-[#0f4664] text-white transition shrink-0"
+                className="xl:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-[#0b3149] hover:bg-[#0f4664] text-white transition shrink-0"
               >
                 {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
@@ -365,7 +365,7 @@ export default function DashboardLayout() {
                 >
                   <span className="rt-shine absolute inset-0 overflow-hidden rounded-full pointer-events-none" />
                   <MapPlus size={17} className="rt-mapplus relative" />
-                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add location & services</span>
+                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add places & Homestays</span>
                   <span className="relative hidden min-[1700px]:inline">Add location and services</span>
                 </button>
               </div>
