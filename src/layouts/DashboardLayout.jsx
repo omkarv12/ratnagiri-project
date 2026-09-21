@@ -9,10 +9,8 @@ import {
   Globe,
   ChevronDown,
   UserRound,
-  Sparkles,
-  Compass,
-  Star,
   MessageSquare,
+  MapPlus,
 } from "lucide-react";
 
 function LogoMark() {
@@ -34,62 +32,17 @@ function LogoMark() {
 // Shared classes for every plain-text nav item: dark text, grey rounded-pill
 // hover state, text grows slightly on hover — matches the Tripadvisor ref.
 const NAV_ITEM_CLASS =
-  "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
+  "flex items-center px-3.5 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
 
-// Dropdown parents, matching the Discover / Review branches from the site map.
-const NAV_MENUS = [
-  {
-    label: "Discover",
-    route: "/discover",
-    icon: Compass,
-    children: [
-      { label: "Travelers' Choice", route: "/discover/travelers-choice" },
-      { label: "Travel Stories", route: "/stories" },
-      { label: "Travel Games", route: "/discover/travel-games" },
-    ],
-  },
-  {
-    label: "Review",
-    route: "/review",
-    icon: Star,
-    children: [
-      { label: "Write a review", route: "/review/write" },
-      { label: "Post photos", route: "/review/photos" },
-      { label: "Add a place", route: "/review/add-place" },
-    ],
-  },
+// Plain nav links, left to right. "Forum" is intentionally last.
+// Update the routes below once the real pages exist.
+const NAV_LINKS = [
+  { label: "Plan Your Trip", route: "/plan-your-trip" },
+  { label: "Experiences", route: "/experiences" },
+  { label: "Stories", route: "/stories" },
+  { label: "Resources", route: "/resources" },
+  { label: "About", route: "/about" },
 ];
-
-function NavDropdown({ menu, active, navigate }) {
-  const Icon = menu.icon;
-  return (
-    <div className="relative group">
-      <button
-        onClick={() => navigate(menu.route)}
-        className={`${NAV_ITEM_CLASS} ${active ? "bg-slate-100" : ""}`}
-      >
-        <Icon size={16} className={active ? "text-teal-600" : "text-slate-500"} />
-        {menu.label}
-        <ChevronDown size={13} className="text-slate-400 group-hover:rotate-180 transition-transform" />
-      </button>
-
-      {/* Dropdown panel */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-150 z-50">
-        <div className="w-52 bg-white rounded-xl shadow-lg border border-slate-100 py-2">
-          {menu.children.map((child) => (
-            <button
-              key={child.label}
-              onClick={() => navigate(child.route)}
-              className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100 hover:text-[#0b3149] rounded-lg mx-1 w-[calc(100%-8px)] transition-colors"
-            >
-              {child.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -142,23 +95,25 @@ export default function DashboardLayout() {
 
             {/* Center: nav */}
             <nav className="hidden md:flex items-center gap-2 text-sm">
-              {/* Plan with Interactive Map — border-only animated glow CTA */}
-              <button
-                onClick={() => navigate("/map")}
-                className="glow-cta flex items-center gap-2 bg-white text-slate-900 font-semibold text-[15px] hover:text-base pl-4 pr-5 py-2 rounded-full transition-all duration-150 mr-2"
-              >
-                <Sparkles size={16} className="text-emerald-500" />
-                Plan with Interactive Map
-              </button>
-
-              {NAV_MENUS.map((menu) => (
-                <NavDropdown
-                  key={menu.label}
-                  menu={menu}
-                  active={location.pathname.startsWith(menu.route)}
-                  navigate={navigate}
-                />
+              {NAV_LINKS.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => navigate(link.route)}
+                  className={`${NAV_ITEM_CLASS} ${
+                    location.pathname.startsWith(link.route) ? "bg-slate-100" : ""
+                  }`}
+                >
+                  {link.label}
+                </button>
               ))}
+
+              <button
+                onClick={() => navigate("/review/add-place")}
+                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[15px] px-4 py-2 rounded-full transition-colors duration-150 ml-1"
+              >
+                <MapPlus size={16} />
+                Add location and services
+              </button>
 
               <button
                 onClick={() => navigate("/forum")}
@@ -168,7 +123,9 @@ export default function DashboardLayout() {
               >
                 <MessageSquare
                   size={16}
-                  className={location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-500"}
+                  className={`mr-1.5 ${
+                    location.pathname.startsWith("/forum") ? "text-teal-600" : "text-slate-500"
+                  }`}
                 />
                 Forum
               </button>
@@ -217,65 +174,6 @@ export default function DashboardLayout() {
         <div className="pb-8">
           <Outlet />
         </div>
-
-        {/* Border-only animated glow for the "Plan with Interactive Map" CTA.
-            No masking/blur tricks (those can bleed outside the button on
-            wide pill shapes) — instead:
-              1. ::before/::after stack two solid backgrounds so only a 2px
-                 ring shows, and that ring's gradient flows via
-                 background-position (always clipped to border-radius, can't
-                 escape the box).
-              2. An animated box-shadow on the button itself shifts which
-                 side is brightest over the cycle (top → right → bottom →
-                 left), so the glow visibly moves around all sides instead of
-                 sitting evenly or streaking off in one direction.
-            Scoped here since this is the only place it's used; move to your
-            global stylesheet (e.g. index.css) if reused elsewhere. */}
-        <style>{`
-          .glow-cta {
-            position: relative;
-            z-index: 0;
-            animation: glowShift 5s ease-in-out infinite;
-          }
-          .glow-cta::before,
-          .glow-cta::after {
-            content: "";
-            position: absolute;
-            border-radius: inherit;
-            pointer-events: none;
-          }
-          .glow-cta::before {
-            inset: -2px;
-            background: linear-gradient(
-              120deg,
-              #16a34a, #bbf7d0, #4ade80, #86efac, #16a34a
-            );
-            background-size: 300% 300%;
-            animation: borderFlow 6s ease-in-out infinite;
-            z-index: -2;
-          }
-          .glow-cta::after {
-            inset: 0;
-            background: #ffffff;
-            z-index: -1;
-          }
-          @keyframes borderFlow {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          @keyframes glowShift {
-            0%   { box-shadow: 0 -3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15); }
-            25%  { box-shadow: 3px 0 12px 0 rgba(34,197,94,0.5),  0 -3px 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15); }
-            50%  { box-shadow: 0 3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 -3px 8px 0 rgba(34,197,94,0.15); }
-            75%  { box-shadow: -3px 0 12px 0 rgba(34,197,94,0.5), 0 -3px 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15), 3px 0 8px 0 rgba(34,197,94,0.15); }
-            100% { box-shadow: 0 -3px 12px 0 rgba(34,197,94,0.5),  3px 0 8px 0 rgba(34,197,94,0.15), -3px 0 8px 0 rgba(34,197,94,0.15), 0 3px 8px 0 rgba(34,197,94,0.15); }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .glow-cta,
-            .glow-cta::before { animation: none; }
-          }
-        `}</style>
       </main>
     </div>
   );
