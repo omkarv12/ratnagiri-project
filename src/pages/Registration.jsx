@@ -28,7 +28,7 @@ export default function Registration() {
         <p className="reg-fade-up text-orange-700 text-base sm:text-lg font-medium tracking-wide">
           अतिथि देवो भवः
         </p>
-        <p className="reg-fade-up reg-fade-up-delay-1 text-slate-400 text-xs mt-1">
+        <p className="reg-fade-up reg-fade-up-delay-1 text-black text-xs mt-1">
           "The guest is akin to God" — welcome to Ratnagiri
         </p>
 
