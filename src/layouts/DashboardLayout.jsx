@@ -58,15 +58,11 @@ html.rt-gray { filter: grayscale(1); }
 html.rt-hc.rt-gray { filter: contrast(1.25) grayscale(1); }
 html.rt-links a { text-decoration: underline !important; }
 
-/* Light band with a faint city skyline along the bottom (like the reference header) */
+/* Row 2 band: soft coastal sky; the Ratnagiri scene is drawn by <RatnagiriScene /> */
 .rt-band {
-  background-color: #EAF1F7;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='120' viewBox='0 0 520 120'%3E%3Cg fill='%230b3149' fill-opacity='0.07'%3E%3Crect x='0' y='60' width='34' height='60'/%3E%3Crect x='40' y='30' width='26' height='90'/%3E%3Crect x='72' y='70' width='40' height='50'/%3E%3Cpath d='M120 120V64l22-30 22 30v56z'/%3E%3Crect x='172' y='48' width='30' height='72'/%3E%3Crect x='208' y='78' width='46' height='42'/%3E%3Crect x='262' y='20' width='22' height='100'/%3E%3Crect x='290' y='56' width='36' height='64'/%3E%3Cpath d='M334 120V70q24-40 48 0v50z'/%3E%3Crect x='392' y='40' width='28' height='80'/%3E%3Crect x='426' y='74' width='40' height='46'/%3E%3Crect x='472' y='52' width='34' height='68'/%3E%3C/g%3E%3C/svg%3E"),
-    linear-gradient(180deg, #F3F8FB 0%, #E4EEF5 100%);
-  background-repeat: repeat-x, no-repeat;
-  background-position: left bottom, center;
-  background-size: 520px 120px, 100% 100%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #EEF5F9 0%, #E3EEF3 55%, #DCEBEC 100%);
 }
 
 /* One orchestrated moment: top of the page drops in once on load */
@@ -368,7 +364,7 @@ function AccessibilityMenu() {
         aria-label="Accessibility options"
         aria-expanded={open}
         title="Accessibility"
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 hover:bg-teal-600 ring-2 ring-white/70 text-white transition hover:scale-105"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-700 hover:bg-teal-600 ring-2 ring-white/70 text-white transition hover:scale-105"
       >
         <Accessibility size={22} />
       </button>
@@ -425,6 +421,104 @@ function AccessibilityMenu() {
 /*  Layout                                                             */
 /* ------------------------------------------------------------------ */
 
+/* Faint Ratnagiri landscape: fort, lighthouse, coconut palms, mango tree, fishing boat, sea */
+function Palm({ x, y, s = 1, flip = false }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
+      <path d="M0 0 C 8 -34 4 -66 14 -98 L 20 -97 C 12 -66 16 -34 8 0 Z" />
+      <path d="M17 -98 C -4 -122 -36 -112 -56 -88 C -34 -100 -6 -102 17 -98 Z" />
+      <path d="M17 -98 C 6 -128 -14 -138 -38 -134 C -16 -128 4 -118 17 -98 Z" />
+      <path d="M17 -98 C 30 -130 52 -136 76 -126 C 54 -124 34 -118 17 -98 Z" />
+      <path d="M17 -98 C 40 -116 70 -108 88 -84 C 66 -98 40 -102 17 -98 Z" />
+      <path d="M17 -98 C 14 -118 20 -140 36 -150 C 28 -132 24 -116 17 -98 Z" />
+      <circle cx="12" cy="-94" r="4" />
+      <circle cx="21" cy="-93" r="4" />
+    </g>
+  );
+}
+
+function RatnagiriScene() {
+  const merlons = (x0, count, y) =>
+    Array.from({ length: count }, (_, i) => (
+      <rect key={`${x0}-${i}`} x={x0 + i * 16} y={y} width="9" height="9" />
+    ));
+  return (
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox="0 0 1600 200"
+      preserveAspectRatio="xMidYMax slice"
+    >
+      {/* sun */}
+      <circle cx="1130" cy="62" r="26" fill="#FBBF24" fillOpacity="0.28" />
+      <circle cx="1130" cy="62" r="40" fill="#FBBF24" fillOpacity="0.1" />
+
+      {/* Ratnadurg fort — laterite */}
+      <g fill="#B4532A" fillOpacity="0.2">
+        <rect x="0" y="136" width="330" height="34" />
+        {merlons(4, 20, 127)}
+        <rect x="64" y="104" width="46" height="66" />
+        <path d="M60 104 h54 v-8 h-6 v-8 h-8 v8 h-8 v-8 h-8 v8 h-8 v-8 h-8 v8 h-8 z" />
+        <rect x="236" y="112" width="42" height="58" />
+        <path d="M232 112 h50 v-8 h-6 v-8 h-8 v8 h-8 v-8 h-8 v8 h-8 v-8 h-8 v8 h-4 z" />
+        <path d="M150 170 v-22 q 14 -20 28 0 v22 z" fill="#fff" fillOpacity="0.5" />
+      </g>
+
+      {/* lighthouse */}
+      <g transform="translate(430 170)" fill="#0b3149" fillOpacity="0.17">
+        <path d="M-18 0 L-11 -104 L11 -104 L18 0 Z" />
+        <rect x="-16" y="-114" width="32" height="10" />
+        <rect x="-9" y="-134" width="18" height="20" fill="#FBBF24" fillOpacity="0.5" />
+        <path d="M-13 -134 L0 -152 L13 -134 Z" />
+        <rect x="-14" y="-72" width="28" height="12" fill="#fff" fillOpacity="0.55" />
+        <rect x="-16" y="-38" width="32" height="12" fill="#fff" fillOpacity="0.55" />
+      </g>
+
+      {/* coconut palms — left cluster */}
+      <g fill="#0f766e" fillOpacity="0.2">
+        <Palm x={560} y={172} s={1.05} />
+        <Palm x={620} y={176} s={0.8} flip />
+        <Palm x={20} y={176} s={0.9} flip />
+      </g>
+
+      {/* mango tree with fruit */}
+      <g transform="translate(1000 172)">
+        <path d="M-6 0 L-4 -34 L4 -34 L6 0 Z" fill="#0b3149" fillOpacity="0.18" />
+        <g fill="#0f766e" fillOpacity="0.2">
+          <circle cx="0" cy="-58" r="30" />
+          <circle cx="-26" cy="-44" r="20" />
+          <circle cx="26" cy="-44" r="20" />
+        </g>
+        <g fill="#FBBF24" fillOpacity="0.55">
+          <ellipse cx="-14" cy="-50" rx="4" ry="5.5" />
+          <ellipse cx="10" cy="-66" rx="4" ry="5.5" />
+          <ellipse cx="24" cy="-42" rx="4" ry="5.5" />
+          <ellipse cx="-30" cy="-38" rx="4" ry="5.5" />
+        </g>
+      </g>
+
+      {/* coconut palms — right cluster */}
+      <g fill="#0f766e" fillOpacity="0.2">
+        <Palm x={1240} y={174} s={0.85} />
+        <Palm x={1480} y={176} s={1.1} flip />
+        <Palm x={1560} y={178} s={0.85} />
+      </g>
+
+      {/* fishing boat */}
+      <g transform="translate(1340 176)" fill="#0b3149" fillOpacity="0.2">
+        <path d="M-40 0 h80 l-12 14 h-56 z" />
+        <rect x="-1.5" y="-46" width="3" height="46" />
+        <path d="M4 -44 L4 -8 L36 -8 Z" fill="#fff" fillOpacity="0.6" />
+      </g>
+
+      {/* sand + sea */}
+      <path d="M0 176 Q 400 168 800 176 T 1600 176 V200 H0 Z" fill="#E7C9A0" fillOpacity="0.28" />
+      <path d="M0 184 Q 100 176 200 184 T 400 184 T 600 184 T 800 184 T 1000 184 T 1200 184 T 1400 184 T 1600 184 V200 H0 Z" fill="#0f766e" fillOpacity="0.16" />
+      <path d="M0 192 Q 100 186 200 192 T 400 192 T 600 192 T 800 192 T 1000 192 T 1200 192 T 1400 192 T 1600 192 V200 H0 Z" fill="#0b3149" fillOpacity="0.12" />
+    </svg>
+  );
+}
+
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -474,7 +568,7 @@ export default function DashboardLayout() {
         <header className="rt-header-in">
           {/* ============ Row 1: social · skip · search · map · EN · accessibility ============ */}
           <div className="relative z-50 bg-[#0b3149] text-white">
-            <div className="mx-auto flex min-h-[3.5rem] max-w-[1680px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex min-h-[3rem] max-w-[1680px] items-center justify-between gap-3 px-4 sm:px-8 lg:px-12">
               <ul className="hidden md:flex items-center gap-4">
                 {SOCIALS.map(({ label, href, Icon }) => (
                   <li key={label}>
@@ -486,7 +580,7 @@ export default function DashboardLayout() {
                       title={label}
                       className="rt-social block text-white/90"
                     >
-                      <Icon size={20} />
+                      <Icon size={18} />
                     </a>
                   </li>
                 ))}
@@ -495,7 +589,7 @@ export default function DashboardLayout() {
               <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only md:not-sr-only inline-flex h-11 items-center rounded-sm border border-sky-300/40 bg-[#134b78] px-4 text-[0.8125rem] font-bold uppercase tracking-wide text-white hover:bg-[#1a5c91] transition"
+                  className="sr-only focus:not-sr-only md:not-sr-only inline-flex h-9 items-center rounded-sm border border-sky-300/40 bg-[#134b78] px-4 text-[0.8125rem] font-bold uppercase tracking-wide text-white hover:bg-[#1a5c91] transition"
                 >
                   Skip to content
                 </a>
@@ -503,7 +597,7 @@ export default function DashboardLayout() {
                 <form
                   onSubmit={handleSearch}
                   role="search"
-                  className="flex h-11 w-40 sm:w-60 items-center rounded-sm bg-white focus-within:ring-2 focus-within:ring-teal-300"
+                  className="flex h-9 w-40 sm:w-60 items-center rounded-sm bg-white focus-within:ring-2 focus-within:ring-teal-300"
                 >
                   <input
                     type="search"
@@ -528,7 +622,7 @@ export default function DashboardLayout() {
 
                 <button
                   onClick={() => navigate("/interactive-map")}
-                  className="hidden sm:inline-flex h-11 items-center rounded-sm bg-white px-3 text-[0.8125rem] font-bold uppercase tracking-wide text-[#0b3149] hover:bg-teal-50 hover:-translate-y-0.5 transition"
+                  className="hidden sm:inline-flex h-9 items-center rounded-sm bg-white px-3 text-[0.8125rem] font-bold uppercase tracking-wide text-[#0b3149] hover:bg-teal-50 hover:-translate-y-0.5 transition"
                 >
                   Tourist Map
                 </button>
@@ -536,7 +630,7 @@ export default function DashboardLayout() {
                 <button
                   aria-label="Language: English"
                   title="Language"
-                  className="flex items-center gap-1.5 min-h-[2.75rem] rounded-lg px-2 py-1.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+                  className="flex items-center gap-1.5 min-h-[2.25rem] rounded-lg px-2 py-1.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
                 >
                   <Languages size={20} />
                   EN
@@ -545,7 +639,7 @@ export default function DashboardLayout() {
                 {showLoginButton && (
                   <button
                     onClick={() => navigate("/login")}
-                    className="flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/40 pl-3 pr-4 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+                    className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/40 pl-3 pr-4 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
                   >
                     <UserRound size={16} />
                     Login
@@ -557,7 +651,7 @@ export default function DashboardLayout() {
                       logout();
                       navigate("/dashboard");
                     }}
-                    className="h-11 whitespace-nowrap rounded-full bg-red-600 px-4 text-[0.9375rem] font-semibold text-white hover:bg-red-700 transition"
+                    className="h-9 whitespace-nowrap rounded-full bg-red-600 px-4 text-[0.9375rem] font-semibold text-white hover:bg-red-700 transition"
                   >
                     Logout
                   </button>
@@ -570,7 +664,8 @@ export default function DashboardLayout() {
 
           {/* ============ Row 2: logos left · title centre · logos right ============ */}
           <div className="rt-band">
-            <div className="mx-auto grid max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+            <RatnagiriScene />
+            <div className="relative mx-auto grid max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5 sm:px-8 lg:px-12">
               <div className="justify-self-start">
                 <LogoSlot {...LOGOS.left} className="h-14 sm:h-20 lg:h-24" />
               </div>
@@ -601,20 +696,20 @@ export default function DashboardLayout() {
         <div className="sticky top-0 z-40 bg-[#0b3149] shadow-md">
           <nav
             aria-label="Main"
-            className="mx-auto flex h-[3.25rem] max-w-[1680px] items-center gap-1 px-4 sm:px-6 lg:px-8"
+            className="mx-auto grid h-[3.75rem] max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-8 lg:px-12"
           >
             {/* Small screens: opens the sidebar */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label="Toggle menu"
-              className="lg:hidden flex h-11 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+              className="lg:hidden justify-self-start flex h-11 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               Menu
             </button>
 
             {/* Pages */}
-            <div className="hidden lg:flex items-center gap-0.5">
+            <div className="col-start-2 hidden lg:flex items-center justify-center gap-0.5">
               <button
                 onClick={() => navigate("/dashboard")}
                 data-active={location.pathname === "/dashboard"}
@@ -637,7 +732,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* CTAs: icon-only < 1024px, short label 1024–1279px, full label 1280px+ */}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="col-start-3 flex items-center justify-end gap-2">
               <button
                 onClick={() => navigate("/interactive-map")}
                 aria-label="Interactive Map"
