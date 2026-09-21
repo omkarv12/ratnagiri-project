@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  LayersControl,
+  GeoJSON,
+} from "react-leaflet";
 import {
   Compass,
   MapPin,
