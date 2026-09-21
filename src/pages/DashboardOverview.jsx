@@ -676,22 +676,7 @@ export default function DashboardOverview() {
         </div>
       </footer>
 
-      {/* ================= Floating Call Button ================= */}
-      <a
-        href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
-        aria-label="Call Ratnagiri Tourism — Emergency Help"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 pl-4 pr-5 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-emerald-300"
-      >
-        <span className="absolute left-0 top-0 w-14 h-14 rounded-full bg-emerald-500 animate-ping opacity-40" />
-        <Phone size={22} className="relative fill-white shrink-0" />
-        <span className="relative text-sm font-semibold whitespace-nowrap">
-          Emergency Help
-        </span>
-      </a>
-    </div>
-  );
-}
-
+      
 // Small helper icon for the "PLAN YOUR TRIP" eyebrow in the Everything You
 // Need section (kept separate since lucide's route-style icon name can vary
 // across versions — swap for `Route` from lucide-react if you prefer).
