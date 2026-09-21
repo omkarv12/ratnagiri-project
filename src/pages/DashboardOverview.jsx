@@ -29,11 +29,11 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
-import Slider1 from "../assets/Sliders1.png";
-import Slider2 from "../assets/Sliders2.png";
-import Slider3 from "../assets/Sliders3.png";
-import Slider4 from "../assets/Sliders4.png";
-import Slider5 from "../assets/Sliders5.png";
+import Slider1 from "../assets/Sliders1.jpg";
+import Slider2 from "../assets/Sliders2.jpg";
+import Slider3 from "../assets/Sliders3.jpg";
+import Slider4 from "../assets/Sliders4.jpg";
+import Slider5 from "../assets/Sliders5.jpg";
 import Slider6 from "../assets/Sliders6.jpg";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
