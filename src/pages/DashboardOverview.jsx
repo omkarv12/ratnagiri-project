@@ -6,7 +6,6 @@ import {
   Popup,
   useMap,
   LayersControl,
-  GeoJSON,
 } from "react-leaflet";
 import {
   Compass,
@@ -174,6 +173,35 @@ function KonkanBackdrop() {
 }
 
 
+// Ratnagiri taluka locations used by the dashboard map.
+// Coordinates are representative locations for flying the map to each taluka.
+const RATNAGIRI_TALUKAS = [
+  { name: "Ratnagiri", lat: 16.9944, lng: 73.3002 },
+  { name: "Sangameshwar", lat: 17.1867, lng: 73.5530 },
+  { name: "Lanja", lat: 16.8578, lng: 73.5490 },
+  { name: "Rajapur", lat: 16.6550, lng: 73.5170 },
+  { name: "Chiplun", lat: 17.5330, lng: 73.5160 },
+  { name: "Guhagar", lat: 17.4840, lng: 73.1930 },
+  { name: "Dapoli", lat: 17.7590, lng: 73.1850 },
+  { name: "Khed", lat: 17.7170, lng: 73.3970 },
+  { name: "Mandangad", lat: 17.9830, lng: 73.2500 },
+];
+
+function TalukaFlyController({ position }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!position || position.length !== 2) return;
+
+    map.flyTo(position, 11, {
+      duration: 1.2,
+      easeLinearity: 0.25,
+    });
+  }, [position, map]);
+
+  return null;
+}
+
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
@@ -183,7 +211,7 @@ export default function DashboardOverview() {
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [selectedTaluka, setSelectedTaluka] = useState(null);
+  const [exploreTaluka, setExploreTaluka] = useState(null);
   const loadingMessages = [
     "Boarding the Konkan Railway...",
     "Chugging past the Sahyadris...",
