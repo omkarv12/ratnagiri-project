@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
+import DraftResumeModal from "./DraftResumeModal";
+import { useFormDraft } from "../../hooks/useFormDraft";
 
 const MIN_PHOTO_SIZE = 500 * 1024;
 const MAX_GALLERY_PHOTOS = 6;
+const DRAFT_KEY = "ratnagiri_homestay_form_draft";
 
 const STEP_LABELS = [
     "Basic Information",
@@ -235,6 +238,14 @@ export default function HomestayForm({ onSuccess }) {
         setTimeout(() => setShake(false), 500);
     };
 
+    // Draft detect/autosave/restore — text fields only; selected photo files
+    // can't be persisted to localStorage.
+    const { pendingDraft, continueDraft, discardDraft, clearDraft } = useFormDraft(
+        DRAFT_KEY,
+        formData,
+        setFormData
+    );
+
     const handleHeaderPhotoSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -424,6 +435,8 @@ export default function HomestayForm({ onSuccess }) {
                 onSuccess();
             }
 
+            clearDraft();
+
             setFormData({
 
                 homestay_name: "",
@@ -494,6 +507,17 @@ export default function HomestayForm({ onSuccess }) {
     };
 
     return (
+
+        <>
+
+        <DraftResumeModal
+            draft={pendingDraft}
+            formLabel="Homestay Registration"
+            nameField="homestay_name"
+            note="Photos aren't saved in drafts — you'll need to re-select them."
+            onContinue={continueDraft}
+            onDiscard={discardDraft}
+        />
 
         <form
             onSubmit={handleSubmit}
@@ -1251,6 +1275,7 @@ export default function HomestayForm({ onSuccess }) {
             </div>
 
         </form>
+        </>
 
     );
 

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
+import DraftResumeModal from "./DraftResumeModal";
+import { useFormDraft } from "../../hooks/useFormDraft";
+
+const DRAFT_KEY = "ratnagiri_driver_form_draft";
 
 const STEP_LABELS = [
     "Basic Information",
@@ -181,6 +185,14 @@ export default function DriverForm({ onSuccess }) {
         setTimeout(() => setShake(false), 500);
     };
 
+    // Draft detect/autosave/restore — text fields only; the driver, vehicle,
+    // and number-plate photo files can't be persisted to localStorage.
+    const { pendingDraft, continueDraft, discardDraft, clearDraft } = useFormDraft(
+        DRAFT_KEY,
+        formData,
+        setFormData
+    );
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -297,6 +309,8 @@ export default function DriverForm({ onSuccess }) {
                 onSuccess();
             }
 
+            clearDraft();
+
             setFormData({
                 driver_name: "",
                 phone_number: "",
@@ -327,6 +341,17 @@ export default function DriverForm({ onSuccess }) {
     };
 
     return (
+
+        <>
+
+        <DraftResumeModal
+            draft={pendingDraft}
+            formLabel="Driver Registration"
+            nameField="driver_name"
+            note="Photos aren't saved in drafts — you'll need to re-select them."
+            onContinue={continueDraft}
+            onDiscard={discardDraft}
+        />
 
         <form
             onSubmit={handleSubmit}
@@ -634,6 +659,7 @@ export default function DriverForm({ onSuccess }) {
             </div>
 
         </form>
+        </>
 
     );
 

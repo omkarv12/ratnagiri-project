@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
+import DraftResumeModal from "./DraftResumeModal";
+import { useFormDraft } from "../../hooks/useFormDraft";
+
 const MIN_PHOTO_SIZE = 500 * 1024;
 const MAX_GALLERY_PHOTOS = 6;
 const DRAFT_KEY = "ratnagiri_location_form_draft";
@@ -255,42 +258,14 @@ const [selectedPhotos, setSelectedPhotos] = useState([]);
 const [photoPreviews, setPhotoPreviews] = useState([]);
 const [uploading, setUploading] = useState(false);
 
-// Offer to restore a saved draft on first load. Only text fields are
-// restorable — selected photo files can't be persisted to localStorage.
-useEffect(() => {
-    try {
-        const saved = localStorage.getItem(DRAFT_KEY);
-        if (!saved) return;
-
-        const parsed = JSON.parse(saved);
-        const hasContent = Object.values(parsed).some((value) =>
-            Array.isArray(value) ? value.length > 0 : !!value
-        );
-
-        if (!hasContent) {
-            localStorage.removeItem(DRAFT_KEY);
-            return;
-        }
-
-        if (window.confirm("We found a saved draft of this form. Continue where you left off?")) {
-            setFormData((prev) => ({ ...prev, ...parsed }));
-        } else {
-            localStorage.removeItem(DRAFT_KEY);
-        }
-    } catch (err) {
-        // Corrupt or inaccessible draft — ignore and start fresh.
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
-// Autosave the draft as the user types (text fields only).
-useEffect(() => {
-    try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
-    } catch (err) {
-        // Storage full or unavailable — not critical, ignore.
-    }
-}, [formData]);
+// Draft detect/autosave/restore — replaces the old window.confirm() flow.
+// Only text fields are restorable; selected photo files can't be persisted
+// to localStorage, so they're excluded from formData already.
+const { pendingDraft, continueDraft, discardDraft, clearDraft } = useFormDraft(
+    DRAFT_KEY,
+    formData,
+    setFormData
+);
 
 const handleHeaderPhotoSelect = (e) => {
     const file = e.target.files[0];
@@ -476,7 +451,7 @@ const handleSubmit = async (e) => {
       onSuccess();
     }
 
-    localStorage.removeItem(DRAFT_KEY);
+    clearDraft();
 
     setFormData({
 
@@ -552,6 +527,16 @@ const handleSubmit = async (e) => {
 
 
   return (
+    <>
+
+    <DraftResumeModal
+        draft={pendingDraft}
+        formLabel="Location Registration"
+        nameField="location_name"
+        note="Photos aren't saved in drafts — you'll need to re-select them."
+        onContinue={continueDraft}
+        onDiscard={discardDraft}
+    />
 
     <form
         onSubmit={handleSubmit}
@@ -1398,5 +1383,6 @@ const handleSubmit = async (e) => {
         </div>
 
     </form>
+    </>
   );
 }
