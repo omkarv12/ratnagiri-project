@@ -34,15 +34,56 @@ function LogoMark() {
 const NAV_ITEM_CLASS =
   "flex items-center px-3.5 py-2 rounded-lg text-[15px] hover:text-base font-semibold text-slate-900 hover:bg-slate-100 transition-all duration-150";
 
-// Plain nav links, left to right. "Forum" is intentionally last.
-// Update the routes below once the real pages exist.
-const NAV_LINKS = [
+// Plain nav links before the Resources dropdown.
+const NAV_LINKS_BEFORE = [
   { label: "Plan Your Trip", route: "/plan-your-trip" },
   { label: "Experiences", route: "/experiences" },
   { label: "Stories", route: "/stories" },
-  { label: "Resources", route: "/resources" },
-  { label: "About", route: "/about" },
 ];
+
+// Plain nav links after the Resources dropdown.
+const NAV_LINKS_AFTER = [{ label: "About", route: "/about" }];
+
+// Resources dropdown — its own pages live under /resources/*.
+const RESOURCES_MENU = {
+  label: "Resources",
+  route: "/resources",
+  children: [
+    { label: "Medical Facilities", route: "/resources/medical-facilities" },
+    { label: "Police Stations", route: "/resources/police-stations" },
+    { label: "Transport Facilities", route: "/resources/transport-facilities" },
+    { label: "Do's / Don'ts", route: "/resources/dos-and-donts" },
+  ],
+};
+
+function NavDropdown({ menu, active, navigate }) {
+  return (
+    <div className="relative group">
+      <button
+        onClick={() => navigate(menu.route)}
+        className={`${NAV_ITEM_CLASS} gap-1.5 ${active ? "bg-slate-100" : ""}`}
+      >
+        {menu.label}
+        <ChevronDown size={13} className="text-slate-400 group-hover:rotate-180 transition-transform" />
+      </button>
+
+      {/* Dropdown panel */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-150 z-50">
+        <div className="w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-2">
+          {menu.children.map((child) => (
+            <button
+              key={child.label}
+              onClick={() => navigate(child.route)}
+              className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-100 hover:text-[#0b3149] rounded-lg mx-1 w-[calc(100%-8px)] transition-colors"
+            >
+              {child.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -82,20 +123,15 @@ export default function DashboardLayout() {
                 className="flex items-center gap-3 shrink-0"
               >
                 <LogoMark />
-                <span className="text-left leading-tight">
-                  <span className="block font-serif text-2xl font-bold text-[#0b3149]">
-                    Ratnagiri
-                  </span>
-                  <span className="block text-xs font-medium text-teal-600 -mt-0.5">
-                    Tourism Dashboard
-                  </span>
+                <span className="font-serif text-2xl font-bold text-[#0b3149]">
+                  Ratnagiri Tourism
                 </span>
               </button>
             </div>
 
             {/* Center: nav */}
             <nav className="hidden md:flex items-center gap-2 text-sm">
-              {NAV_LINKS.map((link) => (
+              {NAV_LINKS_BEFORE.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => navigate(link.route)}
@@ -107,13 +143,23 @@ export default function DashboardLayout() {
                 </button>
               ))}
 
-              <button
-                onClick={() => navigate("/review/add-place")}
-                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[15px] px-4 py-2 rounded-full transition-colors duration-150 ml-1"
-              >
-                <MapPlus size={16} />
-                Add location and services
-              </button>
+              <NavDropdown
+                menu={RESOURCES_MENU}
+                active={location.pathname.startsWith(RESOURCES_MENU.route)}
+                navigate={navigate}
+              />
+
+              {NAV_LINKS_AFTER.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => navigate(link.route)}
+                  className={`${NAV_ITEM_CLASS} ${
+                    location.pathname.startsWith(link.route) ? "bg-slate-100" : ""
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
 
               <button
                 onClick={() => navigate("/forum")}
@@ -128,6 +174,14 @@ export default function DashboardLayout() {
                   }`}
                 />
                 Forum
+              </button>
+
+              <button
+                onClick={() => navigate("/review/add-place")}
+                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[15px] px-4 py-2 rounded-full transition-colors duration-150 ml-1"
+              >
+                <MapPlus size={16} />
+                Add location and services
               </button>
             </nav>
 
