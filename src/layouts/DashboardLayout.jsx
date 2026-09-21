@@ -348,7 +348,7 @@ export default function DashboardLayout() {
                 >
                   <span className="rt-shine absolute inset-0 overflow-hidden rounded-full pointer-events-none" />
                   <Compass size={17} className="rt-compass relative" />
-                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Map</span>
+                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Interactive Map</span>
                   <span className="relative hidden min-[1700px]:inline">Interactive Map</span>
                   <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
                     <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-300" />
@@ -365,7 +365,7 @@ export default function DashboardLayout() {
                 >
                   <span className="rt-shine absolute inset-0 overflow-hidden rounded-full pointer-events-none" />
                   <MapPlus size={17} className="rt-mapplus relative" />
-                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add place</span>
+                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add Add location & services</span>
                   <span className="relative hidden min-[1700px]:inline">Add location and services</span>
                 </button>
               </div>
