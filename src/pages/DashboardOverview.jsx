@@ -442,12 +442,27 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar for the What's New feed */
+        /* Slim scrollbar for the What's New feed (kept for touch devices where the marquee is paused) */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
         .rt-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
         .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Auto-scrolling "What's New" marquee: the list is duplicated once
+           and translated by exactly -50% (one copy's height), so the loop
+           point is seamless. Pauses on hover/focus so it's actually readable. */
+        .rt-marquee-track {
+          animation: rtScrollFeed 26s linear infinite;
+        }
+        .rt-marquee-viewport:hover .rt-marquee-track,
+        .rt-marquee-viewport:focus-within .rt-marquee-track {
+          animation-play-state: paused;
+        }
+        @keyframes rtScrollFeed {
+          from { transform: translateY(0); }
+          to   { transform: translateY(-50%); }
+        }
 
         /* Sparkling "New" badge */
         .rt-new {
@@ -466,6 +481,8 @@ export default function DashboardOverview() {
         @media (prefers-reduced-motion: reduce) {
           .animate-fade-up { animation: none; }
           .rt-new svg { animation: none; }
+          .rt-marquee-track { animation: none; }
+          .rt-marquee-viewport { overflow-y: auto; }
         }
       `}</style>
 
@@ -559,40 +576,46 @@ export default function DashboardOverview() {
                 </button>
               </div>
 
-              {/* Scrollable feed with thumbnails */}
-              <ul className="rt-feed divide-y divide-slate-100 overflow-y-auto max-h-[288px]">
-                {updates.map(({ image, title, blurb, isNew, route }) => (
-                  <li key={title}>
-                    <button
-                      onClick={() => navigate(route)}
-                      className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition focus:outline-none focus-visible:bg-slate-50"
-                    >
-                      <img
-                        src={image}
-                        alt=""
-                        loading="lazy"
-                        className="w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-black/5"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-start gap-2">
-                          <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
-                            {title}
+              {/* Auto-scrolling feed — items duplicated once for a seamless
+                  loop; hover/focus pauses it so it stays readable. Reduced-
+                  motion users get the plain scrollable list from .rt-feed. */}
+              <div className="rt-marquee-viewport rt-feed relative overflow-hidden max-h-[288px]">
+                <ul className="rt-marquee-track">
+                  {[...updates, ...updates].map(({ image, title, blurb, isNew, route }, i) => (
+                    <li key={`${title}-${i}`} className="border-b border-slate-100">
+                      <button
+                        onClick={() => navigate(route)}
+                        tabIndex={i < updates.length ? 0 : -1}
+                        aria-hidden={i >= updates.length ? "true" : undefined}
+                        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition focus:outline-none focus-visible:bg-slate-50"
+                      >
+                        <img
+                          src={image}
+                          alt=""
+                          loading="lazy"
+                          className="w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-black/5"
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-start gap-2">
+                            <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
+                              {title}
+                            </p>
+                            {isNew && (
+                              <span className="rt-new shrink-0 mt-0.5">
+                                <Star size={9} fill="currentColor" />
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
+                            {blurb}
                           </p>
-                          {isNew && (
-                            <span className="rt-new shrink-0 mt-0.5">
-                              <Star size={9} fill="currentColor" />
-                              NEW
-                            </span>
-                          )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
-                          {blurb}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <a
