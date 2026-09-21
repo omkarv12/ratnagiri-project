@@ -17,6 +17,7 @@ export default function HomestayForm({ onSuccess }) {
         live_on_premises: "",
         homestay_type: "",
         homestay_unit_type: "",
+        homestay_location: "", 
         google_maps_discoverable: "",
         google_maps_link: "",
         mtdc_registered: "",
@@ -157,6 +158,7 @@ export default function HomestayForm({ onSuccess }) {
             live_on_premises: "",
             homestay_type: "",
             homestay_unit_type: "",
+            homestay_location: "", 
             google_maps_discoverable: "",
             google_maps_link: "",
             mtdc_registered: "",
@@ -427,6 +429,32 @@ export default function HomestayForm({ onSuccess }) {
         <option>Cottage</option>
         <option>Dormitory</option>
         <option>Treehouse</option>
+    </select>
+
+</div>
+
+
+<div>
+
+    <label className="block text-xs font-bold text-slate-500 mb-1">
+        Homestay Location
+    </label>
+
+    <select
+        name="homestay_location"
+        value={formData.homestay_location}
+        onChange={handleChange}
+        className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
+        required
+    >
+        <option value="">Select</option>
+        <option>Beach</option>
+        <option>Farm</option>
+        <option>Inland</option>
+        <option>Hillside</option>
+        <option>Riverside</option>
+        <option>Village</option>
+        <option>Other</option>
     </select>
 
 </div>

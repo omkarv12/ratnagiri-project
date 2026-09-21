@@ -41,6 +41,7 @@ export default function LocationForm({ onSuccess }) {
     peak_period: "",
     avg_time_spent: "",
     visitor_type: [],
+    is_crowded: "", 
     crowd_level: "",
     site_activities: "",
     site_activity_details_doc: "",
@@ -215,6 +216,7 @@ const handleSubmit = async (e) => {
   peak_period: "",
   avg_time_spent: "",
   visitor_type: [],
+  is_crowded: "", 
   crowd_level: "",
   site_activities: "",
   site_activity_details_doc: "",
@@ -440,124 +442,81 @@ City
 </div>
 
 
+<div className="col-span-2">
 
+  <h3 className="text-lg font-bold text-slate-800 mb-3">
+    Managed and Owned By
+  </h3>
 
-<div>
-  <label className="block text-xs font-bold text-slate-500 mb-1">
-    
-<div>
+  <div>
 
-<label className="block text-sm font-semibold text-slate-700 mb-3">
+    <label className="block text-sm font-semibold text-slate-700 mb-3">
+      Owned By
+    </label>
 
-Owned By
+    <div className="space-y-2 mb-6">
 
-</label>
+      {["Government", "Private", "Community", "Public", "Open"].map((item) => (
 
-<div className="space-y-2">
+        <label key={item} className="flex items-center gap-2">
 
-{["Government","Private","Community","Public"].map((item)=>(
+          <input
+            type="radio"
+            name="owned_by"
+            value={item}
+            checked={formData.owned_by === item}
+            onChange={handleChange}
+          />
 
-<label key={item} className="flex items-center gap-2">
+          {item}
 
-<input
+        </label>
 
-type="radio"
+      ))}
 
-name="owned_by"
+    </div>
 
-value={item}
+  </div>
 
-checked={formData.owned_by===item}
+  <div>
 
-onChange={handleChange}
+    <label className="block text-sm font-semibold text-slate-700 mb-3">
+      Managed By
+    </label>
 
-/>
+    <div className="space-y-2">
 
-{item}
+      {[
+        "Gram Panchayat",
+        "MTDC",
+        "Private",
+        "Community Based",
+        "Public",
+        "Government",
+        "Open",
+      ].map((item) => (
 
-</label>
+        <label key={item} className="flex items-center gap-2">
 
-))}
+          <input
+            type="radio"
+            name="managed_by"
+            value={item}
+            checked={formData.managed_by === item}
+            onChange={handleChange}
+          />
 
-</div>
+          {item}
 
-</div>
+        </label>
 
+      ))}
 
-  </label>
+    </div>
 
-  
-</div>
-
-
-
-
-<div>
-  <label className="block text-xs font-bold text-slate-500 mb-1">
-<div>
-
-<label className="block text-sm font-semibold text-slate-700 mb-3">
-
-Managed By
-
-</label>
-
-<div className="space-y-2">
-
-{[
-"Gram Panchayat",
-"MTDC",
-"Private",
-"Community Based",
-"Public"
-].map((item)=>(
-
-<label key={item} className="flex items-center gap-2">
-
-<input
-
-type="radio"
-
-name="managed_by"
-
-value={item}
-
-checked={formData.managed_by===item}
-
-onChange={handleChange}
-
-/>
-
-{item}
-
-</label>
-
-))}
+  </div>
 
 </div>
-
-</div>  </label>
-
-</div>
-
-
-<div>
-  <label className="block text-xs font-bold text-slate-500 mb-1">
-    Nearest Landmark
-  </label>
-
-  <input
-    type="text"
-    name="nearest_landmark"
-    value={formData.nearest_landmark}
-    onChange={handleChange}
-    className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
-    placeholder="e.g. Near Murud Beach"
-  />
-</div>
-
-
-
 
 
 
@@ -571,6 +530,9 @@ onChange={handleChange}
   </h2>
 </div>
 
+<h3 className="text-lg font-bold text-slate-800 mb-2">
+  Location Amenities
+</h3>
 
 <div className="mb-6">
 
@@ -975,7 +937,22 @@ onChange={handleChange}
 
 </div>
 
+<div>
+  <label className="block text-xs font-bold text-slate-500 mb-1">
+    Is it crowded or not?
+  </label>
 
+  <select
+    name="is_crowded"
+    value={formData.is_crowded}
+    onChange={handleChange}
+    className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
+  >
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+</div>
 
 
 <div>
