@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import {
   Menu,
   X,
-  Search,
   Globe,
   ChevronDown,
   UserRound,
@@ -348,7 +347,7 @@ export default function DashboardLayout() {
                 >
                   <span className="rt-shine absolute inset-0 overflow-hidden rounded-full pointer-events-none" />
                   <Compass size={17} className="rt-compass relative" />
-                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Interactive Map</span>
+                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Map</span>
                   <span className="relative hidden min-[1700px]:inline">Interactive Map</span>
                   <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
                     <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-300" />
@@ -365,25 +364,18 @@ export default function DashboardLayout() {
                 >
                   <span className="rt-shine absolute inset-0 overflow-hidden rounded-full pointer-events-none" />
                   <MapPlus size={17} className="rt-mapplus relative" />
-                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add places & Homestays</span>
+                  <span className="relative hidden min-[1536px]:inline min-[1700px]:hidden">Add place</span>
                   <span className="relative hidden min-[1700px]:inline">Add location and services</span>
                 </button>
               </div>
             </nav>
 
-            {/* Right: language, search, login/logout */}
+            {/* Right: language, login/logout */}
             <div className="flex items-center gap-2 shrink-0">
               <button className="hidden sm:flex items-center gap-1 text-sm font-semibold text-slate-900 hover:bg-slate-100 rounded-lg px-2.5 py-2 transition">
                 <Globe size={16} />
                 EN
                 <ChevronDown size={14} />
-              </button>
-
-              <button
-                aria-label="Search"
-                className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full text-slate-700 hover:bg-slate-100 hover:text-teal-700 transition"
-              >
-                <Search size={18} />
               </button>
 
               {showLoginButton && (
