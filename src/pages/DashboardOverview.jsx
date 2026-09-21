@@ -23,6 +23,7 @@ import {
   BookOpen,
   ShieldCheck,
 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react"; // add to the existing lucide import list
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
 import Slider1 from "../assets/Sliders1.jpg";
@@ -163,6 +164,39 @@ function KonkanBackdrop() {
   );
 }
 
+// Fixes Leaflet's default marker icon path. If SustainabilityMap.jsx is
+// also mounted in the same app this runs twice, which is harmless — but
+// feel free to move this into a shared setup file and import it once.
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+// Ratnagiri district's 9 talukas with approximate HQ coordinates and an
+// accent color for the list (cycled, like the reference screenshot).
+const RATNAGIRI_TALUKAS = [
+  { name: "Ratnagiri",     lat: 16.9902, lng: 73.3120, color: "#0ea5e9" },
+  { name: "Sangameshwar",  lat: 17.1667, lng: 73.5500, color: "#eab308" },
+  { name: "Lanja",         lat: 16.8167, lng: 73.5667, color: "#16a34a" },
+  { name: "Rajapur",       lat: 16.6500, lng: 73.5167, color: "#e11d48" },
+  { name: "Chiplun",       lat: 17.5333, lng: 73.5167, color: "#7c3aed" },
+  { name: "Guhagar",       lat: 17.4833, lng: 73.2000, color: "#16a34a" },
+  { name: "Dapoli",        lat: 17.7500, lng: 73.1833, color: "#0ea5e9" },
+  { name: "Khed",          lat: 17.7167, lng: 73.3833, color: "#eab308" },
+  { name: "Mandangad",     lat: 17.8500, lng: 73.2833, color: "#e11d48" },
+];
+
+// Flies the map to `position` whenever it changes (e.g. taluka clicked)
+function TalukaFlyController({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) map.flyTo(position, 11, { animate: true, duration: 1.2 });
+  }, [position, map]);
+  return null;
+}
+
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
@@ -172,6 +206,7 @@ export default function DashboardOverview() {
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedTaluka, setSelectedTaluka] = useState(null);
   const loadingMessages = [
     "Boarding the Konkan Railway...",
     "Chugging past the Sahyadris...",
@@ -633,6 +668,62 @@ export default function DashboardOverview() {
           </div>
         </div>
       </section>
+
+      {/* ================= Explore Interactive Map ================= */}
+<section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+  <div className="max-w-[1680px] mx-auto">
+    <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+      <MapPin size={16} />
+      Explore Interactive Map
+    </div>
+    <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-8">
+      Explore Ratnagiri <span className="text-emerald-600">Talukas</span>
+    </h2>
+
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+      {/* Left: live interactive map */}
+      <div className="rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 h-[420px] sm:h-[520px]">
+        <MapContainer center={[17.2, 73.35]} zoom={9} className="w-full h-full z-0">
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+            attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          />
+          <TalukaFlyController
+            position={selectedTaluka ? [selectedTaluka.lat, selectedTaluka.lng] : null}
+          />
+          {RATNAGIRI_TALUKAS.map((t) => (
+            <Marker key={t.name} position={[t.lat, t.lng]}>
+              <Popup>{t.name} Taluka</Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      {/* Right: scrollable taluka list */}
+      <div className="bg-white rounded-2xl shadow-lg ring-1 ring-black/5 overflow-hidden">
+        <div className="px-5 py-4 bg-indigo-50">
+          <p className="font-display text-lg font-bold text-slate-900">Explore Talukas</p>
+        </div>
+        <ul className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto rt-feed">
+          {RATNAGIRI_TALUKAS.map((t) => (
+            <li key={t.name}>
+              <button
+                onClick={() => setSelectedTaluka(t)}
+                className={`w-full flex items-center gap-3 px-5 py-3.5 text-left border-l-4 transition-colors ${
+                  selectedTaluka?.name === t.name ? "bg-slate-50" : "hover:bg-slate-50"
+                }`}
+                style={{ borderLeftColor: t.color }}
+              >
+                <CheckCircle2 size={18} className="text-orange-500 shrink-0" />
+                <span className="text-sm font-medium text-slate-800">{t.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* ================= Explore Ratnagiri ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
