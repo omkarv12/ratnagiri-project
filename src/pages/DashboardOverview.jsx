@@ -22,7 +22,6 @@ import {
   Phone,
   BookOpen,
   ShieldCheck,
-  CarTaxiFront,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -216,13 +215,6 @@ export default function DashboardOverview() {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
-
-  // Quick access — replaces the duplicate search field.
-  const quickAccess = [
-    { label: "Locations", hint: "Beaches, forts & more", icon: MapPin, route: "/map" },
-    { label: "Homestays", hint: "Stay with locals", icon: Home, route: "/homestays" },
-    { label: "Drivers & Autos", hint: "Local rides on call", icon: CarTaxiFront, route: "/transport" },
-  ];
 
   // "What's New" items. TODO: replace with real CMS/stories data.
   // `image` is the thumbnail, `isNew` shows the sparkle badge.
@@ -524,27 +516,8 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Right: quick access + stats/What's New panel + contact */}
+          {/* Right: stats/What's New panel + contact */}
           <div className="flex flex-col gap-4 min-w-0">
-            {/* Quick access — replaces the second search field */}
-            <div className="grid grid-cols-3 gap-3">
-              {quickAccess.map(({ label, hint, icon: Icon, route }) => (
-                <button
-                  key={label}
-                  onClick={() => navigate(route)}
-                  className="group bg-white/90 backdrop-blur-sm border border-white/70 rounded-xl px-3 py-3.5 text-left shadow-sm hover:shadow-md hover:bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
-                >
-                  <span className="w-9 h-9 rounded-full bg-[#0b3149]/5 text-[#0f766e] flex items-center justify-center mb-2 group-hover:bg-[#0f766e] group-hover:text-white transition">
-                    <Icon size={17} />
-                  </span>
-                  <p className="text-[13px] font-semibold font-body text-slate-800 leading-tight">
-                    {label}
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{hint}</p>
-                </button>
-              ))}
-            </div>
-
             {/* Attached panel: stats sit flush on top of What's New */}
             <div className="bg-white rounded-2xl shadow-lg ring-1 ring-black/5 overflow-hidden flex flex-col min-h-0">
               {/* stats strip */}
