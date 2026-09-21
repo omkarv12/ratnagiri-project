@@ -691,13 +691,7 @@ export default function DashboardOverview() {
             attribution=""
           />
 
-          {exploreDistrictBorder && (
-            <GeoJSON
-              data={exploreDistrictBorder}
-              style={{ color: "#dc2626", weight: 2.5, fillOpacity: 0, dashArray: "5, 4" }}
-              interactive={false}
-            />
-          )}
+          
 
           <TalukaFlyController
             position={exploreTaluka ? [exploreTaluka.lat, exploreTaluka.lng] : null}
