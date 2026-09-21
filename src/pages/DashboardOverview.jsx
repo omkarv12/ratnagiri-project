@@ -3,7 +3,6 @@ import {
   Compass,
   MapPin,
   Search,
-  ChevronLeft,
   ChevronRight,
   Tag,
   Target,
@@ -106,12 +105,43 @@ export default function DashboardOverview() {
     return () => clearInterval(interval);
   }, []);
 
-  const planTripItems = [
-    { label: "Location", icon: MapPin },
-    { label: "Interest", icon: Target },
-    { label: "Themes", icon: Tag },
-    { label: "Experiences", icon: Star },
-    { label: "Estimated Budget", icon: null, glyph: "₹" },
+  // Snapshot stats — count up on mount. TODO: wire to real numbers (or a CMS
+  // field) once they're available; these are placeholders.
+  const [statBeaches, setStatBeaches] = useState(0);
+  const [statHomestays, setStatHomestays] = useState(0);
+
+  useEffect(() => {
+    const targets = { beaches: 18, homestays: 60 };
+    const duration = 1200;
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      setStatBeaches(Math.round(targets.beaches * progress));
+      setStatHomestays(Math.round(targets.homestays * progress));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // "What's New" snapshot items. TODO: replace with real CMS/stories data.
+  const updates = [
+    {
+      icon: Landmark,
+      title: "Ganeshotsav Homestay Bookings Open",
+      blurb: "Konkan's biggest festival is coming — reserve a homestay early for the best rates.",
+    },
+    {
+      icon: BookOpen,
+      title: "New Guided Trail: Fort to Bhagwati Bandar",
+      blurb: "A fresh 3 km coastal walking trail with a local guide, launching this season.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Monsoon Travel Advisory",
+      blurb: "Some beach and fort routes have seasonal restrictions — check before you go.",
+    },
   ];
 
   const exploreCategories = [
@@ -277,44 +307,79 @@ export default function DashboardOverview() {
 
   return (
     <div className="animate-in fade-in duration-500">
-      {/* ================= Hero ================= */}
-      <div className="relative w-full h-[520px] sm:h-[600px] overflow-hidden">
-        {heroImages.map((img, index) => (
-          <div
-            key={index}
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
-            style={{
-              backgroundImage: `url('${img}')`,
-              opacity: index === currentSlide ? 1 : 0,
-            }}
-          />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/45" />
+      {/* Fonts + entrance animation. TODO: once fonts are added to the Tailwind
+          config, move this @import into index.html <head> as <link> tags —
+          it's inlined here for now so this component works as a drop-in. */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
 
-        {/* Hero copy + search */}
-        <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-12 lg:px-16">
-          <div className="max-w-xl">
-            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-white/80 mb-4">
-              Explore &middot; Experience &middot; Support Local
-            </p>
-            <h1 className="font-serif font-bold text-white leading-[1.05] text-4xl sm:text-5xl lg:text-6xl">
-              Discover
-              <br />
-              <span className="text-teal-300">Ratnagiri</span>
-            </h1>
-            <p className="mt-5 text-sm sm:text-base text-slate-100 leading-relaxed max-w-md">
-              Beaches, forts, culture, food and more — your complete guide to
-              Ratnagiri tourism.
-            </p>
+        .font-display { font-family: 'Fraunces', Georgia, serif; }
+        .font-body { font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif; }
 
-            <div className="mt-7 flex items-center bg-white rounded-full shadow-lg max-w-md overflow-hidden">
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+          animation: fadeUp 0.6s ease-out both;
+        }
+      `}</style>
+
+      {/* ================= Snapshot (photo + stats + What's New) ================= */}
+      <section className="bg-[#0b3149] px-5 sm:px-10 lg:px-16 py-10 sm:py-14">
+        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
+          {/* Left: rotating photo tile with caption */}
+          <div className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[440px]">
+            {heroImages.map((img, index) => (
+              <div
+                key={index}
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+                style={{
+                  backgroundImage: `url('${img}')`,
+                  opacity: index === currentSlide ? 1 : 0,
+                }}
+              />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+
+            <div className="absolute top-6 left-6 right-6 animate-fade-up">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 mb-2">
+                Explore &middot; Experience &middot; Support Local
+              </p>
+              <h1 className="font-display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl">
+                Discover <span className="text-teal-300">Ratnagiri</span>
+              </h1>
+            </div>
+
+            <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
+              <p className="font-display italic text-white/90 text-sm sm:text-base border-b border-dashed border-white/40 pb-1">
+                Beaches, forts, culture &amp; Konkan flavours
+              </p>
+              <div className="flex gap-1.5 shrink-0">
+                {heroImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    aria-label={`Go to slide ${index + 1}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentSlide ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: search, stats, What's New, contact */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center bg-white rounded-full shadow-lg overflow-hidden animate-fade-up">
               <span className="pl-5 text-slate-400">
                 <MapPin size={18} />
               </span>
               <input
                 type="text"
                 placeholder="Search beaches, forts, homestays, places..."
-                className="flex-1 px-3 py-3.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent"
+                className="flex-1 px-3 py-3.5 text-sm font-body text-slate-700 placeholder:text-slate-400 outline-none bg-transparent"
               />
               <button
                 onClick={() => navigate("/map")}
@@ -324,73 +389,86 @@ export default function DashboardOverview() {
                 <Search size={18} />
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Plan Your Trip floating card */}
-        <div className="hidden lg:block absolute top-10 right-10 w-72 rounded-2xl bg-[#0e5f73]/90 backdrop-blur-sm text-white p-5 shadow-xl">
-          <div className="flex items-center gap-2 font-serif text-lg font-semibold mb-3">
-            <Compass size={20} />
-            Plan Your Trip
-          </div>
-          <ul>
-            {planTripItems.map(({ label, icon: Icon, glyph }, i) => (
-              <li key={label}>
+            <div className="grid grid-cols-2 gap-4">
+              <div
+                className="bg-white/95 rounded-xl p-4 flex items-center gap-3 animate-fade-up"
+                style={{ animationDelay: "80ms" }}
+              >
+                <span className="w-11 h-11 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                  <Waves size={19} />
+                </span>
+                <div>
+                  <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
+                    {statBeaches}+
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">Beaches & Forts</p>
+                </div>
+              </div>
+              <div
+                className="bg-white/95 rounded-xl p-4 flex items-center gap-3 animate-fade-up"
+                style={{ animationDelay: "160ms" }}
+              >
+                <span className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <Home size={19} />
+                </span>
+                <div>
+                  <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
+                    {statHomestays}+
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">Registered Homestays</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="bg-white/95 rounded-xl overflow-hidden animate-fade-up"
+              style={{ animationDelay: "240ms" }}
+            >
+              <div className="flex items-center justify-between px-4 py-2.5 bg-[#B4532A]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-white">
+                  What&apos;s New
+                </p>
                 <button
-                  onClick={() => navigate("/plan-your-trip")}
-                  className={`w-full flex items-center justify-between gap-3 py-3 text-sm text-white/90 hover:text-white transition ${
-                    i !== planTripItems.length - 1 ? "border-b border-white/15" : ""
-                  }`}
+                  onClick={() => navigate("/stories")}
+                  className="text-[11px] font-semibold text-white/85 hover:text-white transition"
                 >
-                  <span className="flex items-center gap-2.5">
-                    {Icon ? (
-                      <Icon size={15} className="text-teal-300" />
-                    ) : (
-                      <span className="text-teal-300 font-semibold text-sm w-[15px] text-center">
-                        {glyph}
-                      </span>
-                    )}
-                    {label}
-                  </span>
-                  <ChevronRight size={15} className="text-white/60" />
+                  More
                 </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+              </div>
+              <ul className="divide-y divide-slate-100">
+                {updates.map(({ icon: Icon, title, blurb }) => (
+                  <li key={title} className="flex items-start gap-3 px-4 py-3">
+                    <span className="w-8 h-8 rounded-full bg-[#F4F8F9] text-[#0f766e] flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon size={15} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
+                        {title}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5 leading-snug">{blurb}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        {/* Slide controls */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10">
-          <button
-            onClick={() =>
-              setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length)
-            }
-            aria-label="Previous slide"
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center backdrop-blur-sm transition"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <div className="flex gap-2">
-            {heroImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                aria-label={`Go to slide ${index + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
-                }`}
-              />
-            ))}
+            <a
+              href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
+              className="flex items-center gap-3 bg-[#0f766e] hover:bg-[#0c6059] rounded-xl px-4 py-3 text-white transition animate-fade-up"
+              style={{ animationDelay: "320ms" }}
+            >
+              <span className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                <Phone size={16} />
+              </span>
+              <div>
+                <p className="text-sm font-semibold font-body">Need help planning?</p>
+                <p className="text-xs text-white/80">Call the Ratnagiri Tourism Desk</p>
+              </div>
+            </a>
           </div>
-          <button
-            onClick={() => setCurrentSlide((prev) => (prev + 1) % heroImages.length)}
-            aria-label="Next slide"
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 text-white flex items-center justify-center backdrop-blur-sm transition"
-          >
-            <ChevronRight size={16} />
-          </button>
         </div>
-      </div>
+      </section>
 
       {/* ================= Explore Ratnagiri ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
@@ -401,7 +479,7 @@ export default function DashboardOverview() {
               <Compass size={16} />
               Things to Do
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="font-serif font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Explore <span className="text-emerald-600">Ratnagiri</span>
             </h2>
             <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
@@ -465,7 +543,7 @@ export default function DashboardOverview() {
             </div>
 
             <div className="p-5">
-              <h3 className="font-serif text-xl font-bold text-slate-900 mb-1.5">
+              <h3 className="font-serif font-display text-xl font-bold text-slate-900 mb-1.5">
                 Interactive Map
               </h3>
               <p className="text-sm text-slate-500 mb-4">
@@ -504,7 +582,7 @@ export default function DashboardOverview() {
               <Route2Icon />
               Plan Your Trip
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="font-serif font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Everything You Need
             </h2>
             <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
@@ -546,7 +624,7 @@ export default function DashboardOverview() {
               style={{ backgroundImage: `url(${heroImages[2]})` }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <p className="absolute top-6 left-6 font-serif italic text-white text-2xl leading-tight">
+            <p className="absolute top-6 left-6 font-serif font-display italic text-white text-2xl leading-tight">
               Plan
               <br />
               Explore
@@ -572,7 +650,7 @@ export default function DashboardOverview() {
         </div>
 
         <div className="max-w-3xl mx-auto border border-dashed border-sky-300 rounded-lg px-6 sm:px-10 py-8 sm:py-10 bg-sky-50/40">
-          <p className="font-serif text-base sm:text-lg leading-relaxed text-slate-800 text-center">
+          <p className="font-serif font-body text-base sm:text-lg leading-relaxed text-slate-800 text-center">
             Ratnagiri is best known as the birthplace of freedom fighter
             Lokmanya Tilak, and carries strong ties to Swatantryaveer Savarkar
             and the sage Parshuram. Long before that, the Konkan coastline
@@ -603,7 +681,7 @@ export default function DashboardOverview() {
         <div className="px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
             <div>
-              <h2 className="font-serif italic text-2xl text-white mb-3">
+              <h2 className="font-serif font-display italic text-2xl text-white mb-3">
                 Ratnagiri Tourism
               </h2>
               <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
