@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Compass,
   MapPin,
-  Search,
   ChevronRight,
-  Tag,
-  Target,
   Star,
   Waves,
   Landmark,
@@ -24,8 +21,8 @@ import {
   Play,
   Phone,
   BookOpen,
-  BookText,
   ShieldCheck,
+  CarTaxiFront,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -72,12 +69,107 @@ function YoutubeIcon({ size = 16 }) {
   );
 }
 
+/* ------------------------------------------------------------------
+   Konkan coastline backdrop for the snapshot section.
+   Replaces the flat navy block: hazy Sahyadri ridge, a lighthouse on
+   the headland, coconut palms, a fishing boat and layered surf.
+   Purely decorative -> aria-hidden + pointer-events-none.
+------------------------------------------------------------------ */
+function KonkanBackdrop() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {/* sky -> haze -> sand */}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#EAF5F3_0%,#E4F0EE_38%,#F7EEE0_100%)]" />
+
+      {/* low afternoon sun */}
+      <div className="absolute top-[-90px] right-[10%] w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(232,163,61,0.22)_0%,rgba(232,163,61,0)_68%)]" />
+
+      {/* laterite grain */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(#0b3149 0.6px, transparent 0.6px)",
+          backgroundSize: "20px 20px",
+          opacity: 0.05,
+        }}
+      />
+
+      <svg
+        className="absolute inset-x-0 bottom-0 w-full h-full"
+        viewBox="0 0 1440 620"
+        preserveAspectRatio="xMidYMax slice"
+        fill="none"
+      >
+        {/* far Sahyadri ridge */}
+        <path
+          d="M0 322 L96 286 L178 312 L262 262 L352 306 L438 272 L536 318 L628 288 L720 326 L812 292 L904 330 L1002 296 L1096 334 L1190 300 L1286 336 L1378 306 L1440 330 L1440 620 L0 620 Z"
+          fill="#0b3149"
+          opacity="0.07"
+        />
+        {/* near headland */}
+        <path
+          d="M0 386 L120 362 L248 392 L376 356 L512 398 L648 370 L788 404 L928 374 L1070 406 L1212 378 L1348 408 L1440 388 L1440 620 L0 620 Z"
+          fill="#0f766e"
+          opacity="0.10"
+        />
+
+        {/* lighthouse on the headland */}
+        <g opacity="0.16" fill="#0b3149">
+          <path d="M1246 380 L1252 300 L1268 300 L1274 380 Z" />
+          <rect x="1248" y="288" width="24" height="9" rx="2" />
+          <path d="M1254 288 L1260 276 L1266 288 Z" />
+        </g>
+
+        {/* coconut palms, left cluster */}
+        <g opacity="0.15" fill="#0f766e">
+          <path d="M92 402 C96 360 100 336 106 306 L114 307 C110 338 108 362 106 402 Z" />
+          <path d="M110 306 C86 288 62 288 44 302 C68 296 92 300 110 312 Z" />
+          <path d="M110 306 C132 284 160 282 180 294 C154 292 130 298 112 312 Z" />
+          <path d="M110 304 C104 280 86 262 62 256 C86 268 100 284 108 308 Z" />
+          <path d="M110 304 C120 280 142 264 166 260 C142 272 124 288 114 310 Z" />
+        </g>
+        {/* palm, right */}
+        <g opacity="0.13" fill="#0f766e">
+          <path d="M1366 414 C1370 372 1374 348 1380 318 L1388 319 C1384 350 1382 374 1380 414 Z" />
+          <path d="M1384 318 C1360 300 1336 300 1318 314 C1342 308 1366 312 1384 324 Z" />
+          <path d="M1384 318 C1406 296 1434 294 1454 306 C1428 304 1404 310 1386 324 Z" />
+          <path d="M1384 316 C1378 292 1360 274 1336 268 C1360 280 1374 296 1382 320 Z" />
+        </g>
+
+        {/* fishing boat */}
+        <g opacity="0.14" fill="#B4532A">
+          <path d="M604 442 L700 442 L688 460 L616 460 Z" />
+          <rect x="648" y="404" width="4" height="38" />
+          <path d="M652 408 L684 438 L652 438 Z" />
+        </g>
+
+        {/* layered surf */}
+        <path
+          d="M0 470 C160 448 320 492 480 470 C640 448 800 492 960 470 C1120 448 1280 492 1440 470 L1440 620 L0 620 Z"
+          fill="#0f766e"
+          opacity="0.12"
+        />
+        <path
+          d="M0 512 C180 492 300 534 480 514 C660 494 790 536 970 516 C1150 496 1280 534 1440 514 L1440 620 L0 620 Z"
+          fill="#0b3149"
+          opacity="0.08"
+        />
+        <path
+          d="M0 556 C200 538 340 578 540 560 C740 542 880 580 1080 562 C1230 549 1330 566 1440 556 L1440 620 L0 620 Z"
+          fill="#F7EEE0"
+          opacity="0.95"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
 
   // TODO: replace with the real Ratnagiri Tourism office number (E.164 format,
-  // no spaces/dashes) — this is what the floating call button dials.
+  // no spaces/dashes) — this is what the call strip dials.
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -125,22 +217,59 @@ export default function DashboardOverview() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // "What's New" snapshot items. TODO: replace with real CMS/stories data.
+  // Quick access — replaces the duplicate search field.
+  const quickAccess = [
+    { label: "Locations", hint: "Beaches, forts & more", icon: MapPin, route: "/map" },
+    { label: "Homestays", hint: "Stay with locals", icon: Home, route: "/homestays" },
+    { label: "Drivers & Autos", hint: "Local rides on call", icon: CarTaxiFront, route: "/transport" },
+  ];
+
+  // "What's New" items. TODO: replace with real CMS/stories data.
+  // `image` is the thumbnail, `isNew` shows the sparkle badge.
   const updates = [
     {
       icon: Landmark,
-      title: "Ganeshotsav Homestay Bookings Open",
-      blurb: "Konkan's biggest festival is coming — reserve a homestay early for the best rates.",
+      image: Slider1,
+      isNew: true,
+      title: "Ganeshotsav homestay bookings open",
+      blurb: "Konkan's biggest festival is coming — reserve early for the best rates.",
+      route: "/homestays",
     },
     {
       icon: BookOpen,
-      title: "New Guided Trail: Fort to Bhagwati Bandar",
-      blurb: "A fresh 3 km coastal walking trail with a local guide, launching this season.",
+      image: Slider2,
+      isNew: true,
+      title: "New guided trail: Fort to Bhagwati Bandar",
+      blurb: "A 3 km coastal walk with a local guide, launching this season.",
+      route: "/guided-walks",
     },
     {
       icon: ShieldCheck,
-      title: "Monsoon Travel Advisory",
-      blurb: "Some beach and fort routes have seasonal restrictions — check before you go.",
+      image: Slider3,
+      title: "Monsoon travel advisory",
+      blurb: "Some beach and fort routes have seasonal restrictions.",
+      route: "/rules",
+    },
+    {
+      icon: UtensilsCrossed,
+      image: Slider4,
+      title: "Alphonso season calendar",
+      blurb: "Orchard visits and tasting trails run from March to May.",
+      route: "/traditional-food",
+    },
+    {
+      icon: Drama,
+      image: Slider5,
+      title: "Dashavatar night at Pawas",
+      blurb: "Traditional Konkani folk theatre, every second Saturday.",
+      route: "/cultural-events",
+    },
+    {
+      icon: Bus,
+      image: Slider6,
+      title: "Revised MSRTC timetable",
+      blurb: "New bus timings on the Ratnagiri–Ganpatipule route.",
+      route: "/transport",
     },
   ];
 
@@ -307,9 +436,8 @@ export default function DashboardOverview() {
 
   return (
     <div className="animate-in fade-in duration-500">
-      {/* Fonts + entrance animation. TODO: once fonts are added to the Tailwind
-          config, move this @import into index.html <head> as <link> tags —
-          it's inlined here for now so this component works as a drop-in. */}
+      {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
+          config, move this @import into index.html <head> as <link> tags. */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
 
@@ -320,16 +448,42 @@ export default function DashboardOverview() {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-up {
-          animation: fadeUp 0.6s ease-out both;
+        .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
+
+        /* Slim scrollbar for the What's New feed */
+        .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        .rt-feed::-webkit-scrollbar { width: 6px; }
+        .rt-feed::-webkit-scrollbar-track { background: transparent; }
+        .rt-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+        .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Sparkling "New" badge */
+        .rt-new {
+          display: inline-flex; align-items: center; gap: 3px;
+          padding: 1px 7px 1px 5px; border-radius: 99px;
+          font-size: 9px; font-weight: 800; letter-spacing: .06em;
+          color: #7c2d12; background: #FDE9C8;
+          border: 1px solid #F0C98A;
+        }
+        .rt-new svg { animation: rtTwinkle 1.8s ease-in-out infinite; }
+        @keyframes rtTwinkle {
+          0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+          50%      { opacity: .55; transform: scale(1.25) rotate(18deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fade-up { animation: none; }
+          .rt-new svg { animation: none; }
         }
       `}</style>
 
       {/* ================= Snapshot (photo + stats + What's New) ================= */}
-      <section className="bg-[#0b3149] px-5 sm:px-10 lg:px-16 py-10 sm:py-14">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
+      <section className="relative px-5 sm:px-10 lg:px-16 py-10 sm:py-14 overflow-hidden">
+        <KonkanBackdrop />
+
+        <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
           {/* Left: rotating photo tile with caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[440px]">
+          <div className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[520px] shadow-xl ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -340,10 +494,10 @@ export default function DashboardOverview() {
                 }}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/25" />
 
             <div className="absolute top-6 left-6 right-6 animate-fade-up">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80 mb-2">
+              <p className="text-[11px] font-semibold tracking-[0.18em] text-white/80 mb-2 font-body">
                 Explore &middot; Experience &middot; Support Local
               </p>
               <h1 className="font-display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl">
@@ -370,84 +524,99 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Right: search, stats, What's New, contact */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center bg-white rounded-full shadow-lg overflow-hidden animate-fade-up">
-              <span className="pl-5 text-slate-400">
-                <MapPin size={18} />
-              </span>
-              <input
-                type="text"
-                placeholder="Search beaches, forts, homestays, places..."
-                className="flex-1 px-3 py-3.5 text-sm font-body text-slate-700 placeholder:text-slate-400 outline-none bg-transparent"
-              />
-              <button
-                onClick={() => navigate("/map")}
-                aria-label="Search"
-                className="m-1.5 w-11 h-11 shrink-0 rounded-full bg-[#0b3149] hover:bg-[#0a2b3f] text-white flex items-center justify-center transition"
-              >
-                <Search size={18} />
-              </button>
+          {/* Right: quick access + stats/What's New panel + contact */}
+          <div className="flex flex-col gap-4 min-w-0">
+            {/* Quick access — replaces the second search field */}
+            <div className="grid grid-cols-3 gap-3">
+              {quickAccess.map(({ label, hint, icon: Icon, route }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(route)}
+                  className="group bg-white/90 backdrop-blur-sm border border-white/70 rounded-xl px-3 py-3.5 text-left shadow-sm hover:shadow-md hover:bg-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+                >
+                  <span className="w-9 h-9 rounded-full bg-[#0b3149]/5 text-[#0f766e] flex items-center justify-center mb-2 group-hover:bg-[#0f766e] group-hover:text-white transition">
+                    <Icon size={17} />
+                  </span>
+                  <p className="text-[13px] font-semibold font-body text-slate-800 leading-tight">
+                    {label}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{hint}</p>
+                </button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                className="bg-white/95 rounded-xl p-4 flex items-center gap-3 animate-fade-up"
-                style={{ animationDelay: "80ms" }}
-              >
-                <span className="w-11 h-11 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                  <Waves size={19} />
-                </span>
-                <div>
-                  <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
-                    {statBeaches}+
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">Beaches & Forts</p>
+            {/* Attached panel: stats sit flush on top of What's New */}
+            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-black/5 overflow-hidden flex flex-col min-h-0">
+              {/* stats strip */}
+              <div className="grid grid-cols-2 divide-x divide-slate-100">
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <span className="w-11 h-11 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+                    <Waves size={19} />
+                  </span>
+                  <div>
+                    <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
+                      {statBeaches}+
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">Beaches &amp; forts</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-4">
+                  <span className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Home size={19} />
+                  </span>
+                  <div>
+                    <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
+                      {statHomestays}+
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">Registered homestays</p>
+                  </div>
                 </div>
               </div>
-              <div
-                className="bg-white/95 rounded-xl p-4 flex items-center gap-3 animate-fade-up"
-                style={{ animationDelay: "160ms" }}
-              >
-                <span className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <Home size={19} />
-                </span>
-                <div>
-                  <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
-                    {statHomestays}+
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">Registered Homestays</p>
-                </div>
-              </div>
-            </div>
 
-            <div
-              className="bg-white/95 rounded-xl overflow-hidden animate-fade-up"
-              style={{ animationDelay: "240ms" }}
-            >
+              {/* What's New header — flush against the stats strip above */}
               <div className="flex items-center justify-between px-4 py-2.5 bg-[#B4532A]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-white">
-                  What&apos;s New
+                <p className="text-[12px] font-bold tracking-[0.12em] text-white font-body">
+                  What&apos;s new
                 </p>
                 <button
                   onClick={() => navigate("/stories")}
-                  className="text-[11px] font-semibold text-white/85 hover:text-white transition"
+                  className="text-[11px] font-semibold text-white/85 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded px-1"
                 >
                   More
                 </button>
               </div>
-              <ul className="divide-y divide-slate-100">
-                {updates.map(({ icon: Icon, title, blurb }) => (
-                  <li key={title} className="flex items-start gap-3 px-4 py-3">
-                    <span className="w-8 h-8 rounded-full bg-[#F4F8F9] text-[#0f766e] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon size={15} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
-                        {title}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5 leading-snug">{blurb}</p>
-                    </div>
+
+              {/* Scrollable feed with thumbnails */}
+              <ul className="rt-feed divide-y divide-slate-100 overflow-y-auto max-h-[288px]">
+                {updates.map(({ image, title, blurb, isNew, route }) => (
+                  <li key={title}>
+                    <button
+                      onClick={() => navigate(route)}
+                      className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition focus:outline-none focus-visible:bg-slate-50"
+                    >
+                      <img
+                        src={image}
+                        alt=""
+                        loading="lazy"
+                        className="w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-black/5"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-start gap-2">
+                          <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
+                            {title}
+                          </p>
+                          {isNew && (
+                            <span className="rt-new shrink-0 mt-0.5">
+                              <Star size={9} fill="currentColor" />
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
+                          {blurb}
+                        </p>
+                      </div>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -455,15 +624,14 @@ export default function DashboardOverview() {
 
             <a
               href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
-              className="flex items-center gap-3 bg-[#0f766e] hover:bg-[#0c6059] rounded-xl px-4 py-3 text-white transition animate-fade-up"
-              style={{ animationDelay: "320ms" }}
+              className="flex items-center gap-3 bg-[#0f766e] hover:bg-[#0c6059] rounded-xl px-4 py-3 text-white transition shadow-md"
             >
               <span className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0">
                 <Phone size={16} />
               </span>
               <div>
                 <p className="text-sm font-semibold font-body">Need help planning?</p>
-                <p className="text-xs text-white/80">Call the Ratnagiri Tourism Desk</p>
+                <p className="text-xs text-white/80">Call the Ratnagiri tourism desk</p>
               </div>
             </a>
           </div>
@@ -479,7 +647,7 @@ export default function DashboardOverview() {
               <Compass size={16} />
               Things to Do
             </div>
-            <h2 className="font-serif font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Explore <span className="text-emerald-600">Ratnagiri</span>
             </h2>
             <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
@@ -543,7 +711,7 @@ export default function DashboardOverview() {
             </div>
 
             <div className="p-5">
-              <h3 className="font-serif font-display text-xl font-bold text-slate-900 mb-1.5">
+              <h3 className="font-display text-xl font-bold text-slate-900 mb-1.5">
                 Interactive Map
               </h3>
               <p className="text-sm text-slate-500 mb-4">
@@ -582,7 +750,7 @@ export default function DashboardOverview() {
               <Route2Icon />
               Plan Your Trip
             </div>
-            <h2 className="font-serif font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Everything You Need
             </h2>
             <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
@@ -624,7 +792,7 @@ export default function DashboardOverview() {
               style={{ backgroundImage: `url(${heroImages[2]})` }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <p className="absolute top-6 left-6 font-serif font-display italic text-white text-2xl leading-tight">
+            <p className="absolute top-6 left-6 font-display italic text-white text-2xl leading-tight">
               Plan
               <br />
               Explore
@@ -650,7 +818,7 @@ export default function DashboardOverview() {
         </div>
 
         <div className="max-w-3xl mx-auto border border-dashed border-sky-300 rounded-lg px-6 sm:px-10 py-8 sm:py-10 bg-sky-50/40">
-          <p className="font-serif font-body text-base sm:text-lg leading-relaxed text-slate-800 text-center">
+          <p className="font-body text-base sm:text-lg leading-relaxed text-slate-800 text-center">
             Ratnagiri is best known as the birthplace of freedom fighter
             Lokmanya Tilak, and carries strong ties to Swatantryaveer Savarkar
             and the sage Parshuram. Long before that, the Konkan coastline
@@ -671,8 +839,6 @@ export default function DashboardOverview() {
             Bombay Presidency, later joining independent India's Bombay
             State, and finally becoming part of Maharashtra in 1960.
           </p>
-
-          
         </div>
       </div>
 
@@ -681,7 +847,7 @@ export default function DashboardOverview() {
         <div className="px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
             <div>
-              <h2 className="font-serif font-display italic text-2xl text-white mb-3">
+              <h2 className="font-display italic text-2xl text-white mb-3">
                 Ratnagiri Tourism
               </h2>
               <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
@@ -746,8 +912,6 @@ export default function DashboardOverview() {
           </div>
         </div>
       </footer>
-
-     
     </div>
   );
 }
