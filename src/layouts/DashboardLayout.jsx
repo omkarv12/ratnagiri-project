@@ -12,6 +12,8 @@ import {
   Languages,
   Accessibility,
   RotateCcw,
+  Search,
+  MapPin,
 } from "lucide-react";
 // Social brand icons — install once:  npm i react-icons
 import {
@@ -519,6 +521,132 @@ function RatnagiriScene() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Site-wide search box (left of Home)                                */
+/* ------------------------------------------------------------------ */
+
+// Every page in the menus is searchable instantly; pressing Enter runs the
+// full-site search at /search?q=… (same as the search box in the top bar).
+const SITE_PAGES = [
+  { label: "Home", route: "/dashboard" },
+  ...[EXPLORE_MENU, EXPERIENCES_MENU, STORIES_MENU, RESOURCES_MENU, ABOUT_MENU].flatMap((m) => [
+    { label: m.label, route: m.route },
+    ...m.children.map((c) => ({ ...c, section: m.label })),
+  ]),
+  { label: "Forum", route: "/forum" },
+  { label: "Interactive Map", route: "/interactive-map" },
+  { label: "Add location and services", route: "/review/add-place" },
+];
+
+function NavSearch({ navigate }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const boxRef = useRef(null);
+
+  const term = q.trim().toLowerCase();
+  const matches = term
+    ? SITE_PAGES.filter((pg) => pg.label.toLowerCase().includes(term)).slice(0, 6)
+    : [];
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  const goTo = (route) => {
+    navigate(route);
+    setOpen(false);
+    setQ("");
+    setActive(-1);
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (active >= 0 && matches[active]) return goTo(matches[active].route);
+    if (term) {
+      navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+      setOpen(false);
+    }
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, matches.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, -1));
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={boxRef} className="relative w-full max-w-[22rem]">
+      <form
+        onSubmit={submit}
+        role="search"
+        className="flex h-11 items-center rounded-full bg-white pl-3.5 pr-1 shadow-md shadow-black/20 ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-amber-300"
+      >
+        <MapPin size={17} className="shrink-0 text-slate-400" aria-hidden="true" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+            setActive(-1);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
+          aria-label="Search the whole website"
+          placeholder="Search beaches, forts, homestays, places..."
+          className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-[0.9375rem] text-slate-900 placeholder:text-slate-500 text-ellipsis outline-none"
+        />
+        <button
+          type="submit"
+          aria-label="Search"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b3149] text-white hover:bg-teal-800 transition"
+        >
+          <Search size={17} />
+        </button>
+      </form>
+
+      {open && term && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-full min-w-[18rem] overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl shadow-slate-900/20">
+          {matches.map((pg, i) => (
+            <button
+              key={pg.route}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => goTo(pg.route)}
+              className={`flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-[0.9375rem] font-medium text-slate-800 hover:bg-teal-50 ${
+                i === active ? "bg-teal-50" : ""
+              }`}
+            >
+              <span className="truncate">{pg.label}</span>
+              {pg.section && <span className="shrink-0 text-[0.8125rem] text-slate-500">{pg.section}</span>}
+            </button>
+          ))}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={submit}
+            className="flex w-full items-center gap-2 border-t border-slate-100 px-3.5 py-2.5 text-left text-[0.9375rem] font-semibold text-teal-800 hover:bg-teal-50"
+          >
+            <Search size={15} />
+            <span className="truncate">Search the whole website for “{q.trim()}”</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -702,14 +830,19 @@ export default function DashboardLayout() {
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label="Toggle menu"
-              className="lg:hidden justify-self-start flex h-11 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+              className="col-start-1 row-start-1 lg:hidden justify-self-start flex h-11 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               Menu
             </button>
 
+            {/* Site-wide search (xl and up; smaller screens use the search box in the top bar) */}
+            <div className="col-start-1 row-start-1 hidden min-w-0 xl:block">
+              <NavSearch navigate={navigate} />
+            </div>
+
             {/* Pages */}
-            <div className="col-start-2 hidden lg:flex items-center justify-center gap-0.5">
+            <div className="col-start-2 row-start-1 hidden lg:flex items-center justify-center gap-0.5">
               <button
                 onClick={() => navigate("/dashboard")}
                 data-active={location.pathname === "/dashboard"}
@@ -732,7 +865,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* CTAs: icon-only < 1024px, short label 1024–1279px, full label 1280px+ */}
-            <div className="col-start-3 flex items-center justify-end gap-2">
+            <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
               <button
                 onClick={() => navigate("/interactive-map")}
                 aria-label="Interactive Map"
