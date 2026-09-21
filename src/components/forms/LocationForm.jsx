@@ -1,7 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 const MIN_PHOTO_SIZE = 500 * 1024;
+const DRAFT_KEY = "ratnagiri_location_form_draft";
+
+const STEP_LABELS = [
+    "Basic Information",
+    "Amenities & Accessibility",
+    "Tourism Info & Sustainability",
+    "Photos & Feedback",
+];
+
+const REQUIRED_BY_STEP = {
+    1: ["user_type", "location_name", "village_name", "taluka_name", "district_name"],
+    2: ["road_condition", "signboards_available", "public_transport", "parking_space", "food_stalls"],
+    3: ["attraction_type", "site_activity_details_doc"],
+};
+
+function StepProgress({ step, totalSteps, labels }) {
+    return (
+        <div className="mb-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2">
+                <span>Step {step} of {totalSteps}: {labels[step - 1]}</span>
+                <span>{Math.round((step / totalSteps) * 100)}%</span>
+            </div>
+            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-orange-600 rounded-full transition-all duration-300"
+                    style={{ width: `${(step / totalSteps) * 100}%` }}
+                />
+            </div>
+        </div>
+    );
+}
+
+function Required() {
+    return <span className="text-red-600 font-semibold"> *</span>;
+}
+
+function InternalTag() {
+    return (
+        <span className="ml-2 inline-block align-middle text-[10px] font-semibold uppercase tracking-wide text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+            Internal use only
+        </span>
+    );
+}
 
 export default function LocationForm({ onSuccess }) {
     const [formData, setFormData] = useState({
@@ -41,7 +84,7 @@ export default function LocationForm({ onSuccess }) {
     peak_period: "",
     avg_time_spent: "",
     visitor_type: [],
-    is_crowded: "", 
+    is_crowded: "",
     crowd_level: "",
     site_activities: "",
     site_activity_details_doc: "",
@@ -66,9 +109,49 @@ export default function LocationForm({ onSuccess }) {
 
 });
 
+const [step, setStep] = useState(1);
+const totalSteps = 4;
+
 const [selectedPhotos, setSelectedPhotos] = useState([]);
 const [photoPreviews, setPhotoPreviews] = useState([]);
 const [uploading, setUploading] = useState(false);
+
+// Offer to restore a saved draft on first load. Only text fields are
+// restorable — selected photo files can't be persisted to localStorage.
+useEffect(() => {
+    try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (!saved) return;
+
+        const parsed = JSON.parse(saved);
+        const hasContent = Object.values(parsed).some((value) =>
+            Array.isArray(value) ? value.length > 0 : !!value
+        );
+
+        if (!hasContent) {
+            localStorage.removeItem(DRAFT_KEY);
+            return;
+        }
+
+        if (window.confirm("We found a saved draft of this form. Continue where you left off?")) {
+            setFormData((prev) => ({ ...prev, ...parsed }));
+        } else {
+            localStorage.removeItem(DRAFT_KEY);
+        }
+    } catch (err) {
+        // Corrupt or inaccessible draft — ignore and start fresh.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+// Autosave the draft as the user types (text fields only).
+useEffect(() => {
+    try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+    } catch (err) {
+        // Storage full or unavailable — not critical, ignore.
+    }
+}, [formData]);
 
 const handlePhotoSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -138,6 +221,28 @@ const handleChange = (e) => {
   }));
 };
 
+const goNext = () => {
+    if (step === 1 && (formData.latitude == null || formData.longitude == null)) {
+        alert("Please select the location on the map before continuing.");
+        return;
+    }
+
+    const missing = (REQUIRED_BY_STEP[step] || []).filter((key) => !formData[key]);
+
+    if (missing.length > 0) {
+        alert("Please fill in all required fields (marked *) before continuing.");
+        return;
+    }
+
+    setStep((s) => Math.min(s + 1, totalSteps));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const goBack = () => {
+    setStep((s) => Math.max(s - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 const handleSubmit = async (e) => {
   e.preventDefault();
   if (formData.latitude == null || formData.longitude == null) {
@@ -181,6 +286,8 @@ const handleSubmit = async (e) => {
       onSuccess();
     }
 
+    localStorage.removeItem(DRAFT_KEY);
+
     setFormData({
 
   // Basic Information
@@ -216,7 +323,7 @@ const handleSubmit = async (e) => {
   peak_period: "",
   avg_time_spent: "",
   visitor_type: [],
-  is_crowded: "", 
+  is_crowded: "",
   crowd_level: "",
   site_activities: "",
   site_activity_details_doc: "",
@@ -237,6 +344,7 @@ const handleSubmit = async (e) => {
 
     setSelectedPhotos([]);
     setPhotoPreviews([]);
+    setStep(1);
 
   } catch (err) {
     alert(err.message);
@@ -254,20 +362,49 @@ const handleSubmit = async (e) => {
     className="space-y-8"
 >
 
+<StepProgress step={step} totalSteps={totalSteps} labels={STEP_LABELS} />
 
+{step === 1 ? (
 
+    <div className="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+        <p className="font-semibold text-slate-800 mb-1">Before you start</p>
+        <p>
+            Location and amenity details you submit here may be published on the public Ratnagiri
+            Tourism site once reviewed and approved by the department. Fields marked
+            <InternalTag /> are seen only by the tourism department and are never published.
+        </p>
+        <p className="text-xs text-slate-500 mt-2">
+            Takes about 6–8 minutes · Fields marked <Required /> are required to continue.
+        </p>
+    </div>
+
+) : (
+
+    <p className="text-xs text-slate-500 -mt-4">
+        Reminder: public location details may be published once approved; fields marked
+        <InternalTag /> stay private with the department.
+    </p>
+
+)}
+
+{step === 1 && (
+<>
+
+<div>
 <h3 className="text-xl font-bold text-slate-800 border-b pb-2">
-
     Section 1 : Basic Information
-
 </h3>
+<p className="text-xs text-slate-500 mt-2 mb-2">
+    Helps us map and catalog this location accurately.
+</p>
+</div>
 
 
 <div className="space-y-6">
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    What Best Describes You?
+    What Best Describes You?<Required />
   </label>
 
   <select
@@ -302,7 +439,7 @@ const handleSubmit = async (e) => {
 
 <div>
         <label className="block text-xs font-bold text-slate-500 mb-1">
-          Name of Location
+          Name of Location<Required />
         </label>
 
         <input
@@ -375,7 +512,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Village Name
+    Village Name<Required />
   </label>
 
   <input
@@ -392,7 +529,7 @@ City
 
 <div>
         <label className="block text-xs font-bold text-slate-500 mb-1">
-          Taluka
+          Taluka<Required />
         </label>
 
         <input
@@ -409,7 +546,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    District
+    District<Required />
   </label>
 
   <input
@@ -425,7 +562,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Location on Map
+    Location on Map<Required />
   </label>
 
   <LocationPicker
@@ -440,6 +577,8 @@ City
     }
   />
 </div>
+
+
 
 
 <div className="col-span-2">
@@ -519,16 +658,39 @@ City
 </div>
 
 
+<div>
+  <label className="block text-xs font-bold text-slate-500 mb-1">
+    Nearest Landmark
+  </label>
+
+  <input
+    type="text"
+    name="nearest_landmark"
+    value={formData.nearest_landmark}
+    onChange={handleChange}
+    className="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
+    placeholder="e.g. Near Murud Beach"
+  />
+</div>
 
 </div>
 
+</>
+)}
 
 
-<div className="col-span-2 mt-8">
-  <h2 className="text-xl font-bold text-slate-800 border-b pb-2">
+{step === 2 && (
+<>
+
+<div>
+<h2 className="text-xl font-bold text-slate-800 border-b pb-2">
     Section 2 : Amenities & Accessibility
   </h2>
+<p className="text-xs text-slate-500 mt-2 mb-2">
+    Used to advise visitors and prioritize where the district should invest in facilities.
+</p>
 </div>
+
 
 <h3 className="text-lg font-bold text-slate-800 mb-2">
   Location Amenities
@@ -590,7 +752,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Road Condition
+    Road Condition<Required />
   </label>
 
   <select
@@ -610,7 +772,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Signboards Available
+    Signboards Available<Required />
   </label>
 
   <select
@@ -628,7 +790,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Public Transport Available
+    Public Transport Available<Required />
   </label>
 
   <select
@@ -677,7 +839,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Parking Space Available
+    Parking Space Available<Required />
   </label>
 
   <select
@@ -695,7 +857,7 @@ City
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Food Stalls Available
+    Food Stalls Available<Required />
   </label>
 
   <select
@@ -711,20 +873,28 @@ City
   </select>
 </div>
 
+</>
+)}
 
 
-<div className="mt-10">
+{step === 3 && (
+<>
+
+<div>
   <h2 className="text-xl font-bold text-slate-800 border-b pb-2">
     Section 3 : Tourism Information & Sustainability
   </h2>
-
+  <p className="text-xs text-slate-500 mt-2 mb-2">
+    Helps us understand visitor patterns and manage crowding sustainably, and see where
+    local communities are (or aren't) benefiting economically.
+  </p>
 </div>
 
 
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
-    Type of Attraction
+    Type of Attraction<Required />
   </label>
 
   <select
@@ -937,6 +1107,9 @@ City
 
 </div>
 
+
+
+
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
     Is it crowded or not?
@@ -953,7 +1126,6 @@ City
     <option value="No">No</option>
   </select>
 </div>
-
 
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
@@ -1053,7 +1225,7 @@ City
 <div className="mb-6">
 
   <label className="block text-xs font-bold text-slate-500 mb-2">
-  Activity Details (Description, Conducted By & Photos)
+  Activity Details (Description, Conducted By & Photos)<Required />
 </label>
 
   <input
@@ -1092,6 +1264,7 @@ City
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
     If yes (Job type)
+    <InternalTag />
   </label>
 
   <input
@@ -1104,7 +1277,21 @@ City
   />
 </div>
 
+</>
+)}
 
+
+{step === 4 && (
+<>
+
+<div>
+  <h2 className="text-xl font-bold text-slate-800 border-b pb-2">
+    Section 4 : Photos & Feedback
+  </h2>
+  <p className="text-xs text-slate-500 mt-2 mb-2">
+    Photos help visitors discover this place; your note goes directly to the tourism department.
+  </p>
+</div>
 
 <div className="mb-8">
 
@@ -1151,6 +1338,7 @@ City
 <div>
   <label className="block text-xs font-bold text-slate-500 mb-1">
     Suggestions / Improvements
+    <InternalTag />
   </label>
 
   <textarea
@@ -1163,13 +1351,43 @@ City
   />
 </div>
 
-      <button
-        type="submit"
-        disabled={uploading}
-        className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors disabled:opacity-60"
-      >
-        {uploading ? "Uploading..." : "Submit Profile Data"}
-      </button>
+</>
+)}
+
+
+<div className="flex items-center justify-between pt-4 border-t border-slate-200">
+
+  {step > 1 ? (
+    <button
+      type="button"
+      onClick={goBack}
+      className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+    >
+      Back
+    </button>
+  ) : (
+    <span />
+  )}
+
+  {step < totalSteps ? (
+    <button
+      type="button"
+      onClick={goNext}
+      className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors"
+    >
+      Next
+    </button>
+  ) : (
+    <button
+      type="submit"
+      disabled={uploading}
+      className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors disabled:opacity-60"
+    >
+      {uploading ? "Uploading..." : "Submit Profile Data"}
+    </button>
+  )}
+
+</div>
 
     </form>
   );
