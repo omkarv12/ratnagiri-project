@@ -165,26 +165,6 @@ function KonkanBackdrop() {
   );
 }
 
-// Leaflet's default marker icon path fix (safe to run even if
-// SustainabilityMap.jsx also runs it elsewhere in the app).
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
-
-
-const [exploreTaluka, setExploreTaluka] = useState(null);
-const [exploreDistrictBorder, setExploreDistrictBorder] = useState(null);
-
-useEffect(() => {
-  fetch("/ratnagiri-border.geojson")
-    .then((res) => res.json())
-    .then((data) => setExploreDistrictBorder(data))
-    .catch((err) => console.error("Failed to load district border:", err));
-}, []);
 
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
