@@ -12,10 +12,49 @@ const STEP_LABELS = [
 ];
 
 const REQUIRED_BY_STEP = {
-    1: ["user_type", "location_name", "village_name", "taluka_name", "district_name"],
-    2: ["road_condition", "signboards_available", "public_transport", "parking_space", "food_stalls"],
-    3: ["attraction_type", "site_activity_details_doc"],
+    1: [
+        "user_type",
+        "location_name",
+        "located_in",
+        "village_name",
+        "taluka_name",
+        "district_name",
+        "nearest_landmark",
+        "owned_by",
+        "managed_by",
+    ],
+    2: [
+        "amenities_available",
+        "road_condition",
+        "signboards_available",
+        "public_transport",
+        "nearest_bus_stand",
+        "nearest_railway_station",
+        "parking_space",
+        "food_stalls",
+    ],
+    3: [
+        "attraction_type",
+        "entry_fee",
+        "entry_fee_amount",
+        "visiting_hours",
+        "seasonal_availability",
+        "peak_period",
+        "avg_time_spent",
+        "visitor_type",
+        "is_crowded",
+        "crowd_level",
+        "formal_regulations",
+        "site_activities",
+        "site_activity_details_doc",
+        "local_residents_involved",
+        "job_type",
+    ],
 };
+
+// True when a required value is empty — handles plain values as well as
+// the checkbox-group fields, which are stored as arrays.
+const isEmptyValue = (value) => (Array.isArray(value) ? value.length === 0 : !value);
 
 // Shared, compact styling so every field looks consistent.
 const inputCls =
@@ -45,7 +84,7 @@ function StepProgress({ step, totalSteps, labels }) {
 }
 
 function Required() {
-    return <span className="text-red-600 font-semibold"> *</span>;
+    return <span className="text-red-600 font-semibold animate-pulse"> *</span>;
 }
 
 function InternalTag() {
@@ -127,6 +166,18 @@ export default function LocationForm({ onSuccess }) {
 const [step, setStep] = useState(1);
 const totalSteps = 4;
 
+// Inline validation feedback: a short banner + shake animation instead of
+// blocking browser alert() dialogs for missing required fields.
+const [formError, setFormError] = useState("");
+const [shake, setShake] = useState(false);
+
+const flashError = (message) => {
+    setFormError(message);
+    setShake(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => setShake(false), 500);
+};
+
 const [selectedPhotos, setSelectedPhotos] = useState([]);
 const [photoPreviews, setPhotoPreviews] = useState([]);
 const [uploading, setUploading] = useState(false);
@@ -189,6 +240,8 @@ const handlePhotoSelect = (e) => {
 
     const validFiles = files.filter((file) => file.size >= MIN_PHOTO_SIZE);
 
+    if (validFiles.length > 0 && formError) setFormError("");
+
     setSelectedPhotos((prev) => [...prev, ...validFiles]);
     setPhotoPreviews((prev) => [
         ...prev,
@@ -230,6 +283,8 @@ const uploadPhotos = async () => {
 const handleChange = (e) => {
   const { name, value } = e.target;
 
+  if (formError) setFormError("");
+
   setFormData((prev) => ({
     ...prev,
     [name]: value
@@ -238,22 +293,26 @@ const handleChange = (e) => {
 
 const goNext = () => {
     if (step === 1 && (formData.latitude == null || formData.longitude == null)) {
-        alert("Please select the location on the map before continuing.");
+        flashError("Please select the location on the map before continuing.");
         return;
     }
 
-    const missing = (REQUIRED_BY_STEP[step] || []).filter((key) => !formData[key]);
+    const missing = (REQUIRED_BY_STEP[step] || []).filter((key) => isEmptyValue(formData[key]));
 
     if (missing.length > 0) {
-        alert("Please fill in all required fields (marked *) before continuing.");
+        flashError(
+            `Please fill in all required fields marked * before continuing (${missing.length} remaining).`
+        );
         return;
     }
 
+    setFormError("");
     setStep((s) => Math.min(s + 1, totalSteps));
     window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 const goBack = () => {
+    setFormError("");
     setStep((s) => Math.max(s - 1, 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -261,7 +320,17 @@ const goBack = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
   if (formData.latitude == null || formData.longitude == null) {
-      alert("Please select the location on the map before submitting.");
+      flashError("Please select the location on the map before submitting.");
+      return;
+  }
+
+  if (selectedPhotos.length === 0) {
+      flashError("Please add at least one location photo before submitting.");
+      return;
+  }
+
+  if (!formData.suggestions_improvements.trim()) {
+      flashError("Please share a suggestion or note before submitting.");
       return;
   }
 
@@ -359,6 +428,7 @@ const handleSubmit = async (e) => {
 
     setSelectedPhotos([]);
     setPhotoPreviews([]);
+    setFormError("");
     setStep(1);
 
   } catch (err) {
@@ -376,7 +446,32 @@ const handleSubmit = async (e) => {
         className="space-y-5 max-w-2xl mx-auto bg-white rounded-lg"
     >
 
+        <style>{`
+            @keyframes lf-shake {
+                10%, 90% { transform: translateX(-1px); }
+                20%, 80% { transform: translateX(2px); }
+                30%, 50%, 70% { transform: translateX(-4px); }
+                40%, 60% { transform: translateX(4px); }
+            }
+            .lf-shake { animation: lf-shake 0.5s; }
+            @keyframes lf-pop {
+                0% { opacity: 0; transform: scale(0.6); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+            .lf-pop { animation: lf-pop 0.25s ease-out; }
+        `}</style>
+
         <StepProgress step={step} totalSteps={totalSteps} labels={STEP_LABELS} />
+
+        {formError && (
+            <div
+                className={`rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 ${
+                    shake ? "lf-shake" : ""
+                }`}
+            >
+                {formError}
+            </div>
+        )}
 
         {step === 1 ? (
 
@@ -409,7 +504,7 @@ const handleSubmit = async (e) => {
             <p className={sectionSubCls}>Helps us map and catalog this location accurately.</p>
         </div>
 
-        <div className={gridCls}>
+        <div className={`${gridCls} ${shake ? "lf-shake" : ""}`}>
 
             <div>
                 <label className={labelCls}>What Best Describes You?<Required /></label>
@@ -445,7 +540,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <Full>
-                <label className={labelCls}>Located In</label>
+                <label className={labelCls}>Located In<Required /></label>
                 <div className={chipGroupCls}>
                     {["Village", "Town", "City"].map((item) => (
                         <label key={item} className={chipLabelCls}>
@@ -501,7 +596,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Nearest Landmark</label>
+                <label className={labelCls}>Nearest Landmark<Required /></label>
                 <input
                     type="text"
                     name="nearest_landmark"
@@ -509,6 +604,8 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Near Murud Beach"
+                    placeholder="e.g. Near Murud Beach"
+                    required
                 />
             </div>
 
@@ -531,7 +628,7 @@ const handleSubmit = async (e) => {
                 <h3 className="text-sm font-bold text-slate-800 mb-2 mt-1">Managed and Owned By</h3>
                 <div className={gridCls}>
                     <div>
-                        <label className={labelCls}>Owned By</label>
+                        <label className={labelCls}>Owned By<Required /></label>
                         <div className={chipGroupCls}>
                             {["Government", "Private", "Community", "Public", "Open"].map((item) => (
                                 <label key={item} className={chipLabelCls}>
@@ -549,7 +646,7 @@ const handleSubmit = async (e) => {
                     </div>
 
                     <div>
-                        <label className={labelCls}>Managed By</label>
+                        <label className={labelCls}>Managed By<Required /></label>
                         <div className={chipGroupCls}>
                             {[
                                 "Gram Panchayat",
@@ -590,10 +687,10 @@ const handleSubmit = async (e) => {
             <p className={sectionSubCls}>Used to advise visitors and prioritize where the district should invest in facilities.</p>
         </div>
 
-        <div className={gridCls}>
+        <div className={`${gridCls} ${shake ? "lf-shake" : ""}`}>
 
             <Full>
-                <label className={labelCls}>Amenities Available</label>
+                <label className={labelCls}>Amenities Available<Required /></label>
                 <div className={chipGroupCls}>
                     {[
                         "Washrooms",
@@ -692,7 +789,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Nearest Bus Stand</label>
+                <label className={labelCls}>Nearest Bus Stand<Required /></label>
                 <input
                     type="text"
                     name="nearest_bus_stand"
@@ -700,11 +797,13 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Dapoli Bus Stand"
+                    placeholder="e.g. Dapoli Bus Stand"
+                    required
                 />
             </div>
 
             <div>
-                <label className={labelCls}>Nearest Railway Station</label>
+                <label className={labelCls}>Nearest Railway Station<Required /></label>
                 <input
                     type="text"
                     name="nearest_railway_station"
@@ -712,6 +811,8 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Khed Railway Station"
+                    placeholder="e.g. Khed Railway Station"
+                    required
                 />
             </div>
 
@@ -747,7 +848,7 @@ const handleSubmit = async (e) => {
             </p>
         </div>
 
-        <div className={gridCls}>
+        <div className={`${gridCls} ${shake ? "lf-shake" : ""}`}>
 
             <div>
                 <label className={labelCls}>Type of Attraction<Required /></label>
@@ -773,12 +874,13 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Entry Fee</label>
+                <label className={labelCls}>Entry Fee<Required /></label>
                 <select
                     name="entry_fee"
                     value={formData.entry_fee}
                     onChange={handleChange}
                     className={inputCls}
+                    required
                 >
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
@@ -787,7 +889,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Entry Fee Amount</label>
+                <label className={labelCls}>Entry Fee Amount<Required /></label>
                 <input
                     type="text"
                     name="entry_fee_amount"
@@ -795,11 +897,13 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. 20 Rs."
+                    placeholder="e.g. 20 Rs."
+                    required
                 />
             </div>
 
             <div>
-                <label className={labelCls}>Visiting Hours</label>
+                <label className={labelCls}>Visiting Hours<Required /></label>
                 <input
                     type="text"
                     name="visiting_hours"
@@ -807,11 +911,13 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. 8 AM - 6 PM"
+                    placeholder="e.g. 8 AM - 6 PM"
+                    required
                 />
             </div>
 
             <div>
-                <label className={labelCls}>Seasonal Availability</label>
+                <label className={labelCls}>Seasonal Availability<Required /></label>
                 <div className={chipGroupCls + " pt-1"}>
                     {["Open All Year", "Seasonal"].map((option) => (
                         <label key={option} className={chipLabelCls}>
@@ -829,7 +935,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Peak Period</label>
+                <label className={labelCls}>Peak Period<Required /></label>
                 <input
                     type="text"
                     name="peak_period"
@@ -837,11 +943,13 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. October - February"
+                    placeholder="e.g. October - February"
+                    required
                 />
             </div>
 
             <div>
-                <label className={labelCls}>Average Engagement Time</label>
+                <label className={labelCls}>Average Engagement Time<Required /></label>
                 <input
                     type="text"
                     name="avg_time_spent"
@@ -849,16 +957,19 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. 2 Hours"
+                    placeholder="e.g. 2 Hours"
+                    required
                 />
             </div>
 
             <div>
-                <label className={labelCls}>Is it crowded or not?</label>
+                <label className={labelCls}>Is it crowded or not?<Required /></label>
                 <select
                     name="is_crowded"
                     value={formData.is_crowded}
                     onChange={handleChange}
                     className={inputCls}
+                    required
                 >
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
@@ -867,12 +978,13 @@ const handleSubmit = async (e) => {
             </div>
 
             <div>
-                <label className={labelCls}>Crowd Level</label>
+                <label className={labelCls}>Crowd Level<Required /></label>
                 <select
                     name="crowd_level"
                     value={formData.crowd_level}
                     onChange={handleChange}
                     className={inputCls}
+                    required
                 >
                     <option value="">Select</option>
                     <option value="Low">Low (0-25 Tourists)</option>
@@ -882,7 +994,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <Full>
-                <label className={labelCls}>Visitor Type</label>
+                <label className={labelCls}>Visitor Type<Required /></label>
                 <div className={chipGroupCls}>
                     {[
                         "Weekend Visitors",
@@ -920,7 +1032,7 @@ const handleSubmit = async (e) => {
 
             <Full>
                 <label className={labelCls}>
-                    Formal Regulations for visitors? (e.g. visiting hours, no plastic, dress code)
+                    Formal Regulations for visitors? (e.g. visiting hours, no plastic, dress code)<Required />
                 </label>
                 <div className={chipGroupCls}>
                     {["Yes", "No"].map((option) => (
@@ -939,7 +1051,7 @@ const handleSubmit = async (e) => {
             </Full>
 
             <Full>
-                <label className={labelCls}>Site Activities</label>
+                <label className={labelCls}>Site Activities<Required /></label>
                 <div className={chipGroupCls}>
                     {[
                         "Traditional Food",
@@ -979,13 +1091,14 @@ const handleSubmit = async (e) => {
 
             <div>
                 <label className={labelCls}>
-                    Are local residents involved in employment or income-generating activities here?
+                    Are local residents involved in employment or income-generating activities here?<Required />
                 </label>
                 <select
                     name="local_residents_involved"
                     value={formData.local_residents_involved}
                     onChange={handleChange}
                     className={inputCls}
+                    required
                 >
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
@@ -995,7 +1108,7 @@ const handleSubmit = async (e) => {
 
             <div>
                 <label className={labelCls}>
-                    If yes (Job type)
+                    If yes (Job type)<Required />
                     <InternalTag />
                 </label>
                 <input
@@ -1005,6 +1118,8 @@ const handleSubmit = async (e) => {
                     onChange={handleChange}
                     className={inputCls}
                     placeholder="e.g. Guide, Boat Service, Food Stall"
+                    placeholder="e.g. Guide, Boat Service, Food Stall"
+                    required
                 />
             </div>
 
@@ -1022,30 +1137,54 @@ const handleSubmit = async (e) => {
             <p className={sectionSubCls}>Photos help visitors discover this place; your note goes directly to the tourism department.</p>
         </div>
 
+        <div className={shake ? "lf-shake" : ""}>
+
         <div>
-            <label className={labelCls}>Location Photos (up to 5, min 500 KB each)</label>
+            <label className={labelCls}>Location Photos (up to 5, min 500 KB each)<Required /></label>
 
-            <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handlePhotoSelect}
-                className={inputCls}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+                <label
+                    htmlFor="photo-upload-input"
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                >
+                    <span aria-hidden="true">📷</span> Choose Photos
+                </label>
+                <input
+                    id="photo-upload-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                />
 
-            <p className="text-[11px] text-slate-400 mt-1">
-                {selectedPhotos.length}/5 photos selected
-            </p>
+                <span
+                    key={selectedPhotos.length}
+                    className={`lf-pop inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                        selectedPhotos.length > 0
+                            ? "text-green-700 bg-green-50 border border-green-200"
+                            : "text-slate-500 bg-slate-100 border border-slate-200"
+                    }`}
+                >
+                    {selectedPhotos.length > 0 && <span aria-hidden="true">✓</span>}
+                    {selectedPhotos.length > 0
+                        ? `${selectedPhotos.length} photo${selectedPhotos.length > 1 ? "s" : ""} selected`
+                        : "0/5 photos selected"}
+                </span>
+            </div>
 
             {photoPreviews.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-3">
                     {photoPreviews.map((src, index) => (
-                        <div key={index} className="relative">
+                        <div key={index} className="relative lf-pop">
                             <img
                                 src={src}
                                 alt={`preview-${index}`}
                                 className="w-16 h-16 object-cover rounded border border-slate-300"
                             />
+                            <span className="absolute -bottom-1 -left-1 bg-green-600 text-white rounded-full w-4 h-4 text-[9px] font-bold flex items-center justify-center border border-white">
+                                ✓
+                            </span>
                             <button
                                 type="button"
                                 onClick={() => removePhoto(index)}
@@ -1059,9 +1198,9 @@ const handleSubmit = async (e) => {
             )}
         </div>
 
-        <div>
+        <div className="mt-6">
             <label className={labelCls}>
-                Suggestions / Improvements
+                Suggestions / Improvements<Required />
                 <InternalTag />
             </label>
             <textarea
@@ -1071,7 +1210,10 @@ const handleSubmit = async (e) => {
                 rows="3"
                 className={inputCls}
                 placeholder="Suggestions for improving the tourist destination"
+                required
             />
+        </div>
+
         </div>
 
         </>
