@@ -78,9 +78,7 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
         }
     }, [latitude, longitude]);
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-
+    const runSearch = async () => {
         if (!searchQuery.trim()) return;
 
         setSearching(true);
@@ -107,6 +105,17 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
         }
     };
 
+    // NOTE: this component is rendered inside LocationForm's outer <form>.
+    // A nested <form> here is invalid HTML — browsers silently break/merge it,
+    // which is why search previously didn't work. We use a plain div + button
+    // clicks/Enter-key handling instead of a second <form>.
+    const handleSearchKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            runSearch();
+        }
+    };
+
     const handleSelectResult = (result) => {
         const lat = parseFloat(result.lat);
         const lng = parseFloat(result.lon);
@@ -122,31 +131,33 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
 
     return (
         <div>
-            <form onSubmit={handleSearch} className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-2">
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
                     placeholder="Search for a village, landmark, or place..."
-                    className="flex-1 p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
+                    className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
                 <button
-                    type="submit"
+                    type="button"
+                    onClick={runSearch}
                     disabled={searching}
-                    className="px-4 py-2 bg-orange-600 text-white rounded disabled:opacity-60"
+                    className="px-3 py-1.5 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-md disabled:opacity-60"
                 >
                     {searching ? "..." : "Search"}
                 </button>
-            </form>
+            </div>
 
             {searchResults.length > 0 && (
-                <div className="border border-slate-300 rounded mb-2 max-h-40 overflow-y-auto bg-white">
+                <div className="border border-slate-300 rounded-md mb-2 max-h-40 overflow-y-auto bg-white shadow-sm">
                     {searchResults.map((result) => (
                         <button
                             type="button"
                             key={result.place_id}
                             onClick={() => handleSelectResult(result)}
-                            className="block w-full text-left px-3 py-2 text-sm hover:bg-orange-50 border-b border-slate-100 last:border-b-0"
+                            className="block w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 border-b border-slate-100 last:border-b-0"
                         >
                             {result.display_name}
                         </button>
@@ -156,15 +167,15 @@ export default function LocationPicker({ latitude, longitude, onChange }) {
 
             <div
                 ref={mapContainerRef}
-                style={{ height: "300px", width: "100%" }}
-                className="rounded border border-slate-300"
+                style={{ height: "260px", width: "100%" }}
+                className="rounded-md border border-slate-300"
             />
 
             <p className="text-xs text-slate-400 mt-1">
                 Search above, or click/drag the pin directly on the map to set the
                 exact location.
                 {latitude != null && longitude != null && (
-                    <span className="block mt-1">
+                    <span className="block mt-0.5">
                         Selected: {latitude.toFixed(6)}, {longitude.toFixed(6)}
                     </span>
                 )}
