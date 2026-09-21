@@ -93,7 +93,7 @@ html.rt-links a { text-decoration: underline !important; }
 .rt-nav-link::after {
   content: "";
   position: absolute;
-  left: .75rem; right: .75rem; bottom: .3rem;
+  left: .6rem; right: .6rem; bottom: .22rem;
   height: 2px;
   border-radius: 2px;
   background: var(--rt-mango);
@@ -170,9 +170,9 @@ const LOGOS = {
   incredible: { src: "/logos/incredible-india.png", alt: "Incredible India logo" },
 };
 
-// Shared classes for every nav item: white, 15px semibold, single line.
+// Shared classes for every nav item: white, small semibold, single line.
 const NAV_ITEM_CLASS =
-  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3 py-2 rounded-lg text-[0.9375rem] font-semibold text-white";
+  "rt-nav-link flex min-h-[2.25rem] items-center whitespace-nowrap px-2.5 py-1.5 rounded-lg text-[0.8125rem] font-semibold text-white";
 
 const EXPLORE_MENU = {
   label: "Explore",
@@ -259,7 +259,7 @@ function NavDropdown({ menu, active, navigate }) {
       <button
         onClick={() => navigate(menu.route)}
         data-active={active}
-        className={`${NAV_ITEM_CLASS} gap-1.5`}
+        className={`${NAV_ITEM_CLASS} gap-1`}
       >
         {menu.label}
         <span
@@ -366,9 +366,9 @@ function AccessibilityMenu() {
         aria-label="Accessibility options"
         aria-expanded={open}
         title="Accessibility"
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-700 hover:bg-teal-600 ring-2 ring-white/70 text-white transition hover:scale-105"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 hover:bg-teal-600 ring-2 ring-white/70 text-white transition hover:scale-105"
       >
-        <Accessibility size={22} />
+        <Accessibility size={18} />
       </button>
 
       {open && (
@@ -586,13 +586,13 @@ function NavSearch({ navigate }) {
   };
 
   return (
-    <div ref={boxRef} className="relative w-full max-w-[22rem]">
+    <div ref={boxRef} className="relative w-full max-w-[20rem]">
       <form
         onSubmit={submit}
         role="search"
-        className="flex h-11 items-center rounded-full bg-white pl-3.5 pr-1 shadow-md shadow-black/20 ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-amber-300"
+        className="flex h-9 items-center rounded-full bg-white pl-3 pr-1 shadow-md shadow-black/20 ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-amber-300"
       >
-        <MapPin size={17} className="shrink-0 text-slate-400" aria-hidden="true" />
+        <MapPin size={15} className="shrink-0 text-slate-400" aria-hidden="true" />
         <input
           type="search"
           value={q}
@@ -604,15 +604,15 @@ function NavSearch({ navigate }) {
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           aria-label="Search the whole website"
-          placeholder="Search beaches, forts, homestays, places..."
-          className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-[0.9375rem] text-slate-900 placeholder:text-slate-500 text-ellipsis outline-none"
+          placeholder="Search beaches, forts, places..."
+          className="h-full min-w-0 flex-1 bg-transparent px-2 text-[0.8125rem] text-slate-900 placeholder:text-slate-500 text-ellipsis outline-none"
         />
         <button
           type="submit"
           aria-label="Search"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b3149] text-white hover:bg-teal-800 transition"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0b3149] text-white hover:bg-teal-800 transition"
         >
-          <Search size={17} />
+          <Search size={14} />
         </button>
       </form>
 
@@ -696,8 +696,8 @@ export default function DashboardLayout() {
         <header className="rt-header-in">
           {/* ============ Row 1: social · skip · search · map · EN · accessibility ============ */}
           <div className="relative z-50 bg-[#0b3149] text-white">
-            <div className="mx-auto flex min-h-[3rem] max-w-[1680px] items-center justify-between gap-3 px-4 sm:px-8 lg:px-12">
-              <ul className="hidden md:flex items-center gap-4">
+            <div className="mx-auto flex min-h-[2.5rem] max-w-[1680px] items-center justify-between gap-3 px-4 sm:px-8 lg:px-12 py-1.5">
+              <ul className="hidden md:flex items-center gap-3.5">
                 {SOCIALS.map(({ label, href, Icon }) => (
                   <li key={label}>
                     <a
@@ -708,16 +708,16 @@ export default function DashboardLayout() {
                       title={label}
                       className="rt-social block text-white/90"
                     >
-                      <Icon size={18} />
+                      <Icon size={15} />
                     </a>
                   </li>
                 ))}
               </ul>
 
-              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <div className="ml-auto flex items-center gap-2.5 sm:gap-3">
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only md:not-sr-only inline-flex h-9 items-center rounded-sm border border-sky-300/40 bg-[#134b78] px-4 text-[0.8125rem] font-bold uppercase tracking-wide text-white hover:bg-[#1a5c91] transition"
+                  className="sr-only focus:not-sr-only md:not-sr-only inline-flex h-7 items-center rounded-sm border border-sky-300/40 bg-[#134b78] px-3 text-[0.6875rem] font-bold uppercase tracking-wide text-white hover:bg-[#1a5c91] transition"
                 >
                   Skip to content
                 </a>
@@ -725,7 +725,7 @@ export default function DashboardLayout() {
                 <form
                   onSubmit={handleSearch}
                   role="search"
-                  className="flex h-9 w-40 sm:w-60 items-center rounded-sm bg-white focus-within:ring-2 focus-within:ring-teal-300"
+                  className="flex h-7 w-36 sm:w-52 items-center rounded-sm bg-white focus-within:ring-2 focus-within:ring-teal-300"
                 >
                   <input
                     type="search"
@@ -733,7 +733,7 @@ export default function DashboardLayout() {
                     onChange={(e) => setQuery(e.target.value)}
                     aria-label="Search"
                     placeholder="Search…"
-                    className="h-full min-w-0 flex-1 bg-transparent px-3 text-[0.9375rem] text-slate-900 placeholder:text-slate-500 outline-none"
+                    className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-[0.8125rem] text-slate-900 placeholder:text-slate-500 outline-none"
                   />
                   {SpeechRec && (
                     <button
@@ -741,16 +741,16 @@ export default function DashboardLayout() {
                       onClick={startVoice}
                       aria-label="Voice search"
                       title="Voice search"
-                      className="px-2.5 text-[#0b3149] hover:text-teal-700 transition"
+                      className="px-2 text-[#0b3149] hover:text-teal-700 transition"
                     >
-                      <Mic size={18} />
+                      <Mic size={15} />
                     </button>
                   )}
                 </form>
 
                 <button
                   onClick={() => navigate("/interactive-map")}
-                  className="hidden sm:inline-flex h-9 items-center rounded-sm bg-white px-3 text-[0.8125rem] font-bold uppercase tracking-wide text-[#0b3149] hover:bg-teal-50 hover:-translate-y-0.5 transition"
+                  className="hidden sm:inline-flex h-7 items-center rounded-sm bg-white px-2.5 text-[0.6875rem] font-bold uppercase tracking-wide text-[#0b3149] hover:bg-teal-50 hover:-translate-y-0.5 transition"
                 >
                   Tourist Map
                 </button>
@@ -758,18 +758,18 @@ export default function DashboardLayout() {
                 <button
                   aria-label="Language: English"
                   title="Language"
-                  className="flex items-center gap-1.5 min-h-[2.25rem] rounded-lg px-2 py-1.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+                  className="flex items-center gap-1 min-h-[1.75rem] rounded-lg px-1.5 py-1 text-[0.8125rem] font-semibold text-white hover:bg-white/10 transition"
                 >
-                  <Languages size={20} />
+                  <Languages size={16} />
                   EN
                 </button>
 
                 {showLoginButton && (
                   <button
                     onClick={() => navigate("/login")}
-                    className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/40 pl-3 pr-4 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+                    className="flex h-7 items-center gap-1 whitespace-nowrap rounded-full border border-white/40 pl-2.5 pr-3 text-[0.8125rem] font-semibold text-white hover:bg-white/10 transition"
                   >
-                    <UserRound size={16} />
+                    <UserRound size={13} />
                     Login
                   </button>
                 )}
@@ -779,7 +779,7 @@ export default function DashboardLayout() {
                       logout();
                       navigate("/dashboard");
                     }}
-                    className="h-9 whitespace-nowrap rounded-full bg-red-600 px-4 text-[0.9375rem] font-semibold text-white hover:bg-red-700 transition"
+                    className="h-7 whitespace-nowrap rounded-full bg-red-600 px-3 text-[0.8125rem] font-semibold text-white hover:bg-red-700 transition"
                   >
                     Logout
                   </button>
@@ -793,9 +793,9 @@ export default function DashboardLayout() {
           {/* ============ Row 2: logos left · title centre · logos right ============ */}
           <div className="rt-band">
             <RatnagiriScene />
-            <div className="relative mx-auto grid max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5 sm:px-8 lg:px-12">
+            <div className="relative mx-auto grid max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3 sm:px-8 sm:py-4 lg:px-12">
               <div className="justify-self-start">
-                <LogoSlot {...LOGOS.left} className="h-14 sm:h-20 lg:h-24" />
+                <LogoSlot {...LOGOS.left} className="h-11 sm:h-16 lg:h-20" />
               </div>
 
               <button
@@ -803,18 +803,18 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="flex flex-col items-center text-center"
               >
-                <LogoSlot {...LOGOS.emblem} className="mb-1 h-12 sm:h-14" />
-                <span className="rt-display text-[1.375rem] sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0b3149] leading-tight">
+                <LogoSlot {...LOGOS.emblem} className="mb-1 h-9 sm:h-11" />
+                <span className="rt-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#0b3149] leading-tight">
                   Ratnagiri Tourism
                 </span>
-                <span className="mt-0.5 text-[0.875rem] sm:text-[1.0625rem] font-medium text-slate-700">
+                <span className="mt-0.5 text-xs sm:text-sm font-medium text-slate-700">
                   Government of Maharashtra
                 </span>
               </button>
 
-              <div className="flex items-center justify-self-end gap-3 sm:gap-5">
-                <LogoSlot {...LOGOS.seal} className="hidden sm:block h-16 lg:h-24" />
-                <LogoSlot {...LOGOS.incredible} className="h-12 sm:h-16 lg:h-20" />
+              <div className="flex items-center justify-self-end gap-2 sm:gap-3">
+                <LogoSlot {...LOGOS.seal} className="hidden sm:block h-12 lg:h-16" />
+                <LogoSlot {...LOGOS.incredible} className="h-9 sm:h-11 lg:h-14" />
               </div>
             </div>
           </div>
@@ -824,15 +824,15 @@ export default function DashboardLayout() {
         <div className="sticky top-0 z-40 bg-[#0b3149] shadow-md">
           <nav
             aria-label="Main"
-            className="mx-auto grid h-[3.75rem] max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-8 lg:px-12"
+            className="mx-auto grid h-12 max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-8 lg:px-12"
           >
             {/* Small screens: opens the sidebar */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label="Toggle menu"
-              className="col-start-1 row-start-1 lg:hidden justify-self-start flex h-11 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-semibold text-white hover:bg-white/10 transition"
+              className="col-start-1 row-start-1 lg:hidden justify-self-start flex h-9 items-center gap-1.5 rounded-lg px-2 text-[0.8125rem] font-semibold text-white hover:bg-white/10 transition"
             >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
               Menu
             </button>
 
@@ -842,7 +842,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* Pages */}
-            <div className="col-start-2 row-start-1 hidden lg:flex items-center justify-center gap-0.5">
+            <div className="col-start-2 row-start-1 hidden lg:flex items-center justify-center gap-1">
               <button
                 onClick={() => navigate("/dashboard")}
                 data-active={location.pathname === "/dashboard"}
@@ -865,15 +865,15 @@ export default function DashboardLayout() {
             </div>
 
             {/* CTAs: icon-only < 1024px, short label 1024–1279px, full label 1280px+ */}
-            <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
+            <div className="col-start-3 row-start-1 flex items-center justify-end gap-2.5 sm:gap-3">
               <button
                 onClick={() => navigate("/interactive-map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#C2410C] via-[#B4532A] to-[#9A3412] px-3 lg:px-4 text-[0.9375rem] font-semibold text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#C2410C] via-[#B4532A] to-[#9A3412] px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <Compass size={17} className="rt-compass relative" />
+                <Compass size={15} className="rt-compass relative" />
                 <span className="relative hidden lg:inline xl:hidden">Map</span>
                 <span className="relative hidden xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
@@ -886,10 +886,10 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/review/add-place")}
                 aria-label="Add location and services"
                 title="Add location and services"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 lg:px-4 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={17} className="rt-mapplus relative" />
+                <MapPlus size={15} className="rt-mapplus relative" />
                 <span className="relative hidden lg:inline xl:hidden">Add place</span>
                 <span className="relative hidden xl:inline">Add location and services</span>
               </button>

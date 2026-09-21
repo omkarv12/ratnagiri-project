@@ -593,7 +593,7 @@ export default function DashboardOverview() {
                           src={image}
                           alt=""
                           loading="lazy"
-                          className="w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-black/5"
+                          className="w-28 aspect-video rounded-lg object-cover shrink-0 ring-1 ring-black/5"
                         />
                         <div className="min-w-0">
                           <div className="flex items-start gap-2">
