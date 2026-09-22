@@ -614,10 +614,12 @@ export default function DashboardOverview() {
                 className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105 grayscale"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                   style={{ backgroundImage: `url(${image})` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                {/* black shade on the inner border — soft vignette framing the card */}
+                <div className="absolute inset-0 rounded-xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
                 <div className="absolute inset-x-0 bottom-0 p-4">
                   <p className="text-white font-semibold text-sm">{title}</p>
                   <p className="text-white/75 text-xs mt-1 leading-snug">{description}</p>
