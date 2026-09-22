@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Handshake,
   ExternalLink,
+  Calendar,
+  User,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +61,15 @@ function YoutubeIcon({ size = 16 }) {
       <polygon points="10 15 15 12 10 9" />
     </svg>
   );
+}
+
+// Formats a story's published_at into a short, readable date for the
+// Stories carousel meta row.
+function formatStoryDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 /* ------------------------------------------------------------------
@@ -700,9 +711,9 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Stories — one real, published story at a time, carousel style */}
-          <div className="flex flex-col h-full">
+          <div>
             <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <Users size={16} />
               Stories
@@ -712,24 +723,24 @@ export default function DashboardOverview() {
             </h2>
 
             <div
-              className="w-full max-w-sm mx-auto flex flex-col flex-1"
+              className="w-full max-w-sm mx-auto"
               onMouseEnter={() => setStoryAutoPaused(true)}
               onMouseLeave={() => setStoryAutoPaused(false)}
             >
               {storiesLoading && (
-                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-slate-400 animate-pulse">
+                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-slate-400 animate-pulse">
                   Loading stories...
                 </div>
               )}
 
               {!storiesLoading && storiesError && (
-                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-red-500 text-center">
+                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-red-500 text-center">
                   Couldn't load stories: {storiesError}
                 </div>
               )}
 
               {!storiesLoading && !storiesError && stories.length === 0 && (
-                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-slate-400 text-center">
+                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-slate-400 text-center">
                   No stories published yet.
                 </div>
               )}
@@ -738,17 +749,23 @@ export default function DashboardOverview() {
                 <>
                   <button
                     onClick={() => navigate(`/stories/${stories[storyIndex].slug}`)}
-                    className="text-left bg-white rounded-xl shadow-sm overflow-hidden flex flex-col flex-1 hover:shadow-md transition-shadow"
+                    className="text-left w-full bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
-                    {/* image with arrows overlaid, matches the hero carousel treatment */}
-                    <div className="relative h-52 shrink-0 bg-slate-100">
+                    {/* image with arrows + category badge overlaid, matches the hero treatment */}
+                    <div className="relative h-52 bg-slate-100">
                       {stories[storyIndex].cover_image && (
                         <div
                           className="absolute inset-0 bg-cover bg-center transition-all duration-300"
                           style={{ backgroundImage: `url(${stories[storyIndex].cover_image})` }}
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+
+                      {stories[storyIndex].category?.name && (
+                        <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 text-teal-700 text-[10px] font-bold rounded uppercase tracking-wide">
+                          {stories[storyIndex].category.name}
+                        </span>
+                      )}
 
                       <span
                         onClick={(e) => {
@@ -776,22 +793,33 @@ export default function DashboardOverview() {
                       </span>
                     </div>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800 leading-snug">
-                          {stories[storyIndex].title}
-                        </p>
-                        {(stories[storyIndex].author_name || stories[storyIndex].category) && (
-                          <p className="text-xs text-slate-400 mt-1 mb-2">
-                            {[stories[storyIndex].author_name, stories[storyIndex].category?.name]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                        )}
-                        <p className="text-sm text-slate-600 leading-snug line-clamp-3">
-                          {stories[storyIndex].excerpt}
-                        </p>
-                      </div>
+                    <div className="p-5">
+                      <p className="text-sm font-semibold text-slate-800 leading-snug mb-1.5">
+                        {stories[storyIndex].title}
+                      </p>
+
+                      {(stories[storyIndex].author_name || stories[storyIndex].published_at) && (
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mb-2.5">
+                          {stories[storyIndex].author_name && (
+                            <span className="flex items-center gap-1">
+                              <User size={11} /> {stories[storyIndex].author_name}
+                            </span>
+                          )}
+                          {stories[storyIndex].published_at && (
+                            <span className="flex items-center gap-1">
+                              <Calendar size={11} /> {formatStoryDate(stories[storyIndex].published_at)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <p className="text-sm text-slate-600 leading-snug line-clamp-3 mb-3">
+                        {stories[storyIndex].excerpt || "Read the full story to find out more."}
+                      </p>
+
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
+                        Read story <ChevronRight size={12} />
+                      </span>
                     </div>
                   </button>
 
@@ -813,7 +841,7 @@ export default function DashboardOverview() {
           </div>
 
           {/* Videos — rendered live from the YouTube playlist, matching card layout */}
-          <div className="flex flex-col h-full">
+          <div>
             <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <PlayCircle size={16} />
               Videos
@@ -822,9 +850,9 @@ export default function DashboardOverview() {
               Watch Before You Go
             </h2>
 
-            <div className="w-full max-w-sm mx-auto flex flex-col flex-1">
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
-                <div className="relative h-52 shrink-0 bg-black">
+            <div className="w-full max-w-sm mx-auto">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="relative h-52 bg-black">
                   <iframe
                     ref={videoIframeRef}
                     className="absolute inset-0 w-full h-full"
@@ -850,27 +878,26 @@ export default function DashboardOverview() {
                   </button>
                 </div>
 
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">From our video playlist</p>
-                    <p className="text-xs text-slate-400 mt-1 leading-snug">
-                      Use the arrows to browse the next clip — playback starts only when you press
-                      play.
-                    </p>
-                  </div>
+                <div className="p-5">
+                  <p className="text-sm font-semibold text-slate-800 mb-1.5">
+                    From our video playlist
+                  </p>
+                  <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
+                    <PlayCircle size={11} /> Konkan Ranmanus &middot; Agriculture &amp; Water
+                  </p>
+                  <p className="text-sm text-slate-600 leading-snug mb-3">
+                    Browse with the arrows — playback only starts when you hit play.
+                  </p>
                   <a
                     href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 mt-2"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
                   >
                     Open full playlist <ExternalLink size={12} />
                   </a>
                 </div>
               </div>
-
-              {/* spacer to match the Stories dots row so both cards end at the same baseline */}
-              <div className="h-[26px]" aria-hidden="true" />
             </div>
           </div>
         </div>
