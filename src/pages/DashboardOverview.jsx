@@ -1,30 +1,15 @@
 import { useState, useEffect } from "react";
 import {
-  Compass,
-  MapPin,
   ChevronRight,
   ChevronLeft,
-  Star,
-  Waves,
   Landmark,
-  TreePine,
-  UtensilsCrossed,
   Drama,
   Users,
-  Navigation,
-  Ruler,
-  Route as RouteIcon,
-  SlidersHorizontal,
-  Home,
-  Bus,
-  Sun,
-  Download,
   Play,
   PlayCircle,
   BookOpen,
   ShieldCheck,
   Search,
-  CalendarDays,
   TrendingUp,
   Handshake,
 } from "lucide-react";
@@ -219,105 +204,6 @@ export default function DashboardOverview() {
     setShowSuggestions(false);
   };
 
-  const exploreCategories = [
-    {
-      title: "Beaches",
-      subtitle: "Clean shores & golden sands",
-      icon: Waves,
-      iconColor: "text-sky-600",
-      image:
-        "https://images.unsplash.com/photo-1520942702018-0862200e6873?auto=format&fit=crop&w=600&q=80",
-      route: "/category/beaches",
-    },
-    {
-      title: "Forts",
-      subtitle: "History & breathtaking views",
-      icon: Landmark,
-      iconColor: "text-amber-700",
-      image:
-        "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80",
-      route: "/category/forts",
-    },
-    {
-      title: "Nature & Wildlife",
-      subtitle: "Hills, forests & more",
-      icon: TreePine,
-      iconColor: "text-emerald-600",
-      image:
-        "https://images.unsplash.com/photo-1502786129293-79981df4e689?auto=format&fit=crop&w=600&q=80",
-      route: "/category/nature-wildlife",
-    },
-    {
-      title: "Food & Local Cuisine",
-      subtitle: "Authentic Konkan flavours",
-      icon: UtensilsCrossed,
-      iconColor: "text-orange-600",
-      image:
-        "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=600&q=80",
-      route: "/traditional-food",
-    },
-    {
-      title: "Culture & Festivals",
-      subtitle: "Traditions that live on",
-      icon: Drama,
-      iconColor: "text-fuchsia-600",
-      image:
-        "https://images.unsplash.com/photo-1598935898639-81586f7d2129?auto=format&fit=crop&w=600&q=80",
-      route: "/cultural-events",
-    },
-    {
-      title: "Packages & Itineraries",
-      subtitle: "Plan your perfect trip",
-      icon: Users,
-      iconColor: "text-teal-600",
-      image:
-        "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=600&q=80",
-      route: "/itineraries",
-    },
-  ];
-
-  const mapShortcuts = [
-    { label: "Map View", icon: MapPin },
-    { label: "Distance", icon: Ruler },
-    { label: "Route", icon: RouteIcon },
-    { label: "Filters", icon: SlidersHorizontal },
-  ];
-
-  const planCards = [
-    {
-      title: "Homestays",
-      description: "Stay with locals, experience the real Ratnagiri.",
-      icon: Home,
-      bg: "bg-emerald-100",
-      color: "text-emerald-700",
-      route: "/homestays",
-    },
-    {
-      title: "Transport & Timetable",
-      description: "Buses, rickshaws, taxis & travel options.",
-      icon: Bus,
-      bg: "bg-sky-100",
-      color: "text-sky-700",
-      route: "/transport",
-    },
-    {
-      title: "Weather",
-      description: "Check live weather & plan your day.",
-      icon: Sun,
-      bg: "bg-amber-100",
-      color: "text-amber-700",
-      route: "/weather",
-    },
-    {
-      title: "Download Maps",
-      description: "Get offline maps & travel guides.",
-      icon: Download,
-      bg: "bg-indigo-100",
-      color: "text-indigo-700",
-      route: "/download-maps",
-    },
-  ];
-
   // ---- Panel 2: Experiences -------------------------------------------------
   const experiencesData = [
     {
@@ -340,12 +226,35 @@ export default function DashboardOverview() {
     },
   ];
 
-  const upcomingEvent = {
-    title: "Ganeshotsav Homestay Drive",
-    description: "Book a homestay for Konkan's biggest festival before rates fill up.",
-    image: Slider1,
-    route: "/homestays",
-  };
+  // "What's new" scrolling list — replaces the single Upcoming Event tile
+  const whatsNewData = [
+    {
+      title: "Ganeshotsav Homestay Bookings Open",
+      description: "Konkan's biggest festival is coming — reserve early for the best rates.",
+      image: Slider1,
+      badge: "NEW",
+      route: "/homestays",
+    },
+    {
+      title: "New Guided Trail: Fort to Bhagwati Bandar",
+      description: "A 3 km coastal walk with a local guide, launching this season.",
+      image: Slider3,
+      badge: "NEW",
+      route: "/guided-walks",
+    },
+    {
+      title: "Monsoon Travel Advisory",
+      description: "Some beach and fort routes have seasonal restrictions.",
+      image: Slider6,
+      route: "/transport",
+    },
+    {
+      title: "Alphonso Season Calendar",
+      description: "Orchard visits and tasting trails run from March to May.",
+      image: Slider2,
+      route: "/traditional-food",
+    },
+  ];
 
   // ---- Panel 3: Stories & Videos --------------------------------------------
   const storiesData = [
@@ -451,16 +360,14 @@ export default function DashboardOverview() {
   ];
 
   // ---- Site-wide search index -------------------------------------------
-  // Flattens every section of this page (categories, plans, experiences,
-  // stories, videos, footer links) plus the live `locations` data from
-  // context into one searchable list, so the hero search bar can actually
-  // find things across the whole site instead of only deep-linking to a
-  // /search route that may not exist yet.
+  // Flattens every section of this page (experiences, what's new, stories,
+  // videos, footer links) plus the live `locations` data from context into
+  // one searchable list, so the hero search bar can actually find things
+  // across the whole site instead of only deep-linking to a /search route
+  // that may not exist yet.
   const searchIndex = [
-    ...exploreCategories.map((c) => ({ label: c.title, sub: c.subtitle, route: c.route })),
-    ...planCards.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
-    { label: upcomingEvent.title, sub: upcomingEvent.description, route: upcomingEvent.route },
+    ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
     ...videosData.map((v) => ({ label: v.title, sub: "Video", route: "/videos" })),
     ...storiesData.map((s) => ({ label: s.name, sub: s.role, route: "/stories" })),
     ...footerColumns.flatMap((col) =>
@@ -587,9 +494,9 @@ export default function DashboardOverview() {
                   homestays and Konkan flavours, all in one place.
                 </p>
 
-                {/* search bar — searches across the whole site (categories,
-                    homestays, transport, stories, videos, footer links and
-                    any live locations from context), with a live dropdown */}
+                {/* search bar — searches across the whole site (experiences,
+                    what's new, stories, videos, footer links and any live
+                    locations from context), with a live dropdown */}
                 <form onSubmit={handleHeroSearch} className="relative max-w-md">
                   <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-lg">
                     <Search size={16} className="text-slate-400 shrink-0" />
@@ -667,7 +574,6 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-     
       {/* ================= Panel 2 — Experiences ================= */}
       <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
         <div className="max-w-[1680px] mx-auto">
@@ -701,25 +607,45 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* Upcoming Event */}
-            <button
-              onClick={() => navigate(upcomingEvent.route)}
-              className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-56"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                style={{ backgroundImage: `url(${upcomingEvent.image})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-              <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-[#B4532A] text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                <CalendarDays size={11} />
-                Upcoming Event
+            {/* What's New — scrolling list panel */}
+            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-56 flex flex-col bg-white">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
+                <p className="text-sm font-semibold">What's new</p>
+                <button
+                  onClick={() => navigate("/whats-new")}
+                  className="text-xs font-medium text-white/85 hover:text-white transition"
+                >
+                  More
+                </button>
               </div>
-              <div className="absolute inset-x-0 bottom-0 p-4">
-                <p className="text-white font-semibold text-sm">{upcomingEvent.title}</p>
-                <p className="text-white/75 text-xs mt-1 leading-snug">{upcomingEvent.description}</p>
+              <div className="flex-1 overflow-y-auto rt-feed divide-y divide-slate-100">
+                {whatsNewData.map(({ title, description, image, badge, route }) => (
+                  <button
+                    key={title}
+                    onClick={() => navigate(route)}
+                    className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
+                      style={{ backgroundImage: `url(${image})` }}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
+                        {badge && (
+                          <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                            {badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                        {description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
+            </div>
           </div>
         </div>
       </section>
@@ -790,8 +716,6 @@ export default function DashboardOverview() {
           </div>
         </div>
       </section>
-
-   
 
       {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
       <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
@@ -896,18 +820,5 @@ export default function DashboardOverview() {
         </div>
       </footer>
     </div>
-  );
-}
-
-// Small helper icon for the "PLAN YOUR TRIP" eyebrow in the Everything You
-// Need section (kept separate since lucide's route-style icon name can vary
-// across versions — swap for `Route` from lucide-react if you prefer).
-function Route2Icon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="6" cy="19" r="2" />
-      <circle cx="18" cy="5" r="2" />
-      <path d="M8 19h8a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h8" />
-    </svg>
   );
 }
