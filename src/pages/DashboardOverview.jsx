@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -26,8 +26,26 @@ import Slider6 from "../assets/Sliders6.jpg";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
-// YouTube playlist that powers the Videos carousel in Panel 3.
+// Full playlist link kept for "Open full playlist" — individual videos below
+// are rendered from videosData so two can be shown per page.
 const VIDEOS_PLAYLIST_ID = "PLJW4HbrLXqlA";
+
+// TODO: replace these placeholder ids with the real YouTube video ids from
+// the Konkan Ranmanus playlist (the part after watch?v= in each video URL).
+const videosData = [
+  { id: "VIDEO_ID_1", title: "Konkan Ranmanus — Agriculture & Water" },
+  { id: "VIDEO_ID_2", title: "Alphonso Mango Orchards" },
+  { id: "VIDEO_ID_3", title: "Ratnagiri Fort Walk" },
+  { id: "VIDEO_ID_4", title: "Malvani Food Trail" },
+];
+
+// Splits an array into fixed-size chunks — used to build "pages" of 2 for
+// the Stories and Videos carousels.
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
 
 // lucide-react no longer ships trademarked brand icons (Instagram, Facebook,
 // Twitter, YouTube, etc). These small inline SVGs are drop-in replacements.
@@ -285,40 +303,56 @@ export default function DashboardOverview() {
       .finally(() => setStoriesLoading(false));
   }, []);
 
-  // One-at-a-time carousel index for the Stories panel, with autoslide.
-  // Pauses while the card is hovered so people can actually read a story.
-  const [storyIndex, setStoryIndex] = useState(0);
+  // Stories carousel: shows 2 stories per page, sliding as a whole page in
+  // and out (instead of one card centred with empty space either side).
+  const STORY_PAGE_SIZE = 2;
+  const storyPages = chunkArray(stories, STORY_PAGE_SIZE);
+  const [storyPage, setStoryPage] = useState(0);
   const [storyAutoPaused, setStoryAutoPaused] = useState(false);
-  const goToPrevStory = () =>
-    setStoryIndex((prev) => (prev - 1 + stories.length) % stories.length);
-  const goToNextStory = () =>
-    setStoryIndex((prev) => (prev + 1) % stories.length);
+
+  const goToPrevStoryPage = () =>
+    setStoryPage((p) => (p - 1 + storyPages.length) % storyPages.length);
+  const goToNextStoryPage = () =>
+    setStoryPage((p) => (p + 1) % storyPages.length);
 
   useEffect(() => {
-    if (storyAutoPaused || stories.length < 2) return;
+    if (storyAutoPaused || storyPages.length < 2) return;
     const interval = setInterval(() => {
-      setStoryIndex((prev) => (prev + 1) % stories.length);
+      setStoryPage((p) => (p + 1) % storyPages.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [storyAutoPaused, stories.length]);
+  }, [storyAutoPaused, storyPages.length]);
 
-  // Clamp the index if the list shrinks (e.g. after a refetch).
+  // Clamp the page if the list shrinks (e.g. after a refetch).
   useEffect(() => {
-    if (storyIndex >= stories.length) setStoryIndex(0);
-  }, [stories.length, storyIndex]);
+    if (storyPage >= storyPages.length) setStoryPage(0);
+  }, [storyPages.length, storyPage]);
 
-  // ---- Videos: a single embedded player bound to the YouTube playlist -------
-  // Plain iframe (no autoplay param, no forced "nextVideo" timer) so nothing
-  // starts playing on its own — arrows are the only thing that move it.
-  const videoIframeRef = useRef(null);
-  const postToPlayer = (func) => {
-    videoIframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: "command", func, args: [] }),
-      "*"
-    );
+  // ---- Videos: 2-per-page carousel, click a thumbnail to play that video --
+  // Each card starts as a thumbnail (no network call, no autoplay) and only
+  // turns into a live embed once the person clicks it.
+  const VIDEO_PAGE_SIZE = 2;
+  const videoPages = chunkArray(videosData, VIDEO_PAGE_SIZE);
+  const [videoPage, setVideoPage] = useState(0);
+  const [videoAutoPaused, setVideoAutoPaused] = useState(false);
+  const [playingVideoId, setPlayingVideoId] = useState(null);
+
+  const goToPrevVideoPage = () => {
+    setPlayingVideoId(null);
+    setVideoPage((p) => (p - 1 + videoPages.length) % videoPages.length);
   };
-  const goToPrevVideo = () => postToPlayer("previousVideo");
-  const goToNextVideo = () => postToPlayer("nextVideo");
+  const goToNextVideoPage = () => {
+    setPlayingVideoId(null);
+    setVideoPage((p) => (p + 1) % videoPages.length);
+  };
+
+  useEffect(() => {
+    if (videoAutoPaused || videoPages.length < 2 || playingVideoId) return;
+    const interval = setInterval(() => {
+      setVideoPage((p) => (p + 1) % videoPages.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [videoAutoPaused, videoPages.length, playingVideoId]);
 
   // ---- Panel 4: About ---------------------------------------------------------
   const aboutPillars = [
@@ -712,7 +746,7 @@ export default function DashboardOverview() {
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
         <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Stories — one real, published story at a time, carousel style */}
+          {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <Users size={16} />
@@ -723,7 +757,7 @@ export default function DashboardOverview() {
             </h2>
 
             <div
-              className="w-full max-w-sm mx-auto"
+              className="w-full"
               onMouseEnter={() => setStoryAutoPaused(true)}
               onMouseLeave={() => setStoryAutoPaused(false)}
             >
@@ -747,100 +781,111 @@ export default function DashboardOverview() {
 
               {!storiesLoading && !storiesError && stories.length > 0 && (
                 <>
-                  <button
-                    onClick={() => navigate(`/stories/${stories[storyIndex].slug}`)}
-                    className="text-left w-full bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                  >
-                    {/* image with arrows + category badge overlaid, matches the hero treatment */}
-                    <div className="relative h-52 bg-slate-100">
-                      {stories[storyIndex].cover_image && (
-                        <div
-                          className="absolute inset-0 bg-cover bg-center transition-all duration-300"
-                          style={{ backgroundImage: `url(${stories[storyIndex].cover_image})` }}
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                  <div className="overflow-hidden">
+                    <div
+                      className="flex transition-transform duration-500 ease-out"
+                      style={{ transform: `translateX(-${storyPage * 100}%)` }}
+                    >
+                      {storyPages.map((page, pageIdx) => (
+                        <div key={pageIdx} className="flex gap-4 w-full shrink-0">
+                          {page.map((story) => (
+                            <button
+                              key={story.slug}
+                              onClick={() => navigate(`/stories/${story.slug}`)}
+                              className="text-left flex-1 min-w-0 bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                            >
+                              <div className="relative h-40 bg-slate-100">
+                                {story.cover_image && (
+                                  <div
+                                    className="absolute inset-0 bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${story.cover_image})` }}
+                                  />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                                {story.category?.name && (
+                                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 text-teal-700 text-[9px] font-bold rounded uppercase tracking-wide">
+                                    {story.category.name}
+                                  </span>
+                                )}
+                              </div>
 
-                      {stories[storyIndex].category?.name && (
-                        <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 text-teal-700 text-[10px] font-bold rounded uppercase tracking-wide">
-                          {stories[storyIndex].category.name}
-                        </span>
-                      )}
+                              <div className="p-4">
+                                <p className="text-sm font-semibold text-slate-800 leading-snug mb-1 line-clamp-2">
+                                  {story.title}
+                                </p>
 
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          goToPrevStory();
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Previous story"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                {(story.author_name || story.published_at) && (
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400 mb-1.5">
+                                    {story.author_name && (
+                                      <span className="flex items-center gap-1">
+                                        <User size={10} /> {story.author_name}
+                                      </span>
+                                    )}
+                                    {story.published_at && (
+                                      <span className="flex items-center gap-1">
+                                        <Calendar size={10} /> {formatStoryDate(story.published_at)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <p className="text-xs text-slate-600 leading-snug line-clamp-2 mb-2">
+                                  {story.excerpt || "Read the full story to find out more."}
+                                </p>
+
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
+                                  Read story <ChevronRight size={11} />
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+
+                          {/* pad the last page so a lone card doesn't stretch full width */}
+                          {page.length < STORY_PAGE_SIZE &&
+                            Array.from({ length: STORY_PAGE_SIZE - page.length }).map((_, i) => (
+                              <div key={`story-pad-${i}`} className="flex-1" />
+                            ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {storyPages.length > 1 && (
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      <button
+                        onClick={goToPrevStoryPage}
+                        aria-label="Previous stories"
+                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
                       >
                         <ChevronLeft size={16} />
-                      </span>
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          goToNextStory();
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Next story"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                      </button>
+                      <div className="flex gap-1.5">
+                        {storyPages.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setStoryPage(i)}
+                            aria-label={`Go to stories page ${i + 1}`}
+                            className={`h-1.5 rounded-full transition-all ${
+                              i === storyPage ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={goToNextStoryPage}
+                        aria-label="Next stories"
+                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
                       >
                         <ChevronRight size={16} />
-                      </span>
+                      </button>
                     </div>
-
-                    <div className="p-5">
-                      <p className="text-sm font-semibold text-slate-800 leading-snug mb-1.5">
-                        {stories[storyIndex].title}
-                      </p>
-
-                      {(stories[storyIndex].author_name || stories[storyIndex].published_at) && (
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mb-2.5">
-                          {stories[storyIndex].author_name && (
-                            <span className="flex items-center gap-1">
-                              <User size={11} /> {stories[storyIndex].author_name}
-                            </span>
-                          )}
-                          {stories[storyIndex].published_at && (
-                            <span className="flex items-center gap-1">
-                              <Calendar size={11} /> {formatStoryDate(stories[storyIndex].published_at)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <p className="text-sm text-slate-600 leading-snug line-clamp-3 mb-3">
-                        {stories[storyIndex].excerpt || "Read the full story to find out more."}
-                      </p>
-
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
-                        Read story <ChevronRight size={12} />
-                      </span>
-                    </div>
-                  </button>
-
-                  <div className="flex justify-center gap-1.5 mt-4">
-                    {stories.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setStoryIndex(i)}
-                        aria-label={`Go to story ${i + 1}`}
-                        className={`h-1.5 rounded-full transition-all ${
-                          i === storyIndex ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  )}
                 </>
               )}
             </div>
           </div>
 
-          {/* Videos — rendered live from the YouTube playlist, matching card layout */}
+          {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
             <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <PlayCircle size={16} />
@@ -850,54 +895,113 @@ export default function DashboardOverview() {
               Watch Before You Go
             </h2>
 
-            <div className="w-full max-w-sm mx-auto">
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="relative h-52 bg-black">
-                  <iframe
-                    ref={videoIframeRef}
-                    className="absolute inset-0 w-full h-full"
-                    src={`https://www.youtube-nocookie.com/embed/videoseries?list=${VIDEOS_PLAYLIST_ID}&enablejsapi=1&autoplay=0&rel=0`}
-                    title="Ratnagiri video playlist"
-                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+            <div
+              className="w-full"
+              onMouseEnter={() => setVideoAutoPaused(true)}
+              onMouseLeave={() => setVideoAutoPaused(false)}
+            >
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${videoPage * 100}%)` }}
+                >
+                  {videoPages.map((page, pageIdx) => (
+                    <div key={pageIdx} className="flex gap-4 w-full shrink-0">
+                      {page.map((video) => (
+                        <div
+                          key={video.id}
+                          className="flex-1 min-w-0 bg-white rounded-xl shadow-sm overflow-hidden"
+                        >
+                          <div className="relative aspect-video bg-black">
+                            {playingVideoId === video.id ? (
+                              <iframe
+                                className="absolute inset-0 w-full h-full"
+                                src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0`}
+                                title={video.title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <button
+                                onClick={() => setPlayingVideoId(video.id)}
+                                aria-label={`Play ${video.title}`}
+                                className="group/video absolute inset-0 w-full h-full"
+                              >
+                                <div
+                                  className="absolute inset-0 bg-cover bg-center"
+                                  style={{
+                                    backgroundImage: `url(https://img.youtube.com/vi/${video.id}/hqdefault.jpg)`,
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black/25 group-hover/video:bg-black/10 transition" />
+                                <span className="absolute inset-0 flex items-center justify-center">
+                                  <span className="w-10 h-10 rounded-full bg-white/90 text-rose-600 flex items-center justify-center shadow-md group-hover/video:scale-110 transition-transform">
+                                    <PlayCircle size={22} />
+                                  </span>
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">
+                              {video.title}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
 
+                      {/* pad the last page so a lone card doesn't stretch full width */}
+                      {page.length < VIDEO_PAGE_SIZE &&
+                        Array.from({ length: VIDEO_PAGE_SIZE - page.length }).map((_, i) => (
+                          <div key={`video-pad-${i}`} className="flex-1" />
+                        ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {videoPages.length > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
                   <button
-                    onClick={goToPrevVideo}
-                    aria-label="Previous video"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    onClick={goToPrevVideoPage}
+                    aria-label="Previous videos"
+                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
                   >
                     <ChevronLeft size={16} />
                   </button>
+                  <div className="flex gap-1.5">
+                    {videoPages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setPlayingVideoId(null);
+                          setVideoPage(i);
+                        }}
+                        aria-label={`Go to videos page ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all ${
+                          i === videoPage ? "w-5 bg-rose-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
                   <button
-                    onClick={goToNextVideo}
-                    aria-label="Next video"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    onClick={goToNextVideoPage}
+                    aria-label="Next videos"
+                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
                   >
                     <ChevronRight size={16} />
                   </button>
                 </div>
+              )}
 
-                <div className="p-5">
-                  <p className="text-sm font-semibold text-slate-800 mb-1.5">
-                    From our video playlist
-                  </p>
-                  <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
-                    <PlayCircle size={11} /> Konkan Ranmanus &middot; Agriculture &amp; Water
-                  </p>
-                  <p className="text-sm text-slate-600 leading-snug mb-3">
-                    Browse with the arrows — playback only starts when you hit play.
-                  </p>
-                  <a
-                    href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
-                  >
-                    Open full playlist <ExternalLink size={12} />
-                  </a>
-                </div>
-              </div>
+              <a
+                href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
+              >
+                Open full playlist <ExternalLink size={12} />
+              </a>
             </div>
           </div>
         </div>
