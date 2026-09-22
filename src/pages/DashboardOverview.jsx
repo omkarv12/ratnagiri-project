@@ -593,7 +593,7 @@ export default function DashboardOverview() {
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-72"
+                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-80"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -608,7 +608,7 @@ export default function DashboardOverview() {
             ))}
 
             {/* What's New — scrolling list panel */}
-            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-72 flex flex-col bg-white">
+            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-80 flex flex-col bg-white">
               <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
                 <p className="text-sm font-semibold">What's new</p>
                 <button
