@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -30,13 +30,11 @@ const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 // are rendered from videosData so two can be shown per page.
 const VIDEOS_PLAYLIST_ID = "PLJW4HbrLXqlA";
 
-// TODO: replace these placeholder ids with the real YouTube video ids from
-// the Konkan Ranmanus playlist (the part after watch?v= in each video URL).
+// The two videos from the "Agriculture and Water" playlist.
+// TODO: rename these titles to whatever each video is actually called.
 const videosData = [
-  { id: "VIDEO_ID_1", title: "Konkan Ranmanus — Agriculture & Water" },
-  { id: "VIDEO_ID_2", title: "Alphonso Mango Orchards" },
-  { id: "VIDEO_ID_3", title: "Ratnagiri Fort Walk" },
-  { id: "VIDEO_ID_4", title: "Malvani Food Trail" },
+  { id: "BZWqwLF5mxI", title: "Agriculture and Water — Part 1" },
+  { id: "tfi_WmqM6to", title: "Agriculture and Water — Part 2" },
 ];
 
 // Splits an array into fixed-size chunks — used to build "pages" of 2 for
@@ -157,8 +155,8 @@ function KonkanBackdrop() {
           <path d="M1384 316 C1378 292 1360 274 1336 268 C1360 280 1374 296 1382 320 Z" />
         </g>
 
-        {/* fishing boat */}
-        <g opacity="0.14" fill="#B4532A">
+        {/* fishing boat — gently bobbing */}
+        <g className="rt-boat" opacity="0.14" fill="#B4532A">
           <path d="M604 442 L700 442 L688 460 L616 460 Z" />
           <rect x="648" y="404" width="4" height="38" />
           <path d="M652 408 L684 438 L652 438 Z" />
@@ -180,6 +178,98 @@ function KonkanBackdrop() {
           fill="#F7EEE0"
           opacity="0.95"
         />
+      </svg>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Scroll reveal — fades a section up into place the first time it
+   enters the viewport, then leaves it alone. One deliberate reveal
+   per section rather than an animation firing on every card.
+------------------------------------------------------------------ */
+function useInView(threshold = 0.15) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, inView];
+}
+
+function Reveal({ children, className = "" }) {
+  const [ref, inView] = useInView();
+  return (
+    <div
+      ref={ref}
+      className={`${className} transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 ${
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Mango-grove backdrop for the Experiences panel — warm orchard
+   light and a sprig of mango leaves in the corner, echoing the
+   Alphonso season rather than a generic white card background.
+------------------------------------------------------------------ */
+function MangoGroveBackdrop() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFDF9_0%,#FDF6EC_60%,#FDF3E4_100%)]" />
+      <div className="absolute top-[-70px] left-[-60px] w-[360px] h-[360px] rounded-full bg-[radial-gradient(circle,rgba(217,119,6,0.09)_0%,rgba(217,119,6,0)_70%)]" />
+      <div className="absolute bottom-[-90px] right-[-50px] w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(180,83,42,0.10)_0%,rgba(180,83,42,0)_70%)]" />
+      <svg
+        className="absolute right-6 top-6 w-40 h-40 opacity-[0.07]"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path d="M20 190 C50 140 80 110 130 80" stroke="#7C4A24" strokeWidth="3" strokeLinecap="round" />
+        <ellipse cx="136" cy="76" rx="20" ry="10" transform="rotate(-32 136 76)" fill="#B4532A" />
+        <ellipse cx="108" cy="98" rx="17" ry="8" transform="rotate(-22 108 98)" fill="#D97706" />
+        <ellipse cx="80" cy="122" rx="15" ry="7" transform="rotate(-15 80 122)" fill="#B4532A" />
+      </svg>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Fort-skyline backdrop for the About panel — a faint laterite-fort
+   silhouette along the base, standing in for Ratnagiri's forts and
+   the "Good Governance" pillar without competing with the cards.
+------------------------------------------------------------------ */
+function FortSkylineBackdrop() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#FAFBFC_0%,#F2F6F5_100%)]" />
+      <svg
+        className="absolute inset-x-0 bottom-0 w-full h-44"
+        viewBox="0 0 1440 200"
+        preserveAspectRatio="xMidYMax slice"
+        fill="#0b3149"
+        opacity="0.05"
+      >
+        <path d="M0 200 L0 140 L40 140 L40 110 L70 110 L70 140 L110 140 L110 90 L130 90 L130 70 L150 70 L150 90 L170 90 L170 140 L230 140 L230 120 L260 120 L260 140 L360 140 L360 100 L390 100 L390 80 L410 80 L410 100 L440 100 L440 140 L560 140 L560 200 Z" />
+        <path d="M760 200 L760 130 L800 130 L800 95 L830 95 L830 60 L860 60 L860 95 L890 95 L890 130 L930 130 L930 200 Z" />
+        <path d="M1080 200 L1080 150 L1120 150 L1120 115 L1150 115 L1150 150 L1200 150 L1200 200 Z" />
+        <path d="M1280 200 L1280 140 L1310 140 L1310 115 L1340 115 L1340 90 L1370 90 L1370 115 L1400 115 L1400 140 L1440 140 L1440 200 Z" />
       </svg>
     </div>
   );
@@ -361,6 +451,7 @@ export default function DashboardOverview() {
       icon: Handshake,
       color: "text-teal-700",
       bg: "bg-teal-50",
+      tint: "tint-teal",
       image: Slider3,
       description:
         "Close-knit fishing and farming communities, festivals that pull whole villages together, and a homestay culture built on hospitality.",
@@ -370,6 +461,7 @@ export default function DashboardOverview() {
       icon: TrendingUp,
       color: "text-amber-700",
       bg: "bg-amber-50",
+      tint: "tint-amber",
       image: Slider2,
       description:
         "Alphonso mango and cashew exports, a working fishing harbour, and tourism that increasingly supports small, local businesses.",
@@ -379,6 +471,7 @@ export default function DashboardOverview() {
       icon: ShieldCheck,
       color: "text-emerald-700",
       bg: "bg-emerald-50",
+      tint: "tint-navy",
       image: Slider1,
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
@@ -524,6 +617,39 @@ export default function DashboardOverview() {
         @media (prefers-reduced-motion: reduce) {
           .whats-new-track { animation: none; }
         }
+
+        /* World-class card treatment: a soft resting shadow that deepens
+           and tints toward the section's accent color on hover, paired
+           with a gentle lift. Applied via .rt-card + a tint modifier. */
+        .rt-card {
+          box-shadow: 0 10px 28px -14px rgba(15, 23, 42, 0.22);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+        .rt-card:hover {
+          transform: translateY(-4px);
+        }
+        .rt-card.tint-amber:hover { box-shadow: 0 26px 50px -18px rgba(180, 83, 42, 0.4); }
+        .rt-card.tint-teal:hover { box-shadow: 0 26px 50px -18px rgba(15, 118, 110, 0.35); }
+        .rt-card.tint-rose:hover { box-shadow: 0 26px 50px -18px rgba(225, 29, 72, 0.32); }
+        .rt-card.tint-navy:hover { box-shadow: 0 26px 50px -18px rgba(11, 49, 73, 0.4); }
+        @media (prefers-reduced-motion: reduce) {
+          .rt-card, .rt-card:hover { transition: none; transform: none; }
+        }
+
+        /* Gentle bob for the fishing boat in the hero backdrop — the one
+           bit of ambient, non-user-triggered motion on the page. */
+        @keyframes boatBob {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-4px) rotate(-0.6deg); }
+        }
+        .rt-boat { animation: boatBob 6s ease-in-out infinite; transform-origin: 652px 460px; }
+        @media (prefers-reduced-motion: reduce) {
+          .rt-boat { animation: none; }
+        }
+
+        /* CTA arrow nudges right on hover instead of the whole row moving */
+        .rt-cta-arrow { transition: transform 0.25s ease; }
+        .rt-cta:hover .rt-cta-arrow { transform: translateX(3px); }
       `}</style>
 
       {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
@@ -532,7 +658,7 @@ export default function DashboardOverview() {
 
         <div className="relative max-w-[1680px] mx-auto">
           {/* Full-width rotating photo carousel with search bar + caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[460px] sm:h-[580px] lg:h-[660px] shadow-xl ring-1 ring-black/5">
+          <div className="relative rounded-2xl overflow-hidden h-[460px] sm:h-[580px] lg:h-[660px] shadow-[0_35px_70px_-20px_rgba(11,49,73,0.5)] ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -585,7 +711,7 @@ export default function DashboardOverview() {
                     what's new, stories, footer links and any live locations
                     from context), with a live dropdown */}
                 <form onSubmit={handleHeroSearch} className="relative max-w-md">
-                  <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-lg">
+                  <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-[0_18px_40px_-15px_rgba(11,49,73,0.55)] ring-1 ring-transparent focus-within:ring-2 focus-within:ring-teal-400/60 transition-shadow duration-300">
                     <Search size={16} className="text-slate-400 shrink-0" />
                     <input
                       type="text"
@@ -662,25 +788,28 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Panel 2 — Experiences ================= */}
-      <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto">
-          <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-            <Drama size={16} />
-            Experiences
-          </div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-            Live Like a Local
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
-            Walks, meals and encounters that go beyond the sightseeing list.
-          </p>
+      <section className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <MangoGroveBackdrop />
+        <div className="relative max-w-[1680px] mx-auto">
+          <Reveal>
+            <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+              <Drama size={16} />
+              Experiences
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+              Live Like a Local
+            </h2>
+            <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+              Walks, meals and encounters that go beyond the sightseeing list.
+            </p>
+          </Reveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.3fr] gap-5">
             {experiencesData.map(({ title, description, image, route }) => (
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
+                className="rt-card tint-amber group text-left rounded-xl overflow-hidden relative h-96"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -697,7 +826,7 @@ export default function DashboardOverview() {
             ))}
 
             {/* What's New — auto-scrolling looping list panel */}
-            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-96 flex flex-col bg-white">
+            <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
               <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
                 <p className="text-sm font-semibold">What's new</p>
                 <button
@@ -744,17 +873,32 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
-      <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <section className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <svg
+          className="absolute inset-x-0 bottom-0 w-full h-32 opacity-[0.06] pointer-events-none"
+          viewBox="0 0 1440 160"
+          preserveAspectRatio="xMidYMax slice"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0 90 C160 60 320 120 480 90 C640 60 800 120 960 90 C1120 60 1280 120 1440 90 L1440 160 L0 160 Z"
+            fill="#0f766e"
+          />
+        </svg>
+
+        <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
-            <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-              <Users size={16} />
-              Stories
-            </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
-              Voices of Ratnagiri
-            </h2>
+            <Reveal>
+              <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+                <Users size={16} />
+                Stories
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+                Voices of Ratnagiri
+              </h2>
+            </Reveal>
 
             <div
               className="w-full"
@@ -792,7 +936,7 @@ export default function DashboardOverview() {
                             <button
                               key={story.slug}
                               onClick={() => navigate(`/stories/${story.slug}`)}
-                              className="text-left flex-1 min-w-0 bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                              className="rt-card tint-teal group text-left flex-1 min-w-0 bg-white rounded-xl overflow-hidden"
                             >
                               <div className="relative h-40 bg-slate-100">
                                 {story.cover_image && (
@@ -834,7 +978,8 @@ export default function DashboardOverview() {
                                 </p>
 
                                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
-                                  Read story <ChevronRight size={11} />
+                                  Read story
+                                  <ChevronRight size={11} className="transition-transform duration-300 group-hover:translate-x-1" />
                                 </span>
                               </div>
                             </button>
@@ -855,7 +1000,7 @@ export default function DashboardOverview() {
                       <button
                         onClick={goToPrevStoryPage}
                         aria-label="Previous stories"
-                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
+                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)] hover:scale-105 text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -874,7 +1019,7 @@ export default function DashboardOverview() {
                       <button
                         onClick={goToNextStoryPage}
                         aria-label="Next stories"
-                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
+                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)] hover:scale-105 text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -887,13 +1032,15 @@ export default function DashboardOverview() {
 
           {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
-            <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-              <PlayCircle size={16} />
-              Videos
-            </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
-              Watch Before You Go
-            </h2>
+            <Reveal>
+              <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+                <PlayCircle size={16} />
+                Videos
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+                Watch Before You Go
+              </h2>
+            </Reveal>
 
             <div
               className="w-full"
@@ -910,7 +1057,7 @@ export default function DashboardOverview() {
                       {page.map((video) => (
                         <div
                           key={video.id}
-                          className="flex-1 min-w-0 bg-white rounded-xl shadow-sm overflow-hidden"
+                          className="rt-card tint-rose flex-1 min-w-0 bg-white rounded-xl overflow-hidden"
                         >
                           <div className="relative aspect-video bg-black">
                             {playingVideoId === video.id ? (
@@ -965,7 +1112,7 @@ export default function DashboardOverview() {
                   <button
                     onClick={goToPrevVideoPage}
                     aria-label="Previous videos"
-                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
+                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)] hover:scale-105 text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
                   >
                     <ChevronLeft size={16} />
                   </button>
@@ -987,7 +1134,7 @@ export default function DashboardOverview() {
                   <button
                     onClick={goToNextVideoPage}
                     aria-label="Next videos"
-                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
+                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)] hover:scale-105 text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -998,9 +1145,9 @@ export default function DashboardOverview() {
                 href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                className="rt-cta mt-4 inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
               >
-                Open full playlist <ExternalLink size={12} />
+                Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
               </a>
             </div>
           </div>
@@ -1008,25 +1155,28 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
-      <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto">
-          <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-            <Landmark size={16} />
-            About the District
-          </div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-            Society, Economy &amp; Governance
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
-            A quick look at what keeps Ratnagiri running, beyond the tourist
-            trail.
-          </p>
+      <section className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <FortSkylineBackdrop />
+        <div className="relative max-w-[1680px] mx-auto">
+          <Reveal>
+            <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+              <Landmark size={16} />
+              About the District
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+              Society, Economy &amp; Governance
+            </h2>
+            <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+              A quick look at what keeps Ratnagiri running, beyond the tourist
+              trail.
+            </p>
+          </Reveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {aboutPillars.map(({ title, icon: Icon, color, bg, image, description }) => (
+            {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, description }) => (
               <div
                 key={title}
-                className="group rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
+                className={`rt-card ${tint} group rounded-xl overflow-hidden relative h-96`}
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -1037,7 +1187,7 @@ export default function DashboardOverview() {
                 <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
 
                 <span
-                  className={`absolute top-4 left-4 w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shadow-sm`}
+                  className={`absolute top-4 left-4 w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
                 >
                   <Icon size={18} />
                 </span>
@@ -1053,8 +1203,31 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Footer ================= */}
-      <footer className="bg-slate-900 mt-0">
-        <div className="px-6 sm:px-10 py-12 sm:py-14">
+      <footer className="relative overflow-hidden bg-slate-900 mt-0">
+        <svg
+          className="absolute inset-x-0 top-0 w-full h-20 opacity-[0.05] pointer-events-none"
+          viewBox="0 0 1440 100"
+          preserveAspectRatio="xMidYMin slice"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0 40 C160 10 320 60 480 40 C640 20 800 60 960 40 C1120 20 1280 60 1440 40 L1440 0 L0 0 Z"
+            fill="#5EEAD4"
+          />
+        </svg>
+        <svg
+          className="absolute right-0 bottom-0 w-56 h-56 opacity-[0.05] pointer-events-none"
+          viewBox="0 0 200 200"
+          fill="#5EEAD4"
+          aria-hidden="true"
+        >
+          <path d="M90 200 C94 150 98 120 106 84 L114 85 C110 122 108 152 106 200 Z" />
+          <path d="M110 84 C80 60 50 60 26 78 C56 70 86 76 110 90 Z" />
+          <path d="M110 84 C140 56 174 54 198 70 C166 68 136 76 112 92 Z" />
+        </svg>
+
+        <div className="relative px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
             <div>
               <h2 className="font-display italic text-2xl text-white mb-3">
@@ -1072,7 +1245,7 @@ export default function DashboardOverview() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-teal-600 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-teal-600 hover:text-white hover:-translate-y-1 hover:shadow-[0_10px_22px_-6px_rgba(45,212,191,0.55)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
                   >
                     <Icon size={16} />
                   </a>
