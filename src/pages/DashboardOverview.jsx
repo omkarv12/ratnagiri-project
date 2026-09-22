@@ -5,13 +5,12 @@ import {
   Landmark,
   Drama,
   Users,
-  Play,
   PlayCircle,
-  BookOpen,
   ShieldCheck,
   Search,
   TrendingUp,
   Handshake,
+  ExternalLink,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
@@ -287,54 +286,46 @@ export default function DashboardOverview() {
     },
   ];
 
-  // One-at-a-time carousel index for the Stories panel.
+  // One-at-a-time carousel index for the Stories panel, with autoslide.
+  // Pauses while the card is hovered so people can actually read a story.
   const [storyIndex, setStoryIndex] = useState(0);
+  const [storyAutoPaused, setStoryAutoPaused] = useState(false);
   const goToPrevStory = () =>
     setStoryIndex((prev) => (prev - 1 + storiesData.length) % storiesData.length);
   const goToNextStory = () =>
     setStoryIndex((prev) => (prev + 1) % storiesData.length);
 
-  // ---- Videos: rendered live from a YouTube playlist via the IFrame API -----
-  // Loads the YT IFrame API once, then mounts a player bound to
-  // VIDEOS_PLAYLIST_ID. The player's own previousVideo()/nextVideo() drive
-  // the "carousel" through whatever videos are in that playlist.
-  const videoPlayerRef = useRef(null);
-  const videoPlayerInstanceRef = useRef(null);
-  const [ytApiReady, setYtApiReady] = useState(false);
+  useEffect(() => {
+    if (storyAutoPaused) return;
+    const interval = setInterval(() => {
+      setStoryIndex((prev) => (prev + 1) % storiesData.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [storyAutoPaused, storiesData.length]);
+
+  // ---- Videos: a single embedded player bound to the YouTube playlist -------
+  // Using a plain iframe (with enablejsapi=1) instead of loading the full
+  // YT IFrame API script — far more reliable, nothing to race against on
+  // mount, and our arrows (and the autoslide timer) just postMessage
+  // next/previous commands to it. Also pauses while hovered.
+  const videoIframeRef = useRef(null);
+  const [videoAutoPaused, setVideoAutoPaused] = useState(false);
+  const postToPlayer = (func) => {
+    videoIframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args: [] }),
+      "*"
+    );
+  };
+  const goToPrevVideo = () => postToPlayer("previousVideo");
+  const goToNextVideo = () => postToPlayer("nextVideo");
 
   useEffect(() => {
-    if (window.YT && window.YT.Player) {
-      setYtApiReady(true);
-      return;
-    }
-    const existingTag = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
-    if (!existingTag) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.body.appendChild(tag);
-    }
-    const previousCallback = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      previousCallback?.();
-      setYtApiReady(true);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!ytApiReady || !videoPlayerRef.current || videoPlayerInstanceRef.current) return;
-    videoPlayerInstanceRef.current = new window.YT.Player(videoPlayerRef.current, {
-      height: "100%",
-      width: "100%",
-      playerVars: {
-        listType: "playlist",
-        list: VIDEOS_PLAYLIST_ID,
-        rel: 0,
-      },
-    });
-  }, [ytApiReady]);
-
-  const goToPrevVideo = () => videoPlayerInstanceRef.current?.previousVideo?.();
-  const goToNextVideo = () => videoPlayerInstanceRef.current?.nextVideo?.();
+    if (videoAutoPaused) return;
+    const interval = setInterval(() => {
+      postToPlayer("nextVideo");
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [videoAutoPaused]);
 
   // ---- Panel 4: About ---------------------------------------------------------
   const aboutPillars = [
@@ -409,10 +400,10 @@ export default function DashboardOverview() {
 
   // ---- Site-wide search index -------------------------------------------
   // Flattens every section of this page (experiences, what's new, stories,
-  // videos, footer links) plus the live `locations` data from context into
-  // one searchable list, so the hero search bar can actually find things
-  // across the whole site instead of only deep-linking to a /search route
-  // that may not exist yet.
+  // footer links) plus the live `locations` data from context into one
+  // searchable list, so the hero search bar can actually find things across
+  // the whole site instead of only deep-linking to a /search route that may
+  // not exist yet.
   const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
@@ -723,9 +714,9 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
           {/* Stories — one story at a time, carousel style */}
-          <div>
+          <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <Users size={16} />
               Stories
@@ -734,12 +725,36 @@ export default function DashboardOverview() {
               Voices of Ratnagiri
             </h2>
 
-            <div className="relative max-w-sm mx-auto">
+            <div
+              className="w-full max-w-sm mx-auto flex flex-col flex-1"
+              onMouseEnter={() => setStoryAutoPaused(true)}
+              onMouseLeave={() => setStoryAutoPaused(false)}
+            >
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div
-                  className="h-48 bg-cover bg-center transition-all duration-300"
-                  style={{ backgroundImage: `url(${storiesData[storyIndex].photo})` }}
-                />
+                {/* image with arrows overlaid, matches the hero carousel treatment */}
+                <div className="relative h-52">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+                    style={{ backgroundImage: `url(${storiesData[storyIndex].photo})` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                  <button
+                    onClick={goToPrevStory}
+                    aria-label="Previous story"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={goToNextStory}
+                    aria-label="Next story"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+
                 <div className="p-5">
                   <p className="text-sm font-semibold text-slate-800">
                     {storiesData[storyIndex].name}
@@ -750,21 +765,6 @@ export default function DashboardOverview() {
                   </p>
                 </div>
               </div>
-
-              <button
-                onClick={goToPrevStory}
-                aria-label="Previous story"
-                className="absolute left-0 top-16 -translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={goToNextStory}
-                aria-label="Next story"
-                className="absolute right-0 top-16 translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
-              >
-                <ChevronRight size={16} />
-              </button>
 
               <div className="flex justify-center gap-1.5 mt-4">
                 {storiesData.map((_, i) => (
@@ -781,8 +781,8 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Videos — rendered live from the YouTube playlist, one at a time */}
-          <div>
+          {/* Videos — rendered live from the YouTube playlist, matching card layout */}
+          <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <PlayCircle size={16} />
               Videos
@@ -791,25 +791,56 @@ export default function DashboardOverview() {
               Watch Before You Go
             </h2>
 
-            <div className="relative max-w-sm mx-auto">
-              <div className="rounded-xl overflow-hidden shadow-sm bg-black aspect-video">
-                <div ref={videoPlayerRef} className="w-full h-full" />
+            <div
+              className="w-full max-w-sm mx-auto flex flex-col flex-1"
+              onMouseEnter={() => setVideoAutoPaused(true)}
+              onMouseLeave={() => setVideoAutoPaused(false)}
+            >
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="relative h-52 bg-black">
+                  <iframe
+                    ref={videoIframeRef}
+                    className="absolute inset-0 w-full h-full"
+                    src={`https://www.youtube-nocookie.com/embed/videoseries?list=${VIDEOS_PLAYLIST_ID}&enablejsapi=1&rel=0`}
+                    title="Ratnagiri video playlist"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+
+                  <button
+                    onClick={goToPrevVideo}
+                    aria-label="Previous video"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={goToNextVideo}
+                    aria-label="Next video"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+
+                <div className="p-5">
+                  <p className="text-sm font-semibold text-slate-800">From our video playlist</p>
+                  <p className="text-xs text-slate-400 mt-1 mb-2 leading-snug">
+                    Use the arrows to browse the next clip, or open the full playlist on YouTube.
+                  </p>
+                  <a
+                    href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                  >
+                    Open full playlist <ExternalLink size={12} />
+                  </a>
+                </div>
               </div>
 
-              <button
-                onClick={goToPrevVideo}
-                aria-label="Previous video"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={goToNextVideo}
-                aria-label="Next video"
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-              >
-                <ChevronRight size={16} />
-              </button>
+              {/* spacer to keep both columns the same height as the Stories dots row */}
+              <div className="h-[26px]" aria-hidden="true" />
             </div>
           </div>
         </div>
