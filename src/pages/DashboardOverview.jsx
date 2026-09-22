@@ -3,6 +3,7 @@ import {
   Compass,
   MapPin,
   ChevronRight,
+  ChevronLeft,
   Star,
   Waves,
   Landmark,
@@ -19,9 +20,14 @@ import {
   Sun,
   Download,
   Play,
+  PlayCircle,
   Phone,
   BookOpen,
   ShieldCheck,
+  Search,
+  CalendarDays,
+  TrendingUp,
+  Handshake,
 } from "lucide-react";
 import { CheckCircle2 } from "lucide-react"; // add to the existing lucide import list
 import { useLocations } from "../context/LocationsContext";
@@ -197,6 +203,21 @@ export default function DashboardOverview() {
     return () => clearInterval(interval);
   }, []);
 
+  // Manual carousel controls for the hero photo strip.
+  const goToPrevSlide = () =>
+    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  const goToNextSlide = () =>
+    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+
+  // Hero search bar. TODO: point this at the real search/results route once
+  // it exists — for now it lands on /search?q=...
+  const [searchQuery, setSearchQuery] = useState("");
+  const handleHeroSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+  };
+
   // Snapshot stats — count up on mount. TODO: wire to real numbers (or a CMS
   // field) once they're available; these are placeholders.
   const [statBeaches, setStatBeaches] = useState(0);
@@ -365,6 +386,98 @@ export default function DashboardOverview() {
     },
   ];
 
+  // ---- Panel 2: Experiences -------------------------------------------------
+  const experiencesData = [
+    {
+      title: "Guided Walks",
+      description: "Local guides lead you through forts, markets and coastal trails.",
+      image: Slider2,
+      route: "/guided-walks",
+    },
+    {
+      title: "Konkani Food",
+      description: "Taste solkadhi, fish curry-rice and other Malvani classics.",
+      image: Slider4,
+      route: "/traditional-food",
+    },
+    {
+      title: "Community Interaction",
+      description: "Meet fisherfolk, farmers and artisans in their own villages.",
+      image: Slider3,
+      route: "/village-life",
+    },
+  ];
+
+  const upcomingEvent = {
+    title: "Ganeshotsav Homestay Drive",
+    description: "Book a homestay for Konkan's biggest festival before rates fill up.",
+    image: Slider1,
+    route: "/homestays",
+  };
+
+  // ---- Panel 3: Stories & Videos --------------------------------------------
+  const storiesData = [
+    {
+      name: "Meera Kadam",
+      role: "Homestay host, Ganpatipule",
+      photo: Slider5,
+      quote: "Guests come for the beach, they stay for the fish curry.",
+    },
+    {
+      name: "Suresh Rane",
+      role: "Fisherman, Karla",
+      photo: Slider6,
+      quote: "Best catch is at dawn — I sometimes take visitors along.",
+    },
+    {
+      name: "Anita Sawant",
+      role: "Mango farmer, Devgad",
+      photo: Slider2,
+      quote: "March to May, the whole orchard smells of ripening Alphonso.",
+    },
+    {
+      name: "Ganesh Pednekar",
+      role: "Fort guide, Ratnagiri",
+      photo: Slider3,
+      quote: "Every wall here has a story from the Shivaji era.",
+    },
+  ];
+
+  const videosData = [
+    { title: "A Day at Bhagwati Bandar", duration: "4:12", thumbnail: Slider1 },
+    { title: "Cooking Solkadhi at Home", duration: "6:45", thumbnail: Slider4 },
+    { title: "Inside Ratnagiri Fort", duration: "3:58", thumbnail: Slider3 },
+    { title: "Alphonso Orchard Tour", duration: "5:20", thumbnail: Slider2 },
+  ];
+
+  // ---- Panel 4: About ---------------------------------------------------------
+  const aboutPillars = [
+    {
+      title: "Society",
+      icon: Handshake,
+      color: "text-teal-700",
+      bg: "bg-teal-50",
+      description:
+        "Close-knit fishing and farming communities, festivals that pull whole villages together, and a homestay culture built on hospitality.",
+    },
+    {
+      title: "Economy",
+      icon: TrendingUp,
+      color: "text-amber-700",
+      bg: "bg-amber-50",
+      description:
+        "Alphonso mango and cashew exports, a working fishing harbour, and tourism that increasingly supports small, local businesses.",
+    },
+    {
+      title: "Good Governance",
+      icon: ShieldCheck,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
+      description:
+        "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
+    },
+  ];
+
   const footerColumns = [
     {
       heading: "Destinations",
@@ -443,9 +556,10 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar for the What's New feed (kept for touch devices where the marquee is paused) */
+        /* Slim scrollbar, reused for the What's New feed and the horizontal
+           Stories / Videos strips */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
-        .rt-feed::-webkit-scrollbar { width: 6px; }
+        .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
         .rt-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
         .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -486,13 +600,13 @@ export default function DashboardOverview() {
         }
       `}</style>
 
-      {/* ================= Snapshot (photo + stats + What's New) ================= */}
+      {/* ================= Panel 1 — Hero carousel (photo + stats + What's New) ================= */}
       <section className="relative px-5 sm:px-10 lg:px-16 py-10 sm:py-14 overflow-hidden">
         <KonkanBackdrop />
 
         <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
-          {/* Left: rotating photo tile with caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[360px] sm:h-[520px] shadow-xl ring-1 ring-black/5">
+          {/* Left: rotating photo carousel with search bar + caption */}
+          <div className="relative rounded-2xl overflow-hidden h-[420px] sm:h-[560px] shadow-xl ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -503,15 +617,61 @@ export default function DashboardOverview() {
                 }}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/25" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30" />
+
+            {/* black shade on the inner border — a soft vignette that frames
+                every slide the same way, so the carousel reads as one
+                consistent frame rather than six different photos */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_90px_30px_rgba(0,0,0,0.5)]" />
+
+            {/* carousel arrows */}
+            <button
+              onClick={goToPrevSlide}
+              aria-label="Previous photo"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={goToNextSlide}
+              aria-label="Next photo"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            >
+              <ChevronRight size={18} />
+            </button>
 
             <div className="absolute top-6 left-6 right-6 animate-fade-up">
               <p className="text-[11px] font-semibold tracking-[0.18em] text-white/80 mb-2 font-body">
                 Explore &middot; Experience &middot; Support Local
               </p>
-              <h1 className="font-display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl">
+              <h1 className="font-display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl mb-3">
                 Discover <span className="text-teal-300">Ratnagiri</span>
               </h1>
+              <p className="text-white/85 text-sm sm:text-base max-w-sm font-body mb-5 leading-relaxed">
+                Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
+                homestays and Konkan flavours, all in one place.
+              </p>
+
+              {/* search bar */}
+              <form
+                onSubmit={handleHeroSearch}
+                className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-1.5 max-w-sm shadow-lg"
+              >
+                <Search size={16} className="text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search beaches, forts, stays..."
+                  className="flex-1 min-w-0 text-sm text-slate-700 placeholder:text-slate-400 bg-transparent outline-none font-body"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 bg-[#0b3149] hover:bg-[#0a2b3f] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
+                >
+                  Search
+                </button>
+              </form>
             </div>
 
             <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
@@ -805,6 +965,129 @@ export default function DashboardOverview() {
         </div>
       </section>
 
+      {/* ================= Panel 2 — Experiences ================= */}
+      <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <div className="max-w-[1680px] mx-auto">
+          <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+            <Drama size={16} />
+            Experiences
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            Live Like a Local
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+            Walks, meals and encounters that go beyond the sightseeing list.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.3fr] gap-5">
+            {experiencesData.map(({ title, description, image, route }) => (
+              <button
+                key={title}
+                onClick={() => navigate(route)}
+                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-56"
+              >
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${image})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <p className="text-white font-semibold text-sm">{title}</p>
+                  <p className="text-white/75 text-xs mt-1 leading-snug">{description}</p>
+                </div>
+              </button>
+            ))}
+
+            {/* Upcoming Event */}
+            <button
+              onClick={() => navigate(upcomingEvent.route)}
+              className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-56"
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                style={{ backgroundImage: `url(${upcomingEvent.image})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+              <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 bg-[#B4532A] text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                <CalendarDays size={11} />
+                Upcoming Event
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <p className="text-white font-semibold text-sm">{upcomingEvent.title}</p>
+                <p className="text-white/75 text-xs mt-1 leading-snug">{upcomingEvent.description}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= Panel 3 — Stories & Videos ================= */}
+      <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Stories */}
+          <div>
+            <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+              <Users size={16} />
+              Stories
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+              Voices of Ratnagiri
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory rt-feed">
+              {storiesData.map(({ name, role, photo, quote }) => (
+                <div
+                  key={name}
+                  className="snap-start shrink-0 w-56 bg-white rounded-xl shadow-sm overflow-hidden"
+                >
+                  <div className="h-36 bg-cover bg-center" style={{ backgroundImage: `url(${photo})` }} />
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-slate-800">{name}</p>
+                    <p className="text-xs text-slate-400 mb-2">{role}</p>
+                    <p className="text-xs text-slate-600 leading-snug italic">&ldquo;{quote}&rdquo;</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Videos */}
+          <div>
+            <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+              <PlayCircle size={16} />
+              Videos
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+              Watch Before You Go
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory rt-feed">
+              {videosData.map(({ title, duration, thumbnail }) => (
+                <button
+                  key={title}
+                  className="snap-start shrink-0 w-56 text-left bg-white rounded-xl shadow-sm overflow-hidden group"
+                >
+                  <div
+                    className="relative h-36 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${thumbnail})` }}
+                  >
+                    <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#0b3149]">
+                        <Play size={15} fill="currentColor" className="ml-0.5" />
+                      </span>
+                    </div>
+                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                      {duration}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-slate-800 leading-snug">{title}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ================= Traveler Story ================= */}
       <div className="bg-sky-50/70 py-10 sm:py-14 px-4 sm:px-8">
         <div className="flex justify-center gap-1 mb-6">
@@ -837,6 +1120,38 @@ export default function DashboardOverview() {
           </p>
         </div>
       </div>
+
+      {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
+      <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+        <div className="max-w-[1680px] mx-auto">
+          <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+            <Landmark size={16} />
+            About the District
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            Society, Economy &amp; Governance
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+            A quick look at what keeps Ratnagiri running, beyond the tourist
+            trail.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {aboutPillars.map(({ title, icon: Icon, color, bg, description }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-slate-100 p-6 hover:shadow-md transition-shadow"
+              >
+                <span className={`w-11 h-11 rounded-full ${bg} ${color} flex items-center justify-center mb-4`}>
+                  <Icon size={19} />
+                </span>
+                <p className="text-sm font-semibold text-slate-800 mb-2">{title}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ================= Footer ================= */}
       <footer className="bg-slate-900 mt-0">
