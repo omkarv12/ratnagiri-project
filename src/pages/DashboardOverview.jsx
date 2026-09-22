@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
+import { blogApi } from "../api/blogApi";
 import Slider1 from "../assets/Sliders1.jpg";
 import Slider2 from "../assets/Sliders2.jpg";
 import Slider3 from "../assets/Sliders3.jpg";
@@ -259,57 +260,46 @@ export default function DashboardOverview() {
   ];
 
   // ---- Panel 3: Stories & Videos --------------------------------------------
-  const storiesData = [
-    {
-      name: "Meera Kadam",
-      role: "Homestay host, Ganpatipule",
-      photo: Slider5,
-      quote: "Guests come for the beach, they stay for the fish curry.",
-    },
-    {
-      name: "Suresh Rane",
-      role: "Fisherman, Karla",
-      photo: Slider6,
-      quote: "Best catch is at dawn — I sometimes take visitors along.",
-    },
-    {
-      name: "Anita Sawant",
-      role: "Mango farmer, Devgad",
-      photo: Slider2,
-      quote: "March to May, the whole orchard smells of ripening Alphonso.",
-    },
-    {
-      name: "Ganesh Pednekar",
-      role: "Fort guide, Ratnagiri",
-      photo: Slider3,
-      quote: "Every wall here has a story from the Shivaji era.",
-    },
-  ];
+  // Stories are the real, published posts from the Stories section (same
+  // blogApi the /stories page uses) — no mock data here.
+  const [stories, setStories] = useState([]);
+  const [storiesLoading, setStoriesLoading] = useState(true);
+  const [storiesError, setStoriesError] = useState(null);
+
+  useEffect(() => {
+    blogApi
+      .listLatest(6)
+      .then((data) => setStories(data || []))
+      .catch((err) => setStoriesError(err.message))
+      .finally(() => setStoriesLoading(false));
+  }, []);
 
   // One-at-a-time carousel index for the Stories panel, with autoslide.
   // Pauses while the card is hovered so people can actually read a story.
   const [storyIndex, setStoryIndex] = useState(0);
   const [storyAutoPaused, setStoryAutoPaused] = useState(false);
   const goToPrevStory = () =>
-    setStoryIndex((prev) => (prev - 1 + storiesData.length) % storiesData.length);
+    setStoryIndex((prev) => (prev - 1 + stories.length) % stories.length);
   const goToNextStory = () =>
-    setStoryIndex((prev) => (prev + 1) % storiesData.length);
+    setStoryIndex((prev) => (prev + 1) % stories.length);
 
   useEffect(() => {
-    if (storyAutoPaused) return;
+    if (storyAutoPaused || stories.length < 2) return;
     const interval = setInterval(() => {
-      setStoryIndex((prev) => (prev + 1) % storiesData.length);
+      setStoryIndex((prev) => (prev + 1) % stories.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [storyAutoPaused, storiesData.length]);
+  }, [storyAutoPaused, stories.length]);
+
+  // Clamp the index if the list shrinks (e.g. after a refetch).
+  useEffect(() => {
+    if (storyIndex >= stories.length) setStoryIndex(0);
+  }, [stories.length, storyIndex]);
 
   // ---- Videos: a single embedded player bound to the YouTube playlist -------
-  // Using a plain iframe (with enablejsapi=1) instead of loading the full
-  // YT IFrame API script — far more reliable, nothing to race against on
-  // mount, and our arrows (and the autoslide timer) just postMessage
-  // next/previous commands to it. Also pauses while hovered.
+  // Plain iframe (no autoplay param, no forced "nextVideo" timer) so nothing
+  // starts playing on its own — arrows are the only thing that move it.
   const videoIframeRef = useRef(null);
-  const [videoAutoPaused, setVideoAutoPaused] = useState(false);
   const postToPlayer = (func) => {
     videoIframeRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: "command", func, args: [] }),
@@ -318,14 +308,6 @@ export default function DashboardOverview() {
   };
   const goToPrevVideo = () => postToPlayer("previousVideo");
   const goToNextVideo = () => postToPlayer("nextVideo");
-
-  useEffect(() => {
-    if (videoAutoPaused) return;
-    const interval = setInterval(() => {
-      postToPlayer("nextVideo");
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [videoAutoPaused]);
 
   // ---- Panel 4: About ---------------------------------------------------------
   const aboutPillars = [
@@ -407,7 +389,11 @@ export default function DashboardOverview() {
   const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
-    ...storiesData.map((s) => ({ label: s.name, sub: s.role, route: "/stories" })),
+    ...stories.map((s) => ({
+      label: s.title,
+      sub: s.excerpt,
+      route: `/stories/${s.slug}`,
+    })),
     ...footerColumns.flatMap((col) =>
       col.links.map((l) => ({ label: l.label, sub: col.heading, route: l.route }))
     ),
@@ -714,8 +700,8 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          {/* Stories — one story at a time, carousel style */}
+        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+          {/* Stories — one real, published story at a time, carousel style */}
           <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <Users size={16} />
@@ -730,54 +716,99 @@ export default function DashboardOverview() {
               onMouseEnter={() => setStoryAutoPaused(true)}
               onMouseLeave={() => setStoryAutoPaused(false)}
             >
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                {/* image with arrows overlaid, matches the hero carousel treatment */}
-                <div className="relative h-52">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-all duration-300"
-                    style={{ backgroundImage: `url(${storiesData[storyIndex].photo})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-                  <button
-                    onClick={goToPrevStory}
-                    aria-label="Previous story"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={goToNextStory}
-                    aria-label="Next story"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
+              {storiesLoading && (
+                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-slate-400 animate-pulse">
+                  Loading stories...
                 </div>
+              )}
 
-                <div className="p-5">
-                  <p className="text-sm font-semibold text-slate-800">
-                    {storiesData[storyIndex].name}
-                  </p>
-                  <p className="text-xs text-slate-400 mb-2">{storiesData[storyIndex].role}</p>
-                  <p className="text-sm text-slate-600 leading-snug italic">
-                    &ldquo;{storiesData[storyIndex].quote}&rdquo;
-                  </p>
+              {!storiesLoading && storiesError && (
+                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-red-500 text-center">
+                  Couldn't load stories: {storiesError}
                 </div>
-              </div>
+              )}
 
-              <div className="flex justify-center gap-1.5 mt-4">
-                {storiesData.map((_, i) => (
+              {!storiesLoading && !storiesError && stories.length === 0 && (
+                <div className="bg-white rounded-xl shadow-sm flex-1 flex items-center justify-center p-8 text-sm text-slate-400 text-center">
+                  No stories published yet.
+                </div>
+              )}
+
+              {!storiesLoading && !storiesError && stories.length > 0 && (
+                <>
                   <button
-                    key={i}
-                    onClick={() => setStoryIndex(i)}
-                    aria-label={`Go to story ${i + 1}`}
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === storyIndex ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                  />
-                ))}
-              </div>
+                    onClick={() => navigate(`/stories/${stories[storyIndex].slug}`)}
+                    className="text-left bg-white rounded-xl shadow-sm overflow-hidden flex flex-col flex-1 hover:shadow-md transition-shadow"
+                  >
+                    {/* image with arrows overlaid, matches the hero carousel treatment */}
+                    <div className="relative h-52 shrink-0 bg-slate-100">
+                      {stories[storyIndex].cover_image && (
+                        <div
+                          className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+                          style={{ backgroundImage: `url(${stories[storyIndex].cover_image})` }}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToPrevStory();
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Previous story"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                      >
+                        <ChevronLeft size={16} />
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToNextStory();
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Next story"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                      >
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800 leading-snug">
+                          {stories[storyIndex].title}
+                        </p>
+                        {(stories[storyIndex].author_name || stories[storyIndex].category) && (
+                          <p className="text-xs text-slate-400 mt-1 mb-2">
+                            {[stories[storyIndex].author_name, stories[storyIndex].category?.name]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        )}
+                        <p className="text-sm text-slate-600 leading-snug line-clamp-3">
+                          {stories[storyIndex].excerpt}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <div className="flex justify-center gap-1.5 mt-4">
+                    {stories.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setStoryIndex(i)}
+                        aria-label={`Go to story ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all ${
+                          i === storyIndex ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -791,19 +822,15 @@ export default function DashboardOverview() {
               Watch Before You Go
             </h2>
 
-            <div
-              className="w-full max-w-sm mx-auto flex flex-col flex-1"
-              onMouseEnter={() => setVideoAutoPaused(true)}
-              onMouseLeave={() => setVideoAutoPaused(false)}
-            >
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="relative h-52 bg-black">
+            <div className="w-full max-w-sm mx-auto flex flex-col flex-1">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+                <div className="relative h-52 shrink-0 bg-black">
                   <iframe
                     ref={videoIframeRef}
                     className="absolute inset-0 w-full h-full"
-                    src={`https://www.youtube-nocookie.com/embed/videoseries?list=${VIDEOS_PLAYLIST_ID}&enablejsapi=1&rel=0`}
+                    src={`https://www.youtube-nocookie.com/embed/videoseries?list=${VIDEOS_PLAYLIST_ID}&enablejsapi=1&autoplay=0&rel=0`}
                     title="Ratnagiri video playlist"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
 
@@ -823,23 +850,26 @@ export default function DashboardOverview() {
                   </button>
                 </div>
 
-                <div className="p-5">
-                  <p className="text-sm font-semibold text-slate-800">From our video playlist</p>
-                  <p className="text-xs text-slate-400 mt-1 mb-2 leading-snug">
-                    Use the arrows to browse the next clip, or open the full playlist on YouTube.
-                  </p>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">From our video playlist</p>
+                    <p className="text-xs text-slate-400 mt-1 leading-snug">
+                      Use the arrows to browse the next clip — playback starts only when you press
+                      play.
+                    </p>
+                  </div>
                   <a
                     href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 mt-2"
                   >
                     Open full playlist <ExternalLink size={12} />
                   </a>
                 </div>
               </div>
 
-              {/* spacer to keep both columns the same height as the Stories dots row */}
+              {/* spacer to match the Stories dots row so both cards end at the same baseline */}
               <div className="h-[26px]" aria-hidden="true" />
             </div>
           </div>
