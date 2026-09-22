@@ -209,7 +209,14 @@ export default function DashboardOverview() {
   const handleHeroSearch = (e) => {
     e.preventDefault();
     const q = searchQuery.trim();
-    if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+    if (!q) return;
+    // If we have a live match in the site index, go straight there;
+    // otherwise fall back to the dedicated search results page.
+    const bestMatch = searchIndex.find((item) =>
+      item.label?.toLowerCase().includes(q.toLowerCase())
+    );
+    navigate(bestMatch ? bestMatch.route : `/search?q=${encodeURIComponent(q)}`);
+    setShowSuggestions(false);
   };
 
   const exploreCategories = [
@@ -443,6 +450,38 @@ export default function DashboardOverview() {
     { icon: TwitterIcon, label: "Twitter", href: "https://twitter.com" },
   ];
 
+  // ---- Site-wide search index -------------------------------------------
+  // Flattens every section of this page (categories, plans, experiences,
+  // stories, videos, footer links) plus the live `locations` data from
+  // context into one searchable list, so the hero search bar can actually
+  // find things across the whole site instead of only deep-linking to a
+  // /search route that may not exist yet.
+  const searchIndex = [
+    ...exploreCategories.map((c) => ({ label: c.title, sub: c.subtitle, route: c.route })),
+    ...planCards.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
+    ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
+    { label: upcomingEvent.title, sub: upcomingEvent.description, route: upcomingEvent.route },
+    ...videosData.map((v) => ({ label: v.title, sub: "Video", route: "/videos" })),
+    ...storiesData.map((s) => ({ label: s.name, sub: s.role, route: "/stories" })),
+    ...footerColumns.flatMap((col) =>
+      col.links.map((l) => ({ label: l.label, sub: col.heading, route: l.route }))
+    ),
+    ...(locations || []).map((l) => ({
+      label: l.name || l.title || "Untitled place",
+      sub: l.category || l.type || "Place",
+      route: l.route || (l.slug ? `/place/${l.slug}` : l.id ? `/place/${l.id}` : "/map"),
+    })),
+  ];
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchResults = searchQuery.trim()
+    ? searchIndex
+        .filter((item) =>
+          item.label?.toLowerCase().includes(searchQuery.trim().toLowerCase())
+        )
+        .slice(0, 6)
+    : [];
+
   if (loading) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 text-center">
@@ -494,12 +533,12 @@ export default function DashboardOverview() {
       `}</style>
 
       {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
-      <section className="relative px-5 sm:px-10 lg:px-16 py-10 sm:py-14 overflow-hidden">
+      <section className="relative px-2 sm:px-3 lg:px-4 py-2 sm:py-3 overflow-hidden">
         <KonkanBackdrop />
 
         <div className="relative max-w-[1680px] mx-auto">
           {/* Full-width rotating photo carousel with search bar + caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[420px] sm:h-[560px] lg:h-[640px] shadow-xl ring-1 ring-black/5">
+          <div className="relative rounded-2xl overflow-hidden h-[460px] sm:h-[580px] lg:h-[660px] shadow-xl ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -510,7 +549,7 @@ export default function DashboardOverview() {
                 }}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/40" />
 
             {/* black shade on the inner border — a soft vignette that frames
                 every slide the same way, so the carousel reads as one
@@ -533,38 +572,78 @@ export default function DashboardOverview() {
               <ChevronRight size={18} />
             </button>
 
-            <div className="absolute top-6 left-6 right-6 animate-fade-up">
-              <p className="text-[11px] font-semibold tracking-[0.18em] text-white/80 mb-2 font-body">
-                Explore &middot; Experience &middot; Support Local
-              </p>
-              <h1 className="font-display text-white leading-[1.05] text-3xl sm:text-4xl lg:text-5xl mb-3">
-                Discover <span className="text-teal-300">Ratnagiri</span>
-              </h1>
-              <p className="text-white/85 text-sm sm:text-base max-w-sm font-body mb-5 leading-relaxed">
-                Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
-                homestays and Konkan flavours, all in one place.
-              </p>
+            {/* content block — vertically centered in the frame, sized to
+                sit comfortably instead of being cramped in the top corner */}
+            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14 animate-fade-up">
+              <div className="max-w-xl">
+                <p className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-white/80 mb-3 font-body">
+                  Explore &middot; Experience &middot; Support Local
+                </p>
+                <h1 className="font-display text-white leading-[1.05] text-4xl sm:text-5xl lg:text-6xl mb-4">
+                  Discover <span className="text-teal-300">Ratnagiri</span>
+                </h1>
+                <p className="text-white/85 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
+                  Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
+                  homestays and Konkan flavours, all in one place.
+                </p>
 
-              {/* search bar */}
-              <form
-                onSubmit={handleHeroSearch}
-                className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-1.5 max-w-sm shadow-lg"
-              >
-                <Search size={16} className="text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search beaches, forts, stays..."
-                  className="flex-1 min-w-0 text-sm text-slate-700 placeholder:text-slate-400 bg-transparent outline-none font-body"
-                />
-                <button
-                  type="submit"
-                  className="shrink-0 bg-[#0b3149] hover:bg-[#0a2b3f] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
-                >
-                  Search
-                </button>
-              </form>
+                {/* search bar — searches across the whole site (categories,
+                    homestays, transport, stories, videos, footer links and
+                    any live locations from context), with a live dropdown */}
+                <form onSubmit={handleHeroSearch} className="relative max-w-md">
+                  <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-lg">
+                    <Search size={16} className="text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                      placeholder="Search the whole site — beaches, forts, stays..."
+                      className="flex-1 min-w-0 text-sm text-slate-700 placeholder:text-slate-400 bg-transparent outline-none font-body"
+                    />
+                    <button
+                      type="submit"
+                      className="shrink-0 bg-[#0b3149] hover:bg-[#0a2b3f] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
+                    >
+                      Search
+                    </button>
+                  </div>
+
+                  {showSuggestions && searchResults.length > 0 && (
+                    <ul className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white rounded-xl shadow-xl ring-1 ring-black/10 overflow-hidden z-20">
+                      {searchResults.map((result, i) => (
+                        <li key={`${result.label}-${i}`} className={i > 0 ? "border-t border-slate-100" : ""}>
+                          <button
+                            type="button"
+                            onMouseDown={() => {
+                              navigate(result.route);
+                              setSearchQuery("");
+                              setShowSuggestions(false);
+                            }}
+                            className="w-full flex items-center justify-between gap-3 text-left px-4 py-2.5 hover:bg-slate-50 transition"
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-sm font-medium text-slate-800 truncate">
+                                {result.label}
+                              </span>
+                              {result.sub && (
+                                <span className="block text-xs text-slate-400 truncate">
+                                  {result.sub}
+                                </span>
+                              )}
+                            </span>
+                            <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </form>
+              </div>
             </div>
 
             <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
