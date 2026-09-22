@@ -771,73 +771,7 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Everything You Need ================= */}
-      <section className="bg-emerald-50/60 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-        <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
-          <div>
-            <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-              <Route2Icon />
-              Plan Your Trip
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-              Everything You Need
-            </h2>
-            <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
-              Find homestays, transport, weather, and more — all in one
-              place.
-            </p>
-
-            <div className="grid grid-cols-2 gap-5">
-              {planCards.map(({ title, description, icon: Icon, bg, color, route }) => (
-                <button
-                  key={title}
-                  onClick={() => navigate(route)}
-                  className="group text-left bg-white rounded-xl shadow-sm hover:shadow-md p-5 transition-shadow"
-                >
-                  <span
-                    className={`w-11 h-11 rounded-full ${bg} ${color} flex items-center justify-center mb-3`}
-                  >
-                    <Icon size={19} />
-                  </span>
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{title}</p>
-                      <p className="text-xs text-slate-400 mt-1 leading-snug">{description}</p>
-                    </div>
-                    <ChevronRight
-                      size={16}
-                      className="text-slate-300 group-hover:text-emerald-600 shrink-0 mt-1 group-hover:translate-x-0.5 transition"
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Poster image */}
-          <div className="relative rounded-2xl overflow-hidden shadow-md h-72 lg:h-full min-h-[280px]">
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${heroImages[2]})` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <p className="absolute top-6 left-6 font-display italic text-white text-2xl leading-tight">
-              Plan
-              <br />
-              Explore
-              <br />
-              Support Local
-            </p>
-            <button
-              aria-label="Play video"
-              className="absolute bottom-6 right-6 w-11 h-11 rounded-full bg-white/90 hover:bg-white text-[#0b3149] flex items-center justify-center transition"
-            >
-              <Play size={16} fill="currentColor" className="ml-0.5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
+     
       {/* ================= Panel 2 — Experiences ================= */}
       <section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
         <div className="max-w-[1680px] mx-auto">
