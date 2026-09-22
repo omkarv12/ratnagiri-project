@@ -171,10 +171,14 @@ const ABOUT_MENU = {
   label: "About",
   route: "/about",
   children: [
-    { label: "About", route: "/about" },
-    { label: "Society & Economy", route: "/about/society-and-economy" },
-    { label: "Culture", route: "/about/culture" },
-    { label: "Governance", route: "/about/good-governance" },
+    {
+      label: "About",
+      children: [
+        { label: "Society & Economy", route: "/about/society-and-economy" },
+        { label: "Culture", route: "/about/culture" },
+        { label: "Governance", route: "/about/good-governance" },
+      ],
+    },
     {
       label: "Geography",
       children: [
