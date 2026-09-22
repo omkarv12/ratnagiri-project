@@ -437,6 +437,24 @@ export default function DashboardOverview() {
         @media (prefers-reduced-motion: reduce) {
           .animate-fade-up { animation: none; }
         }
+
+        /* What's New — continuous vertical auto-scroll loop.
+           The list is rendered twice back-to-back and the track slides up
+           by exactly 50% (one full set), so it loops seamlessly. Pauses on
+           hover so the person can actually click an item. */
+        .whats-new-track {
+          animation: whatsNewScroll 14s linear infinite;
+        }
+        .whats-new-viewport:hover .whats-new-track {
+          animation-play-state: paused;
+        }
+        @keyframes whatsNewScroll {
+          from { transform: translateY(0); }
+          to { transform: translateY(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .whats-new-track { animation: none; }
+        }
       `}</style>
 
       {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
@@ -593,7 +611,7 @@ export default function DashboardOverview() {
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-80"
+                className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -607,8 +625,8 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* What's New — scrolling list panel */}
-            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-80 flex flex-col bg-white">
+            {/* What's New — auto-scrolling looping list panel */}
+            <div className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-96 flex flex-col bg-white">
               <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
                 <p className="text-sm font-semibold">What's new</p>
                 <button
@@ -618,32 +636,36 @@ export default function DashboardOverview() {
                   More
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto rt-feed divide-y divide-slate-100">
-                {whatsNewData.map(({ title, description, image, badge, route }) => (
-                  <button
-                    key={title}
-                    onClick={() => navigate(route)}
-                    className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
-                      style={{ backgroundImage: `url(${image})` }}
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
-                        {badge && (
-                          <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                            {badge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
-                        {description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+              <div className="whats-new-viewport flex-1 overflow-hidden relative group/wn">
+                <div className="whats-new-track divide-y divide-slate-100">
+                  {[...whatsNewData, ...whatsNewData].map(
+                    ({ title, description, image, badge, route }, idx) => (
+                      <button
+                        key={`${title}-${idx}`}
+                        onClick={() => navigate(route)}
+                        className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
+                          style={{ backgroundImage: `url(${image})` }}
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
+                            {badge && (
+                              <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                                {badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                            {description}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           </div>
