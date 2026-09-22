@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -23,6 +23,9 @@ import Slider5 from "../assets/Sliders5.jpg";
 import Slider6 from "../assets/Sliders6.jpg";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
+
+// YouTube playlist that powers the Videos carousel in Panel 3.
+const VIDEOS_PLAYLIST_ID = "PLJW4HbrLXqlA";
 
 // lucide-react no longer ships trademarked brand icons (Instagram, Facebook,
 // Twitter, YouTube, etc). These small inline SVGs are drop-in replacements.
@@ -284,12 +287,54 @@ export default function DashboardOverview() {
     },
   ];
 
-  const videosData = [
-    { title: "A Day at Bhagwati Bandar", duration: "4:12", thumbnail: Slider1 },
-    { title: "Cooking Solkadhi at Home", duration: "6:45", thumbnail: Slider4 },
-    { title: "Inside Ratnagiri Fort", duration: "3:58", thumbnail: Slider3 },
-    { title: "Alphonso Orchard Tour", duration: "5:20", thumbnail: Slider2 },
-  ];
+  // One-at-a-time carousel index for the Stories panel.
+  const [storyIndex, setStoryIndex] = useState(0);
+  const goToPrevStory = () =>
+    setStoryIndex((prev) => (prev - 1 + storiesData.length) % storiesData.length);
+  const goToNextStory = () =>
+    setStoryIndex((prev) => (prev + 1) % storiesData.length);
+
+  // ---- Videos: rendered live from a YouTube playlist via the IFrame API -----
+  // Loads the YT IFrame API once, then mounts a player bound to
+  // VIDEOS_PLAYLIST_ID. The player's own previousVideo()/nextVideo() drive
+  // the "carousel" through whatever videos are in that playlist.
+  const videoPlayerRef = useRef(null);
+  const videoPlayerInstanceRef = useRef(null);
+  const [ytApiReady, setYtApiReady] = useState(false);
+
+  useEffect(() => {
+    if (window.YT && window.YT.Player) {
+      setYtApiReady(true);
+      return;
+    }
+    const existingTag = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if (!existingTag) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.body.appendChild(tag);
+    }
+    const previousCallback = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previousCallback?.();
+      setYtApiReady(true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ytApiReady || !videoPlayerRef.current || videoPlayerInstanceRef.current) return;
+    videoPlayerInstanceRef.current = new window.YT.Player(videoPlayerRef.current, {
+      height: "100%",
+      width: "100%",
+      playerVars: {
+        listType: "playlist",
+        list: VIDEOS_PLAYLIST_ID,
+        rel: 0,
+      },
+    });
+  }, [ytApiReady]);
+
+  const goToPrevVideo = () => videoPlayerInstanceRef.current?.previousVideo?.();
+  const goToNextVideo = () => videoPlayerInstanceRef.current?.nextVideo?.();
 
   // ---- Panel 4: About ---------------------------------------------------------
   const aboutPillars = [
@@ -371,7 +416,6 @@ export default function DashboardOverview() {
   const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
-    ...videosData.map((v) => ({ label: v.title, sub: "Video", route: "/videos" })),
     ...storiesData.map((s) => ({ label: s.name, sub: s.role, route: "/stories" })),
     ...footerColumns.flatMap((col) =>
       col.links.map((l) => ({ label: l.label, sub: col.heading, route: l.route }))
@@ -430,7 +474,7 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar, reused for the horizontal Stories / Videos strips */
+        /* Slim scrollbar, reused for horizontal strips */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
@@ -516,8 +560,8 @@ export default function DashboardOverview() {
                 </p>
 
                 {/* search bar — searches across the whole site (experiences,
-                    what's new, stories, videos, footer links and any live
-                    locations from context), with a live dropdown */}
+                    what's new, stories, footer links and any live locations
+                    from context), with a live dropdown */}
                 <form onSubmit={handleHeroSearch} className="relative max-w-md">
                   <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-lg">
                     <Search size={16} className="text-slate-400 shrink-0" />
@@ -680,7 +724,7 @@ export default function DashboardOverview() {
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
         <div className="max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Stories */}
+          {/* Stories — one story at a time, carousel style */}
           <div>
             <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <Users size={16} />
@@ -689,24 +733,55 @@ export default function DashboardOverview() {
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
               Voices of Ratnagiri
             </h2>
-            <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory rt-feed">
-              {storiesData.map(({ name, role, photo, quote }) => (
+
+            <div className="relative max-w-sm mx-auto">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div
-                  key={name}
-                  className="snap-start shrink-0 w-56 bg-white rounded-xl shadow-sm overflow-hidden"
-                >
-                  <div className="h-36 bg-cover bg-center" style={{ backgroundImage: `url(${photo})` }} />
-                  <div className="p-4">
-                    <p className="text-sm font-semibold text-slate-800">{name}</p>
-                    <p className="text-xs text-slate-400 mb-2">{role}</p>
-                    <p className="text-xs text-slate-600 leading-snug italic">&ldquo;{quote}&rdquo;</p>
-                  </div>
+                  className="h-48 bg-cover bg-center transition-all duration-300"
+                  style={{ backgroundImage: `url(${storiesData[storyIndex].photo})` }}
+                />
+                <div className="p-5">
+                  <p className="text-sm font-semibold text-slate-800">
+                    {storiesData[storyIndex].name}
+                  </p>
+                  <p className="text-xs text-slate-400 mb-2">{storiesData[storyIndex].role}</p>
+                  <p className="text-sm text-slate-600 leading-snug italic">
+                    &ldquo;{storiesData[storyIndex].quote}&rdquo;
+                  </p>
                 </div>
-              ))}
+              </div>
+
+              <button
+                onClick={goToPrevStory}
+                aria-label="Previous story"
+                className="absolute left-0 top-16 -translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={goToNextStory}
+                aria-label="Next story"
+                className="absolute right-0 top-16 translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              >
+                <ChevronRight size={16} />
+              </button>
+
+              <div className="flex justify-center gap-1.5 mt-4">
+                {storiesData.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setStoryIndex(i)}
+                    aria-label={`Go to story ${i + 1}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === storyIndex ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Videos */}
+          {/* Videos — rendered live from the YouTube playlist, one at a time */}
           <div>
             <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
               <PlayCircle size={16} />
@@ -715,30 +790,26 @@ export default function DashboardOverview() {
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
               Watch Before You Go
             </h2>
-            <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory rt-feed">
-              {videosData.map(({ title, duration, thumbnail }) => (
-                <button
-                  key={title}
-                  className="snap-start shrink-0 w-56 text-left bg-white rounded-xl shadow-sm overflow-hidden group"
-                >
-                  <div
-                    className="relative h-36 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${thumbnail})` }}
-                  >
-                    <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition flex items-center justify-center">
-                      <span className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#0b3149]">
-                        <Play size={15} fill="currentColor" className="ml-0.5" />
-                      </span>
-                    </div>
-                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
-                      {duration}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-sm font-semibold text-slate-800 leading-snug">{title}</p>
-                  </div>
-                </button>
-              ))}
+
+            <div className="relative max-w-sm mx-auto">
+              <div className="rounded-xl overflow-hidden shadow-sm bg-black aspect-video">
+                <div ref={videoPlayerRef} className="w-full h-full" />
+              </div>
+
+              <button
+                onClick={goToPrevVideo}
+                aria-label="Previous video"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={goToNextVideo}
+                aria-label="Next video"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-slate-500 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         </div>
