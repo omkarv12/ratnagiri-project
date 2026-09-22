@@ -822,7 +822,7 @@ export default function DashboardOverview() {
 
           <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
+              © {new Date().getFullYear()} Ratnagiri Tourism 2026. All rights reserved.
             </p>
             <div className="flex gap-5">
               <button
