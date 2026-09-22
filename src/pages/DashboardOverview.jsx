@@ -298,6 +298,7 @@ export default function DashboardOverview() {
       icon: Handshake,
       color: "text-teal-700",
       bg: "bg-teal-50",
+      image: Slider3,
       description:
         "Close-knit fishing and farming communities, festivals that pull whole villages together, and a homestay culture built on hospitality.",
     },
@@ -306,6 +307,7 @@ export default function DashboardOverview() {
       icon: TrendingUp,
       color: "text-amber-700",
       bg: "bg-amber-50",
+      image: Slider2,
       description:
         "Alphonso mango and cashew exports, a working fishing harbour, and tourism that increasingly supports small, local businesses.",
     },
@@ -314,6 +316,7 @@ export default function DashboardOverview() {
       icon: ShieldCheck,
       color: "text-emerald-700",
       bg: "bg-emerald-50",
+      image: Slider1,
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
     },
@@ -757,16 +760,29 @@ export default function DashboardOverview() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {aboutPillars.map(({ title, icon: Icon, color, bg, description }) => (
+            {aboutPillars.map(({ title, icon: Icon, color, bg, image, description }) => (
               <div
                 key={title}
-                className="rounded-xl border border-slate-100 p-6 hover:shadow-md transition-shadow"
+                className="group rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden bg-white"
               >
-                <span className={`w-11 h-11 rounded-full ${bg} ${color} flex items-center justify-center mb-4`}>
-                  <Icon size={19} />
-                </span>
-                <p className="text-sm font-semibold text-slate-800 mb-2">{title}</p>
-                <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+                <div className="relative h-40">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{ backgroundImage: `url(${image})` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+                  {/* black shade on the inner border — soft vignette framing the photo */}
+                  <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.35),inset_0_0_40px_14px_rgba(0,0,0,0.4)]" />
+                </div>
+                <div className="px-6 pt-0 pb-6 -mt-7 relative">
+                  <span
+                    className={`w-12 h-12 rounded-full ${bg} ${color} flex items-center justify-center mb-4 ring-4 ring-white shadow-sm`}
+                  >
+                    <Icon size={20} />
+                  </span>
+                  <p className="text-sm font-semibold text-slate-800 mb-2">{title}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+                </div>
               </div>
             ))}
           </div>
