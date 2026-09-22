@@ -1,13 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  LayersControl,
-} from "react-leaflet";
-import {
   Compass,
   MapPin,
   ChevronRight,
@@ -172,36 +164,6 @@ function KonkanBackdrop() {
   );
 }
 
-
-// Ratnagiri taluka locations used by the dashboard map.
-// Coordinates are representative locations for flying the map to each taluka.
-const RATNAGIRI_TALUKAS = [
-  { name: "Ratnagiri", lat: 16.9944, lng: 73.3002 },
-  { name: "Sangameshwar", lat: 17.1867, lng: 73.5530 },
-  { name: "Lanja", lat: 16.8578, lng: 73.5490 },
-  { name: "Rajapur", lat: 16.6550, lng: 73.5170 },
-  { name: "Chiplun", lat: 17.5330, lng: 73.5160 },
-  { name: "Guhagar", lat: 17.4840, lng: 73.1930 },
-  { name: "Dapoli", lat: 17.7590, lng: 73.1850 },
-  { name: "Khed", lat: 17.7170, lng: 73.3970 },
-  { name: "Mandangad", lat: 17.9830, lng: 73.2500 },
-];
-
-function TalukaFlyController({ position }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!position || position.length !== 2) return;
-
-    map.flyTo(position, 11, {
-      duration: 1.2,
-      easeLinearity: 0.25,
-    });
-  }, [position, map]);
-
-  return null;
-}
-
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
@@ -211,7 +173,6 @@ export default function DashboardOverview() {
   const RATNAGIRI_TOURISM_PHONE = "+912352222233";
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [exploreTaluka, setExploreTaluka] = useState(null);
   const loadingMessages = [
     "Boarding the Konkan Railway...",
     "Chugging past the Sahyadris...",
@@ -503,17 +464,6 @@ export default function DashboardOverview() {
           from { transform: translateY(0); }
           to   { transform: translateY(-50%); }
         }
-      .rt-taluka-track { animation: rtScrollTalukas 20s linear infinite; }
-.rt-taluka-viewport:hover .rt-taluka-track,
-.rt-taluka-viewport:focus-within .rt-taluka-track { animation-play-state: paused; }
-@keyframes rtScrollTalukas {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-50%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .rt-taluka-track { animation: none; }
-  .rt-taluka-viewport { overflow-y: auto; }
-}
         /* Sparkling "New" badge */
         .rt-new {
           display: inline-flex; align-items: center; gap: 3px;
@@ -683,92 +633,6 @@ export default function DashboardOverview() {
           </div>
         </div>
       </section>
-
-     {/* ================= Explore Interactive Map ================= */}
-<section className="bg-white px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
-  <div className="max-w-[1680px] mx-auto">
-    <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-      <MapPin size={16} />
-      Explore Interactive Map
-    </div>
-    <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-8">
-      Explore <span className="text-emerald-600">Ratnagiri</span> Talukas
-    </h2>
-
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-      {/* Left: the actual district map — satellite/street toggle + border, same as your full map page */}
-      <div className="relative rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5 h-[420px] sm:h-[560px]">
-        <MapContainer center={[17.2, 73.35]} zoom={9} className="w-full h-full z-0">
-          <LayersControl position="bottomleft">
-            <LayersControl.BaseLayer checked name="Satellite">
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Street Map">
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-              />
-            </LayersControl.BaseLayer>
-          </LayersControl>
-
-          <TileLayer
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-            attribution=""
-          />
-
-          
-
-          <TalukaFlyController
-            position={exploreTaluka ? [exploreTaluka.lat, exploreTaluka.lng] : null}
-          />
-
-          {RATNAGIRI_TALUKAS.map((t) => (
-            <Marker key={t.name} position={[t.lat, t.lng]} />
-          ))}
-        </MapContainer>
-
-        <button
-          onClick={() => navigate("/map")}
-          className="absolute bottom-4 right-4 z-[1000] flex items-center gap-1.5 bg-white/95 backdrop-blur hover:bg-white text-[#0b3149] text-xs font-bold px-4 py-2 rounded-full shadow-lg transition"
-        >
-          Open Full Map
-          <ChevronRight size={14} />
-        </button>
-      </div>
-
-      {/* Right: auto-scrolling taluka list — click any to fly the map there */}
-      <div className="bg-white rounded-2xl shadow-lg ring-1 ring-black/5 overflow-hidden">
-        <div className="px-5 py-4 bg-indigo-50">
-          <p className="font-display text-lg font-bold text-slate-900">Explore Districts</p>
-        </div>
-        <div className="rt-taluka-viewport rt-feed relative overflow-hidden max-h-[420px] sm:max-h-[520px]">
-          <ul className="rt-taluka-track">
-            {[...RATNAGIRI_TALUKAS, ...RATNAGIRI_TALUKAS].map((t, i) => (
-              <li key={`${t.name}-${i}`} className="border-b border-slate-100">
-                <button
-                  onClick={() => setExploreTaluka(t)}
-                  tabIndex={i < RATNAGIRI_TALUKAS.length ? 0 : -1}
-                  aria-hidden={i >= RATNAGIRI_TALUKAS.length ? "true" : undefined}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition ${
-                    exploreTaluka?.name === t.name ? "bg-slate-50" : "hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="w-6 h-6 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                    <ChevronRight size={13} />
-                  </span>
-                  <span className="text-sm font-medium text-slate-800">{t.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
       {/* ================= Explore Ratnagiri ================= */}
       <section className="bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
