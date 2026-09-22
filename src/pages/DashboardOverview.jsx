@@ -21,7 +21,6 @@ import {
   Download,
   Play,
   PlayCircle,
-  Phone,
   BookOpen,
   ShieldCheck,
   Search,
@@ -29,7 +28,6 @@ import {
   TrendingUp,
   Handshake,
 } from "lucide-react";
-import { CheckCircle2 } from "lucide-react"; // add to the existing lucide import list
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate } from "react-router-dom";
 import Slider1 from "../assets/Sliders1.jpg";
@@ -174,10 +172,6 @@ export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
 
-  // TODO: replace with the real Ratnagiri Tourism office number (E.164 format,
-  // no spaces/dashes) — this is what the call strip dials.
-  const RATNAGIRI_TOURISM_PHONE = "+912352222233";
-
   const [currentSlide, setCurrentSlide] = useState(0);
   const loadingMessages = [
     "Boarding the Konkan Railway...",
@@ -217,75 +211,6 @@ export default function DashboardOverview() {
     const q = searchQuery.trim();
     if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
   };
-
-  // Snapshot stats — count up on mount. TODO: wire to real numbers (or a CMS
-  // field) once they're available; these are placeholders.
-  const [statBeaches, setStatBeaches] = useState(0);
-  const [statHomestays, setStatHomestays] = useState(0);
-
-  useEffect(() => {
-    const targets = { beaches: 18, homestays: 60 };
-    const duration = 1200;
-    const start = performance.now();
-    let raf;
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      setStatBeaches(Math.round(targets.beaches * progress));
-      setStatHomestays(Math.round(targets.homestays * progress));
-      if (progress < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  // "What's New" items. TODO: replace with real CMS/stories data.
-  // `image` is the thumbnail, `isNew` shows the sparkle badge.
-  const updates = [
-    {
-      icon: Landmark,
-      image: Slider1,
-      isNew: true,
-      title: "Ganeshotsav homestay bookings open",
-      blurb: "Konkan's biggest festival is coming — reserve early for the best rates.",
-      route: "/homestays",
-    },
-    {
-      icon: BookOpen,
-      image: Slider2,
-      isNew: true,
-      title: "New guided trail: Fort to Bhagwati Bandar",
-      blurb: "A 3 km coastal walk with a local guide, launching this season.",
-      route: "/guided-walks",
-    },
-    {
-      icon: ShieldCheck,
-      image: Slider3,
-      title: "Monsoon travel advisory",
-      blurb: "Some beach and fort routes have seasonal restrictions.",
-      route: "/rules",
-    },
-    {
-      icon: UtensilsCrossed,
-      image: Slider4,
-      title: "Alphonso season calendar",
-      blurb: "Orchard visits and tasting trails run from March to May.",
-      route: "/traditional-food",
-    },
-    {
-      icon: Drama,
-      image: Slider5,
-      title: "Dashavatar night at Pawas",
-      blurb: "Traditional Konkani folk theatre, every second Saturday.",
-      route: "/cultural-events",
-    },
-    {
-      icon: Bus,
-      image: Slider6,
-      title: "Revised MSRTC timetable",
-      blurb: "New bus timings on the Ratnagiri–Ganpatipule route.",
-      route: "/transport",
-    },
-  ];
 
   const exploreCategories = [
     {
@@ -556,57 +481,25 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar, reused for the What's New feed and the horizontal
-           Stories / Videos strips */
+        /* Slim scrollbar, reused for the horizontal Stories / Videos strips */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
         .rt-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
         .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Auto-scrolling "What's New" marquee: the list is duplicated once
-           and translated by exactly -50% (one copy's height), so the loop
-           point is seamless. Pauses on hover/focus so it's actually readable. */
-        .rt-marquee-track {
-          animation: rtScrollFeed 26s linear infinite;
-        }
-        .rt-marquee-viewport:hover .rt-marquee-track,
-        .rt-marquee-viewport:focus-within .rt-marquee-track {
-          animation-play-state: paused;
-        }
-        @keyframes rtScrollFeed {
-          from { transform: translateY(0); }
-          to   { transform: translateY(-50%); }
-        }
-        /* Sparkling "New" badge */
-        .rt-new {
-          display: inline-flex; align-items: center; gap: 3px;
-          padding: 1px 7px 1px 5px; border-radius: 99px;
-          font-size: 9px; font-weight: 800; letter-spacing: .06em;
-          color: #7c2d12; background: #FDE9C8;
-          border: 1px solid #F0C98A;
-        }
-        .rt-new svg { animation: rtTwinkle 1.8s ease-in-out infinite; }
-        @keyframes rtTwinkle {
-          0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
-          50%      { opacity: .55; transform: scale(1.25) rotate(18deg); }
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .animate-fade-up { animation: none; }
-          .rt-new svg { animation: none; }
-          .rt-marquee-track { animation: none; }
-          .rt-marquee-viewport { overflow-y: auto; }
         }
       `}</style>
 
-      {/* ================= Panel 1 — Hero carousel (photo + stats + What's New) ================= */}
+      {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
       <section className="relative px-5 sm:px-10 lg:px-16 py-10 sm:py-14 overflow-hidden">
         <KonkanBackdrop />
 
-        <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8">
-          {/* Left: rotating photo carousel with search bar + caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[420px] sm:h-[560px] shadow-xl ring-1 ring-black/5">
+        <div className="relative max-w-[1680px] mx-auto">
+          {/* Full-width rotating photo carousel with search bar + caption */}
+          <div className="relative rounded-2xl overflow-hidden h-[420px] sm:h-[560px] lg:h-[640px] shadow-xl ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -691,105 +584,6 @@ export default function DashboardOverview() {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Right: stats/What's New panel + contact */}
-          <div className="flex flex-col gap-4 min-w-0">
-            {/* Attached panel: stats sit flush on top of What's New */}
-            <div className="bg-white rounded-2xl shadow-lg ring-1 ring-black/5 overflow-hidden flex flex-col min-h-0">
-              {/* stats strip */}
-              <div className="grid grid-cols-2 divide-x divide-slate-100">
-                <div className="flex items-center gap-3 px-4 py-4">
-                  <span className="w-11 h-11 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
-                    <Waves size={19} />
-                  </span>
-                  <div>
-                    <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
-                      {statBeaches}+
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">Beaches &amp; forts</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 px-4 py-4">
-                  <span className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Home size={19} />
-                  </span>
-                  <div>
-                    <p className="font-display text-2xl font-bold text-[#0b3149] leading-none">
-                      {statHomestays}+
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">Registered homestays</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* What's New header — flush against the stats strip above */}
-              <div className="flex items-center justify-between px-4 py-2.5 bg-[#B4532A]">
-                <p className="text-[12px] font-bold tracking-[0.12em] text-white font-body">
-                  What&apos;s new
-                </p>
-                <button
-                  onClick={() => navigate("/stories")}
-                  className="text-[11px] font-semibold text-white/85 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded px-1"
-                >
-                  More
-                </button>
-              </div>
-
-              {/* Auto-scrolling feed — items duplicated once for a seamless
-                  loop; hover/focus pauses it so it stays readable. Reduced-
-                  motion users get the plain scrollable list from .rt-feed. */}
-              <div className="rt-marquee-viewport rt-feed relative overflow-hidden max-h-[288px]">
-                <ul className="rt-marquee-track">
-                  {[...updates, ...updates].map(({ image, title, blurb, isNew, route }, i) => (
-                    <li key={`${title}-${i}`} className="border-b border-slate-100">
-                      <button
-                        onClick={() => navigate(route)}
-                        tabIndex={i < updates.length ? 0 : -1}
-                        aria-hidden={i >= updates.length ? "true" : undefined}
-                        className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition focus:outline-none focus-visible:bg-slate-50"
-                      >
-                        <img
-                          src={image}
-                          alt=""
-                          loading="lazy"
-                          className="w-28 aspect-video rounded-lg object-cover shrink-0 ring-1 ring-black/5"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-start gap-2">
-                            <p className="text-sm font-semibold font-body text-slate-800 leading-snug">
-                              {title}
-                            </p>
-                            {isNew && (
-                              <span className="rt-new shrink-0 mt-0.5">
-                                <Star size={9} fill="currentColor" />
-                                NEW
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
-                            {blurb}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <a
-              href={`tel:${RATNAGIRI_TOURISM_PHONE}`}
-              className="flex items-center gap-3 bg-[#0f766e] hover:bg-[#0c6059] rounded-xl px-4 py-3 text-white transition shadow-md"
-            >
-              <span className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                <Phone size={16} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold font-body">Need help planning?</p>
-                <p className="text-xs text-white/80">Call the Ratnagiri tourism desk</p>
-              </div>
-            </a>
           </div>
         </div>
       </section>
