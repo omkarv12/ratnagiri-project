@@ -763,25 +763,25 @@ export default function DashboardOverview() {
             {aboutPillars.map(({ title, icon: Icon, color, bg, image, description }) => (
               <div
                 key={title}
-                className="group rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden bg-white"
+                className="group rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
               >
-                <div className="relative h-40">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url(${image})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
-                  {/* black shade on the inner border — soft vignette framing the photo */}
-                  <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.35),inset_0_0_40px_14px_rgba(0,0,0,0.4)]" />
-                </div>
-                <div className="px-6 pt-0 pb-6 -mt-7 relative">
-                  <span
-                    className={`w-12 h-12 rounded-full ${bg} ${color} flex items-center justify-center mb-4 ring-4 ring-white shadow-sm`}
-                  >
-                    <Icon size={20} />
-                  </span>
-                  <p className="text-sm font-semibold text-slate-800 mb-2">{title}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{description}</p>
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${image})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {/* black shade on the inner border — soft vignette framing the card */}
+                <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
+
+                <span
+                  className={`absolute top-4 left-4 w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shadow-sm`}
+                >
+                  <Icon size={18} />
+                </span>
+
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <p className="text-white font-semibold text-base">{title}</p>
+                  <p className="text-white/80 text-xs mt-1.5 leading-relaxed">{description}</p>
                 </div>
               </div>
             ))}
