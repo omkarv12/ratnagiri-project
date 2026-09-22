@@ -614,7 +614,7 @@ export default function DashboardOverview() {
                 className="group text-left rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-96"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105 grayscale"
                   style={{ backgroundImage: `url(${image})` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
