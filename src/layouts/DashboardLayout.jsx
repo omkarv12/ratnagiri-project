@@ -383,7 +383,7 @@ export default function DashboardLayout() {
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <ShieldCheck size={15} className="rt-shield relative" />
-                <span className="relative hidden sm:inline">Admin</span>
+                <span className="relative hidden sm:inline">Admin login</span>
               </button>
             </div>
           </div>
