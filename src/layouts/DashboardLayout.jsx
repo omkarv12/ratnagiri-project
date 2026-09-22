@@ -365,7 +365,7 @@ export default function DashboardLayout() {
               </button>
 
               <button
-                onClick={() => navigate("/review/add-place")}
+                onClick={() => navigate("/registration")}
                 aria-label="Add location and services"
                 title="Add location and services"
                 className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
