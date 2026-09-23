@@ -34,7 +34,6 @@ import {
   KonkanBackdrop,
   MangoGroveBackdrop,
   FortSkylineBackdrop,
-  HeroAmbientOverlay,
   WaveLayer,
   Palm,
 } from "../components/AmbientBackdrops";
@@ -539,9 +538,6 @@ export default function DashboardOverview() {
                 every slide the same way, so the carousel reads as one
                 consistent frame rather than six different photos */}
             <div className="absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_90px_30px_rgba(0,0,0,0.5)]" />
-
-            {/* live ambient layer: birds, drifting leaves, sparks, swaying palms */}
-            <HeroAmbientOverlay />
 
             {/* carousel arrows */}
             <button
