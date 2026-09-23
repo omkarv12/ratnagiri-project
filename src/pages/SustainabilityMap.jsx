@@ -8,6 +8,18 @@ import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import RegistrationForm from '../components/forms/RegistrationForm';
 import API_BASE_URL from '../config';
+const {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Tooltip,
+  LayersControl,
+  GeoJSON,
+  Polyline,
+  useMap,
+  useMapEvents,
+} = ReactLeaflet;
 
 function MapLegend() {
   return (
