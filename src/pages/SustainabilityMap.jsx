@@ -33,6 +33,25 @@ const CATEGORY_COLOR_MAP = {
 };
 const DEFAULT_COLOR = "#e08b01";
 
+// Small, unobtrusive legend — bottom-right corner only, no emoji, no icons.
+function MapLegend() {
+  return (
+    <div className="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex flex-col gap-1.5 max-w-[170px]">
+      {Object.entries(CATEGORY_COLOR_MAP).map(([category, color]) => (
+        <div key={category} className="flex items-center gap-2">
+          <span
+            className="w-2.5 h-2.5 rounded-full shrink-0"
+            style={{ backgroundColor: color }}
+          />
+          <span className="text-[10px] font-medium text-slate-700 leading-tight">
+            {category}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Fix Leaflet's default icon missing issue in webpack/vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -1165,6 +1184,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
   className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}
   style={{ cursor: pinMode ? 'crosshair' : 'grab' }}
 >
+  <MapLegend />
 {activeRoute && (
   <div className="absolute top-14 sm:top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2 sm:gap-3">
     <span className="text-xs sm:text-sm font-bold text-slate-800">
