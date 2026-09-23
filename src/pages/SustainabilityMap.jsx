@@ -6,6 +6,7 @@ import L from 'leaflet';
 import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
+import RatnagiriCinematic from '../components/RatnagiriCinematic';
 import RegistrationForm from '../components/forms/RegistrationForm';
 import API_BASE_URL from '../config';
 const {
@@ -391,7 +392,7 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
     { id: "pins", label: "Add Location", icon: MapPin },
   ];
 
-  if (loading) return <div className="p-8 text-center animate-pulse font-medium text-slate-500 h-full flex items-center justify-center">Loading live database for map...</div>;
+  if (loading) return <RatnagiriCinematic />;
   const talukas = [
   "All",
   ...new Set(
