@@ -8,6 +8,9 @@ import DashboardOverview from "./pages/DashboardOverview";
 import LocationProfile from "./pages/LocationProfile";
 import SustainabilityMap from "./pages/SustainabilityMap";
 import AdminDashboard from "./pages/AdminDashboard";
+import Society from "./pages/Society";
+import Economy from "./pages/Economy";
+import GoodGovernance from "./pages/GoodGovernance";
 
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
@@ -81,9 +84,24 @@ export default function App() {
               element={<CulturalEvents />}
             />
 
-            <Route
+                        <Route
               path="/community-experience"
               element={<CommunityExperience />}
+            />
+
+            <Route
+              path="/society"
+              element={<Society />}
+            />
+
+            <Route
+              path="/economy"
+              element={<Economy />}
+            />
+
+            <Route
+              path="/good-governance"
+              element={<GoodGovernance />}
             />
             <Route
   path="/stories"
@@ -113,4 +131,5 @@ export default function App() {
       </Router>
     </LocationsProvider>
   );
+  
 }

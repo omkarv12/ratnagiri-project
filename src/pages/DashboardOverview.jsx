@@ -451,7 +451,7 @@ export default function DashboardOverview() {
   }, [videoAutoPaused, videoPages.length, playingVideoId]);
 
   // ---- Panel 4: About ---------------------------------------------------------
-    const aboutPillars = [
+        const aboutPillars = [
     {
       title: "Society",
       icon: Handshake,
@@ -459,6 +459,7 @@ export default function DashboardOverview() {
       bg: "bg-teal-50",
       tint: "tint-teal",
       image: SocietyImg,
+      route: "/society",
       description:
         "Close-knit fishing and farming communities, festivals that pull whole villages together, and a homestay culture built on hospitality.",
     },
@@ -469,6 +470,7 @@ export default function DashboardOverview() {
       bg: "bg-amber-50",
       tint: "tint-amber",
       image: EconomyImg,
+      route: "/economy",
       description:
         "Alphonso mango and cashew exports, a working fishing harbour, and tourism that increasingly supports small, local businesses.",
     },
@@ -479,6 +481,7 @@ export default function DashboardOverview() {
       bg: "bg-emerald-50",
       tint: "tint-navy",
       image: GoodGovernanceImg,
+      route: "/good-governance",
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
     },
@@ -530,8 +533,9 @@ export default function DashboardOverview() {
   // searchable list, so the hero search bar can actually find things across
   // the whole site instead of only deep-linking to a /search route that may
   // not exist yet.
-  const searchIndex = [
+    const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
+    ...aboutPillars.map((p) => ({ label: p.title, sub: p.description, route: p.route })),
     ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
     ...stories.map((s) => ({
       label: s.title,
@@ -1159,11 +1163,12 @@ export default function DashboardOverview() {
             </p>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, description }) => (
-              <div
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, route, description }) => (
+              <button
                 key={title}
-                className={`rt-card ${tint} group rounded-xl overflow-hidden relative h-96`}
+                onClick={() => navigate(route)}
+                className={`rt-card ${tint} group text-left rounded-xl overflow-hidden relative h-96`}
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -1183,12 +1188,9 @@ export default function DashboardOverview() {
                   <p className="text-white font-semibold text-base">{title}</p>
                   <p className="text-white/80 text-xs mt-1.5 leading-relaxed">{description}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
-        </div>
-      </section>
-
       {/* ================= Footer ================= */}
       <footer className="relative overflow-hidden bg-slate-900 mt-0">
         <svg
