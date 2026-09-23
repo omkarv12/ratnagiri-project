@@ -19,6 +19,7 @@ const {
   Polyline,
   useMap,
   useMapEvents,
+  ZoomControl,
 } = ReactLeaflet;
 
 // Maps each tourism category to a marker color. No emoji — plain colored pins.
@@ -1225,7 +1226,8 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
     </button>
   </div>
 )}
-  <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full z-0">
+  <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
+    <ZoomControl position="topright" />
     <LayersControl position="bottomleft">
   <LayersControl.BaseLayer checked name="Satellite">
     <TileLayer
