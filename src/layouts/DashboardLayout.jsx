@@ -149,9 +149,9 @@ const EXPERIENCES_MENU = {
 
 const STORIES_MENU = {
   label: "Stories",
-  route: "/stories",
+  route: "/dashboard#stories",
   children: [
-    { label: "Videos", route: "/stories/videos" },
+    { label: "Videos", route: "/dashboard#stories" },
     { label: "Reels", route: "/stories/reels" },
   ],
 };
