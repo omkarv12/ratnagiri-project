@@ -13,7 +13,7 @@ import {
   Database,
   Sprout,
 } from "lucide-react";
-import GovernanceHero from "../assets/good_governance.png"; // swap with your chosen hero image
+import GovernanceHero from "../assets/good_governance.jpg"; // swap with your chosen hero image
 
 /* Reusable scroll-reveal, same pattern as Society.jsx / Economy.jsx */
 function useInView(threshold = 0.15) {

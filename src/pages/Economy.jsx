@@ -14,7 +14,7 @@ import {
   Sprout,
   Award,
 } from "lucide-react";
-import EconomyHero from "../assets/society.png"; // swap with your chosen hero image
+import EconomyHero from "../assets/Society.jpg"; // swap with your chosen hero image
 
 /* Reusable scroll-reveal, same pattern as Society.jsx / DashboardOverview */
 function useInView(threshold = 0.15) {
