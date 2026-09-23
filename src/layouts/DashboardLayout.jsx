@@ -140,7 +140,7 @@ const PLAN_MENU = {
 
 const EXPERIENCES_MENU = {
   label: "Experiences",
-  route: "/experiences",
+  route: "/dashboard#experiences",
   children: [
     { label: "Upcoming Events", route: "/experiences/upcoming-events" }, // new route
     { label: "Discover Your Stay", route: "/experiences/discover-your-stay" }, // new route
@@ -169,7 +169,7 @@ const RESOURCES_MENU = {
 
 const ABOUT_MENU = {
   label: "About",
-  route: "/about",
+  route: "/dashboard#about",
   children: [
       {
       label: "About",

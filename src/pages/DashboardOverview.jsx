@@ -15,7 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { blogApi } from "../api/blogApi";
 import Slider1 from "../assets/Sliders1.jpg";
 import Slider2 from "../assets/Sliders2.jpg";
@@ -284,6 +284,21 @@ function FortSkylineBackdrop() {
 export default function DashboardOverview() {
   const { locations, loading } = useLocations();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // If we arrived here with a #section-id in the URL (e.g. from the nav
+  // header's "Experiences" or "About" links), smooth-scroll to that
+  // section once the page has rendered.
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.getElementById(location.hash.replace("#", ""));
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 150);
+      }
+    }
+  }, [location]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const loadingMessages = [
@@ -780,8 +795,8 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Panel 2 — Experiences ================= */}
-      <section className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+            {/* ================= Panel 2 — Experiences ================= */}
+      <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
         <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
@@ -863,8 +878,8 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Panel 3 — Stories & Videos ================= */}
-      <section className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+          {/* ================= Panel 3 — Stories & Videos ================= */}
+      <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
         <svg
           className="absolute inset-x-0 bottom-0 w-full h-32 opacity-[0.06] pointer-events-none"
           viewBox="0 0 1440 160"
@@ -1145,8 +1160,8 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
-      <section className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16">
+            {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
+      <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
