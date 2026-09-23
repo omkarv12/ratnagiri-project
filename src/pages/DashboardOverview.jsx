@@ -29,6 +29,15 @@ import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
 import EconomyImg from "../assets/Economy.jpg";
 import GoodGovernanceImg from "../assets/good_governance.jpg";
+import {
+  ambientCss,
+  KonkanBackdrop,
+  MangoGroveBackdrop,
+  FortSkylineBackdrop,
+  HeroAmbientOverlay,
+  WaveLayer,
+  Palm,
+} from "../components/AmbientBackdrops";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
@@ -95,101 +104,6 @@ function formatStoryDate(dateStr) {
 }
 
 /* ------------------------------------------------------------------
-   Konkan coastline backdrop for the snapshot section.
-   Replaces the flat navy block: hazy Sahyadri ridge, a lighthouse on
-   the headland, coconut palms, a fishing boat and layered surf.
-   Purely decorative -> aria-hidden + pointer-events-none.
------------------------------------------------------------------- */
-function KonkanBackdrop() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {/* sky -> haze -> sand */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#EAF5F3_0%,#E4F0EE_38%,#F7EEE0_100%)]" />
-
-      {/* low afternoon sun */}
-      <div className="absolute top-[-90px] right-[10%] w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(232,163,61,0.22)_0%,rgba(232,163,61,0)_68%)]" />
-
-      {/* laterite grain */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "radial-gradient(#0b3149 0.6px, transparent 0.6px)",
-          backgroundSize: "20px 20px",
-          opacity: 0.05,
-        }}
-      />
-
-      <svg
-        className="absolute inset-x-0 bottom-0 w-full h-full"
-        viewBox="0 0 1440 620"
-        preserveAspectRatio="xMidYMax slice"
-        fill="none"
-      >
-        {/* far Sahyadri ridge */}
-        <path
-          d="M0 322 L96 286 L178 312 L262 262 L352 306 L438 272 L536 318 L628 288 L720 326 L812 292 L904 330 L1002 296 L1096 334 L1190 300 L1286 336 L1378 306 L1440 330 L1440 620 L0 620 Z"
-          fill="#0b3149"
-          opacity="0.07"
-        />
-        {/* near headland */}
-        <path
-          d="M0 386 L120 362 L248 392 L376 356 L512 398 L648 370 L788 404 L928 374 L1070 406 L1212 378 L1348 408 L1440 388 L1440 620 L0 620 Z"
-          fill="#0f766e"
-          opacity="0.10"
-        />
-
-        {/* lighthouse on the headland */}
-        <g opacity="0.16" fill="#0b3149">
-          <path d="M1246 380 L1252 300 L1268 300 L1274 380 Z" />
-          <rect x="1248" y="288" width="24" height="9" rx="2" />
-          <path d="M1254 288 L1260 276 L1266 288 Z" />
-        </g>
-
-        {/* coconut palms, left cluster */}
-        <g opacity="0.15" fill="#0f766e">
-          <path d="M92 402 C96 360 100 336 106 306 L114 307 C110 338 108 362 106 402 Z" />
-          <path d="M110 306 C86 288 62 288 44 302 C68 296 92 300 110 312 Z" />
-          <path d="M110 306 C132 284 160 282 180 294 C154 292 130 298 112 312 Z" />
-          <path d="M110 304 C104 280 86 262 62 256 C86 268 100 284 108 308 Z" />
-          <path d="M110 304 C120 280 142 264 166 260 C142 272 124 288 114 310 Z" />
-        </g>
-        {/* palm, right */}
-        <g opacity="0.13" fill="#0f766e">
-          <path d="M1366 414 C1370 372 1374 348 1380 318 L1388 319 C1384 350 1382 374 1380 414 Z" />
-          <path d="M1384 318 C1360 300 1336 300 1318 314 C1342 308 1366 312 1384 324 Z" />
-          <path d="M1384 318 C1406 296 1434 294 1454 306 C1428 304 1404 310 1386 324 Z" />
-          <path d="M1384 316 C1378 292 1360 274 1336 268 C1360 280 1374 296 1382 320 Z" />
-        </g>
-
-        {/* fishing boat — gently bobbing */}
-        <g className="rt-boat" opacity="0.14" fill="#B4532A">
-          <path d="M604 442 L700 442 L688 460 L616 460 Z" />
-          <rect x="648" y="404" width="4" height="38" />
-          <path d="M652 408 L684 438 L652 438 Z" />
-        </g>
-
-        {/* layered surf */}
-        <path
-          d="M0 470 C160 448 320 492 480 470 C640 448 800 492 960 470 C1120 448 1280 492 1440 470 L1440 620 L0 620 Z"
-          fill="#0f766e"
-          opacity="0.12"
-        />
-        <path
-          d="M0 512 C180 492 300 534 480 514 C660 494 790 536 970 516 C1150 496 1280 534 1440 514 L1440 620 L0 620 Z"
-          fill="#0b3149"
-          opacity="0.08"
-        />
-        <path
-          d="M0 556 C200 538 340 578 540 560 C740 542 880 580 1080 562 C1230 549 1330 566 1440 556 L1440 620 L0 620 Z"
-          fill="#F7EEE0"
-          opacity="0.95"
-        />
-      </svg>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------
    Scroll reveal — fades a section up into place the first time it
    enters the viewport, then leaves it alone. One deliberate reveal
    per section rather than an animation firing on every card.
@@ -227,56 +141,6 @@ function Reveal({ children, className = "" }) {
       }`}
     >
       {children}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------
-   Mango-grove backdrop for the Experiences panel — warm orchard
-   light and a sprig of mango leaves in the corner, echoing the
-   Alphonso season rather than a generic white card background.
------------------------------------------------------------------- */
-function MangoGroveBackdrop() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFDF9_0%,#FDF6EC_60%,#FDF3E4_100%)]" />
-      <div className="absolute top-[-70px] left-[-60px] w-[360px] h-[360px] rounded-full bg-[radial-gradient(circle,rgba(217,119,6,0.09)_0%,rgba(217,119,6,0)_70%)]" />
-      <div className="absolute bottom-[-90px] right-[-50px] w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(180,83,42,0.10)_0%,rgba(180,83,42,0)_70%)]" />
-      <svg
-        className="absolute right-6 top-6 w-40 h-40 opacity-[0.07]"
-        viewBox="0 0 200 200"
-        fill="none"
-      >
-        <path d="M20 190 C50 140 80 110 130 80" stroke="#7C4A24" strokeWidth="3" strokeLinecap="round" />
-        <ellipse cx="136" cy="76" rx="20" ry="10" transform="rotate(-32 136 76)" fill="#B4532A" />
-        <ellipse cx="108" cy="98" rx="17" ry="8" transform="rotate(-22 108 98)" fill="#D97706" />
-        <ellipse cx="80" cy="122" rx="15" ry="7" transform="rotate(-15 80 122)" fill="#B4532A" />
-      </svg>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------
-   Fort-skyline backdrop for the About panel — a faint laterite-fort
-   silhouette along the base, standing in for Ratnagiri's forts and
-   the "Good Governance" pillar without competing with the cards.
------------------------------------------------------------------- */
-function FortSkylineBackdrop() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#FAFBFC_0%,#F2F6F5_100%)]" />
-      <svg
-        className="absolute inset-x-0 bottom-0 w-full h-44"
-        viewBox="0 0 1440 200"
-        preserveAspectRatio="xMidYMax slice"
-        fill="#0b3149"
-        opacity="0.05"
-      >
-        <path d="M0 200 L0 140 L40 140 L40 110 L70 110 L70 140 L110 140 L110 90 L130 90 L130 70 L150 70 L150 90 L170 90 L170 140 L230 140 L230 120 L260 120 L260 140 L360 140 L360 100 L390 100 L390 80 L410 80 L410 100 L440 100 L440 140 L560 140 L560 200 Z" />
-        <path d="M760 200 L760 130 L800 130 L800 95 L830 95 L830 60 L860 60 L860 95 L890 95 L890 130 L930 130 L930 200 Z" />
-        <path d="M1080 200 L1080 150 L1120 150 L1120 115 L1150 115 L1150 150 L1200 150 L1200 200 Z" />
-        <path d="M1280 200 L1280 140 L1310 140 L1310 115 L1340 115 L1340 90 L1370 90 L1370 115 L1400 115 L1400 140 L1440 140 L1440 200 Z" />
-      </svg>
     </div>
   );
 }
@@ -348,7 +212,7 @@ export default function DashboardOverview() {
   };
 
   // ---- Panel 2: Experiences -------------------------------------------------
-    const experiencesData = [
+  const experiencesData = [
     {
       title: "Guided Walks",
       description: "Local guides lead you through forts, markets and coastal trails.",
@@ -466,7 +330,7 @@ export default function DashboardOverview() {
   }, [videoAutoPaused, videoPages.length, playingVideoId]);
 
   // ---- Panel 4: About ---------------------------------------------------------
-        const aboutPillars = [
+  const aboutPillars = [
     {
       title: "Society",
       icon: Handshake,
@@ -548,7 +412,7 @@ export default function DashboardOverview() {
   // searchable list, so the hero search bar can actually find things across
   // the whole site instead of only deep-linking to a /search route that may
   // not exist yet.
-    const searchIndex = [
+  const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...aboutPillars.map((p) => ({ label: p.title, sub: p.description, route: p.route })),
     ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
@@ -644,20 +508,12 @@ export default function DashboardOverview() {
           .rt-card, .rt-card:hover { transition: none; transform: none; }
         }
 
-        /* Gentle bob for the fishing boat in the hero backdrop — the one
-           bit of ambient, non-user-triggered motion on the page. */
-        @keyframes boatBob {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-4px) rotate(-0.6deg); }
-        }
-        .rt-boat { animation: boatBob 6s ease-in-out infinite; transform-origin: 652px 460px; }
-        @media (prefers-reduced-motion: reduce) {
-          .rt-boat { animation: none; }
-        }
-
         /* CTA arrow nudges right on hover instead of the whole row moving */
         .rt-cta-arrow { transition: transform 0.25s ease; }
         .rt-cta:hover .rt-cta-arrow { transform: translateX(3px); }
+
+        /* Ambient "live wallpaper" animations (palms, mangoes, waves, birds...) */
+        ${ambientCss}
       `}</style>
 
       {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
@@ -683,6 +539,9 @@ export default function DashboardOverview() {
                 every slide the same way, so the carousel reads as one
                 consistent frame rather than six different photos */}
             <div className="absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_90px_30px_rgba(0,0,0,0.5)]" />
+
+            {/* live ambient layer: birds, drifting leaves, sparks, swaying palms */}
+            <HeroAmbientOverlay />
 
             {/* carousel arrows */}
             <button
@@ -795,7 +654,7 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-            {/* ================= Panel 2 — Experiences ================= */}
+      {/* ================= Panel 2 — Experiences ================= */}
       <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
         <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
@@ -878,20 +737,10 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-          {/* ================= Panel 3 — Stories & Videos ================= */}
+      {/* ================= Panel 3 — Stories & Videos ================= */}
       <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
-        <svg
-          className="absolute inset-x-0 bottom-0 w-full h-32 opacity-[0.06] pointer-events-none"
-          viewBox="0 0 1440 160"
-          preserveAspectRatio="xMidYMax slice"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M0 90 C160 60 320 120 480 90 C640 60 800 120 960 90 C1120 60 1280 120 1440 90 L1440 160 L0 160 Z"
-            fill="#0f766e"
-          />
-        </svg>
+        <WaveLayer height={110} fill="#0f766e" opacity={0.08} duration={16} />
+        <WaveLayer height={70} fill="#0f766e" opacity={0.06} duration={10} reverse />
 
         <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Stories — 2 published stories per page, sliding as a page */}
@@ -1160,7 +1009,7 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-            {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
+      {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
       <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
@@ -1178,7 +1027,7 @@ export default function DashboardOverview() {
             </p>
           </Reveal>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, route, description }) => (
               <button
                 key={title}
@@ -1199,7 +1048,7 @@ export default function DashboardOverview() {
                   <Icon size={18} />
                 </span>
 
-                                <div className="absolute inset-x-0 bottom-0 p-5">
+                <div className="absolute inset-x-0 bottom-0 p-5">
                   <p className="text-white font-semibold text-base">{title}</p>
                   <p className="text-white/80 text-xs mt-1.5 leading-relaxed">{description}</p>
                 </div>
@@ -1223,16 +1072,10 @@ export default function DashboardOverview() {
             fill="#5EEAD4"
           />
         </svg>
-        <svg
-          className="absolute right-0 bottom-0 w-56 h-56 opacity-[0.05] pointer-events-none"
-          viewBox="0 0 200 200"
+        <Palm
+          className="absolute right-4 bottom-0 h-56 w-auto opacity-[0.10] pointer-events-none"
           fill="#5EEAD4"
-          aria-hidden="true"
-        >
-          <path d="M90 200 C94 150 98 120 106 84 L114 85 C110 122 108 152 106 200 Z" />
-          <path d="M110 84 C80 60 50 60 26 78 C56 70 86 76 110 90 Z" />
-          <path d="M110 84 C140 56 174 54 198 70 C166 68 136 76 112 92 Z" />
-        </svg>
+        />
 
         <div className="relative px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
