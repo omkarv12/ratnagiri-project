@@ -26,6 +26,9 @@ import Slider6 from "../assets/Sliders6.jpg";
 import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
+import SocietyImg from "../assets/Society.jpg";
+import EconomyImg from "../assets/society.png";
+import GoodGovernanceImg from "../assets/good_governance.png";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
@@ -448,14 +451,14 @@ export default function DashboardOverview() {
   }, [videoAutoPaused, videoPages.length, playingVideoId]);
 
   // ---- Panel 4: About ---------------------------------------------------------
-  const aboutPillars = [
+    const aboutPillars = [
     {
       title: "Society",
       icon: Handshake,
       color: "text-teal-700",
       bg: "bg-teal-50",
       tint: "tint-teal",
-      image: Slider3,
+      image: SocietyImg,
       description:
         "Close-knit fishing and farming communities, festivals that pull whole villages together, and a homestay culture built on hospitality.",
     },
@@ -465,7 +468,7 @@ export default function DashboardOverview() {
       color: "text-amber-700",
       bg: "bg-amber-50",
       tint: "tint-amber",
-      image: Slider2,
+      image: EconomyImg,
       description:
         "Alphonso mango and cashew exports, a working fishing harbour, and tourism that increasingly supports small, local businesses.",
     },
@@ -475,8 +478,7 @@ export default function DashboardOverview() {
       color: "text-emerald-700",
       bg: "bg-emerald-50",
       tint: "tint-navy",
-      image:
-        "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80",
+      image: GoodGovernanceImg,
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
     },
