@@ -348,7 +348,7 @@ export default function DashboardOverview() {
     },
   ];
 
-  // "What's new" scrolling list — replaces the single Upcoming Event tile
+  // "Upcoming Events" scrolling list — replaces the single Upcoming Event tile
   const whatsNewData = [
     {
       title: "Ganeshotsav",
@@ -472,7 +472,8 @@ export default function DashboardOverview() {
       color: "text-emerald-700",
       bg: "bg-emerald-50",
       tint: "tint-navy",
-      image: Slider1,
+      image:
+        "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80",
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
     },
@@ -589,7 +590,8 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar, reused for horizontal strips */
+        /* Slim scrollbar, reused for horizontal strips and the Upcoming
+           Events list */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
@@ -598,24 +600,6 @@ export default function DashboardOverview() {
 
         @media (prefers-reduced-motion: reduce) {
           .animate-fade-up { animation: none; }
-        }
-
-        /* What's New — continuous vertical auto-scroll loop.
-           The list is rendered twice back-to-back and the track slides up
-           by exactly 50% (one full set), so it loops seamlessly. Pauses on
-           hover so the person can actually click an item. */
-        .whats-new-track {
-          animation: whatsNewScroll 14s linear infinite;
-        }
-        .whats-new-viewport:hover .whats-new-track {
-          animation-play-state: paused;
-        }
-        @keyframes whatsNewScroll {
-          from { transform: translateY(0); }
-          to { transform: translateY(-50%); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .whats-new-track { animation: none; }
         }
 
         /* World-class card treatment: a soft resting shadow that deepens
@@ -797,7 +781,7 @@ export default function DashboardOverview() {
               Experiences
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-              Live Like a Local
+              Local Experiences
             </h2>
             <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
               Walks, meals and encounters that go beyond the sightseeing list.
@@ -825,10 +809,10 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* What's New — auto-scrolling looping list panel */}
+            {/* Upcoming Events — static list panel, scrollable, no auto-scroll */}
             <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
               <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
-                <p className="text-sm font-semibold">What's new</p>
+                <p className="text-sm font-semibold">Upcoming Events</p>
                 <button
                   onClick={() => navigate("/whats-new")}
                   className="text-xs font-medium text-white/85 hover:text-white transition"
@@ -836,35 +820,33 @@ export default function DashboardOverview() {
                   More
                 </button>
               </div>
-              <div className="whats-new-viewport flex-1 overflow-hidden relative group/wn">
-                <div className="whats-new-track divide-y divide-slate-100">
-                  {[...whatsNewData, ...whatsNewData].map(
-                    ({ title, description, image, badge, route }, idx) => (
-                      <button
-                        key={`${title}-${idx}`}
-                        onClick={() => navigate(route)}
-                        className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
-                      >
-                        <div
-                          className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
-                          style={{ backgroundImage: `url(${image})` }}
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
-                            {badge && (
-                              <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                                {badge}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
-                            {description}
-                          </p>
+              <div className="rt-feed flex-1 overflow-y-auto relative">
+                <div className="divide-y divide-slate-100">
+                  {whatsNewData.map(({ title, description, image, badge, route }, idx) => (
+                    <button
+                      key={`${title}-${idx}`}
+                      onClick={() => navigate(route)}
+                      className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
+                        style={{ backgroundImage: `url(${image})` }}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
+                          {badge && (
+                            <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                              {badge}
+                            </span>
+                          )}
                         </div>
-                      </button>
-                    )
-                  )}
+                        <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                          {description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -896,7 +878,7 @@ export default function DashboardOverview() {
                 Stories
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
-                Voices of Ratnagiri
+                Stories from Ratnagiri
               </h2>
             </Reveal>
 
@@ -1038,7 +1020,7 @@ export default function DashboardOverview() {
                 Videos
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
-                Watch Before You Go
+                Videos
               </h2>
             </Reveal>
 
@@ -1159,7 +1141,7 @@ export default function DashboardOverview() {
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
+            <div className="flex items-center gap-2 text-slate-800 text-xs font-extrabold uppercase tracking-[0.15em] mb-3">
               <Landmark size={16} />
               About the District
             </div>
