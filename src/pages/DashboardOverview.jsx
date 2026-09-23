@@ -45,7 +45,7 @@ const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 // NEW: the loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
 // loader only while data is actually loading.
-const MIN_LOADER_MS = 4500;
+const MIN_LOADER_MS = 0;
 
 // Full playlist link kept for "Open full playlist" — individual videos below
 // are rendered from videosData so two can be shown per page.
