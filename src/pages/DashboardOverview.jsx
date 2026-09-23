@@ -37,8 +37,15 @@ import {
   WaveLayer,
   Palm,
 } from "../components/AmbientBackdrops";
+// NEW: cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
+import RatnagiriCinematic from "../components/RatnagiriCinematic";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
+
+// NEW: the loading scene always plays at least this long (ms), even when the
+// data arrives faster, so the intro isn't just a flash. Set to 0 to show the
+// loader only while data is actually loading.
+const MIN_LOADER_MS = 4500;
 
 // Full playlist link kept for "Open full playlist" — individual videos below
 // are rendered from videosData so two can be shown per page.
@@ -164,22 +171,16 @@ export default function DashboardOverview() {
   }, [location]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const loadingMessages = [
-    "Boarding the Konkan Railway...",
-    "Chugging past the Sahyadris...",
-    "Crossing the ghats to Ratnagiri...",
-    "Passing through mango orchards...",
-    "Ratnagiri approaching...",
-  ];
-  const [msgIndex, setMsgIndex] = useState(0);
 
+  // NEW: keeps the cinematic loader on screen for a minimum time.
+  // (The old loadingMessages / msgIndex code is gone — the loader now
+  // runs its own station messages.)
+  const [minTimeDone, setMinTimeDone] = useState(MIN_LOADER_MS === 0);
   useEffect(() => {
-    if (!loading) return;
-    const interval = setInterval(() => {
-      setMsgIndex((prev) => (prev + 1) % loadingMessages.length);
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [loading]);
+    if (MIN_LOADER_MS === 0) return;
+    const t = setTimeout(() => setMinTimeDone(true), MIN_LOADER_MS);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -439,27 +440,8 @@ export default function DashboardOverview() {
         .slice(0, 6)
     : [];
 
-  if (loading) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 text-center">
-        <div className="relative w-full max-w-md h-20 overflow-hidden mb-6">
-          <div className="absolute top-1/2 -translate-y-1/2 w-full border-b-2 border-dashed border-slate-300" />
-          <div className="absolute top-1/2 -translate-y-1/2 text-5xl animate-[train_6s_linear_infinite]">
-            🚂
-          </div>
-        </div>
-        <p className="font-medium text-slate-500 transition-opacity duration-300">
-          {loadingMessages[msgIndex]}
-        </p>
-        <style>{`
-          @keyframes train {
-            0% { left: -10%; }
-            100% { left: 100%; }
-          }
-        `}</style>
-      </div>
-    );
-  }
+  // NEW: cinematic loading screen replaces the old 🚂 loader.
+  if (loading || !minTimeDone) return <RatnagiriCinematic />;
 
   return (
     <div className="animate-in fade-in duration-500">
