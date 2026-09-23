@@ -23,7 +23,7 @@ import Slider3 from "../assets/Sliders3.jpg";
 import Slider4 from "../assets/Sliders4.jpg";
 import Slider5 from "../assets/Sliders5.jpg";
 import Slider6 from "../assets/Sliders6.jpg";
-import KokaniFoodImg from "../assets/Kokani-Food.jpeg";
+import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 
