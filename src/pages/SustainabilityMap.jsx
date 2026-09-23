@@ -31,18 +31,30 @@ const CATEGORY_COLOR_MAP = {
   "Taxi & Auto": "#0006a7",
   "Bus Stand": "#487c00",
 };
-const DEFAULT_COLOR = "#e08b01";
+// Maps each tourism category to an emoji + color
+const CATEGORY_ICON_MAP = {
+  "Beach Tourism": { emoji: "🏖️", color: "#0ea5e9" },
+  "Heritage Tourism": { emoji: "🏛️", color: "#a855f7" },
+  "Religious Tourism": { emoji: "🛕", color: "#f97316" },
+  "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
+  "Homestays": { emoji: "🏡", color: "#ffc1b6" },
+  "Taxi & Auto": { emoji: "🛺", color: "#0006a7" },
+  "Bus Stand": { emoji: "🚌", color: "#487c00" },
+};
+const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 
-// Small, unobtrusive legend — bottom-right corner only, no emoji, no icons.
+// Small, unobtrusive legend — bottom-right corner only.
 function MapLegend() {
   return (
-    <div className="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex flex-col gap-1.5 max-w-[170px]">
-      {Object.entries(CATEGORY_COLOR_MAP).map(([category, color]) => (
+    <div className="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex flex-col gap-1.5 max-w-[190px]">
+      {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
         <div key={category} className="flex items-center gap-2">
           <span
-            className="w-2.5 h-2.5 rounded-full shrink-0"
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
             style={{ backgroundColor: color }}
-          />
+          >
+            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
+          </span>
           <span className="text-[10px] font-medium text-slate-700 leading-tight">
             {category}
           </span>
@@ -60,12 +72,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Creates a plain colored pin-shaped divIcon (no emoji).
+// Creates a pin-shaped divIcon with a category emoji inside.
 // Bigger + red when selected.
 function createMarkerIcon(category, isSelected) {
-  const color = CATEGORY_COLOR_MAP[category] || DEFAULT_COLOR;
+  const { emoji, color } = CATEGORY_ICON_MAP[category] || DEFAULT_ICON;
   const bg = isSelected ? "#dc2626" : color;
   const size = isSelected ? 42 : 32;
+  const fontSize = isSelected ? 20 : 16;
 
   const html = `
     <div style="
@@ -76,7 +89,16 @@ function createMarkerIcon(category, isSelected) {
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
       box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-    "></div>
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <span style="
+        transform: rotate(45deg);
+        font-size: ${fontSize}px;
+        line-height: 1;
+      ">${emoji}</span>
+    </div>
   `;
 
   return L.divIcon({
@@ -90,6 +112,7 @@ function createMarkerIcon(category, isSelected) {
 function createNearbyIcon(zoom) {
   const scale = Math.max(0.55, Math.min(1, (zoom - 9) / 5));
   const size = Math.round(26 * scale);
+  const fontSize = Math.round(13 * scale);
   const html = `
     <div style="
       width: ${size}px;
@@ -98,7 +121,11 @@ function createNearbyIcon(zoom) {
       border: 2px solid white;
       border-radius: 50%;
       box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-    "></div>
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: ${fontSize}px;
+    ">📍</div>
   `;
   return L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
 }
@@ -376,11 +403,11 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
 
 const tourismTypes = [
   { value: "All", label: "All Types" },
-  { value: "Beach Tourism", label: "Beach Tourism" },
-  { value: "Heritage Tourism", label: "Heritage Tourism" },
-  { value: "Religious Tourism", label: "Religious Tourism" },
-  { value: "Nature & Eco Tourism", label: "Nature & Eco Tourism" },
-  { value: "Adventure & Marine Tourism", label: "Adventure & Marine Tourism" },
+  { value: "Beach Tourism", label: "🏖️ Beach Tourism" },
+  { value: "Heritage Tourism", label: "🏛️ Heritage Tourism" },
+  { value: "Religious Tourism", label: "🛕 Religious Tourism" },
+  { value: "Nature & Eco Tourism", label: "🌿 Nature & Eco Tourism" },
+  { value: "Adventure & Marine Tourism", label: "🚤 Adventure & Marine Tourism" },
 ];
 
 
@@ -536,7 +563,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     title="Show nearby locations"
     className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
   >
-    <MapPin size={14} />
+    📍
   </button>
 </div>
   </div>
@@ -659,7 +686,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
   />
 )}
-    <strong className="block text-base mb-1 border-b pb-1">{b.name}</strong>
+    <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
     <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
     {userLocation && (
       <span className="text-xs text-emerald-700 font-medium mb-2 block">
@@ -673,7 +700,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
         rel="noreferrer"
         className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
       >
-        Download Timetable PDF
+        ⬇ Download Timetable PDF
       </a>
     ) : (
       <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
@@ -826,7 +853,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
     onClick={(e) => { e.stopPropagation(); handleShowRoute(loc.latitude, loc.longitude); }}
     className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
   >
-    Show Route
+    🧭 Show Route
   </button>
 </div>              
                   </div>
@@ -953,7 +980,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
       onClick={(e) => { e.stopPropagation(); handleShowRoute(home.latitude, home.longitude); }}
       className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
     >
-      Show Route
+      🧭 Show Route
     </button>
   </div>
 </div>
@@ -1088,7 +1115,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                           onClick={(e) => { e.stopPropagation(); handleShowRoute(d.lat, d.lng); }}
                           className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
                         >
-                          Show Route
+                          🧭 Show Route
                         </button>
                       </div>
                     </div>
@@ -1129,7 +1156,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                     className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
                     <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
-                      {b.name}
+                      🚏 {b.name}
                     </h3>
                     <p className="text-sm text-slate-600 mb-2">
                       <strong>Taluka:</strong> {b.taluka}
@@ -1147,7 +1174,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-bold text-white bg-lime-600 hover:bg-lime-700 px-3 py-1.5 rounded transition-colors"
                       >
-                        Download bus timetable
+                        ⬇ Download bus timetable
                       </a>
                     ) : (
                       <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
@@ -1188,7 +1215,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
 {activeRoute && (
   <div className="absolute top-14 sm:top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2 sm:gap-3">
     <span className="text-xs sm:text-sm font-bold text-slate-800">
-      {activeRoute.distance} km · {activeRoute.duration} min
+      🚗 {activeRoute.distance} km · {activeRoute.duration} min
     </span>
     <button
       onClick={() => setActiveRoute(null)}
