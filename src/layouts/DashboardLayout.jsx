@@ -321,7 +321,7 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="flex items-center gap-2"
               >
-                <LogoSlot {...LOGO} className="h-8 sm:h-9" />
+              
                 <span className="rt-display text-base sm:text-lg lg:text-xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                   Ratnagiri Tourism
                 </span>
@@ -350,7 +350,7 @@ export default function DashboardLayout() {
             {/* Right: CTAs + Admin */}
             <div className="flex items-center justify-end gap-2.5 sm:gap-3">
               <button
-                onClick={() => navigate("/interactive-map")}
+                onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
                 className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#C2410C] via-[#B4532A] to-[#9A3412] px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
