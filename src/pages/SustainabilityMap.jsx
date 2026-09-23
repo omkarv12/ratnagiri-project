@@ -6,9 +6,10 @@ import L from 'leaflet';
 import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
-import RatnagiriCinematic from '../components/RatnagiriCinematic';
 import RegistrationForm from '../components/forms/RegistrationForm';
 import API_BASE_URL from '../config';
+// NEW: loading screen
+import RatnagiriCinematic from '../components/RatnagiriCinematic';
 const {
   MapContainer,
   TileLayer,
@@ -207,6 +208,41 @@ function MapController({ position }) {
   return null;
 }
 
+// NEW: fits the map to the whole Ratnagiri district border when the page
+// opens. Falls back to fitting all location pins if the border file fails
+// to load.
+function InitialView({ border, points }) {
+  const map = useMap();
+  const settled = useRef(false);
+
+  const fit = () => {
+    const el = map.getContainer();
+    if (!el.clientWidth || !el.clientHeight) return false; // map hidden (mobile list view)
+    let bounds = null;
+    if (border) bounds = L.geoJSON(border).getBounds();
+    else if (points.length) bounds = L.latLngBounds(points);
+    if (!bounds || !bounds.isValid()) return false;
+    map.invalidateSize();
+    map.fitBounds(bounds, { padding: [24, 24], animate: false });
+    return !!border;
+  };
+
+  useEffect(() => {
+    if (!settled.current) settled.current = fit();
+  }, [border, points.length]);
+
+  // On mobile the map starts hidden; fit again the first time it becomes visible
+  useEffect(() => {
+    const ro = new ResizeObserver(() => {
+      if (!settled.current) settled.current = fit();
+    });
+    ro.observe(map.getContainer());
+    return () => ro.disconnect();
+  }, [map, border, points.length]);
+
+  return null;
+}
+
 function NearbyBoundsController({ origin, nearby }) {
   const map = useMap();
   useEffect(() => {
@@ -392,7 +428,9 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
     { id: "pins", label: "Add Location", icon: MapPin },
   ];
 
+  // NEW: replaces the old "Loading live database for map..." text
   if (loading) return <RatnagiriCinematic />;
+
   const talukas = [
   "All",
   ...new Set(
@@ -718,7 +756,10 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
   };
 
   return (
-     <div className="flex flex-col md:flex-row h-full bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
+     // CHANGED: fixed height (viewport minus the 4rem header) instead of h-full,
+     // so the sidebar, map and profile panel each scroll on their own and the
+     // page itself doesn't scroll. Change 4rem if your header height differs.
+     <div className="flex flex-col md:flex-row h-[calc(100dvh-4rem)] bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
       
       {/* INNER SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
       <div
@@ -751,8 +792,8 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
           })}
         </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 min-h-0">
+        {/* Tab Content — CHANGED: overscroll-contain so scrolling the list never scrolls the page */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6 min-h-0">
           
           {/* VILLAGES TAB */}
           {activeTab === 'villages' && (
@@ -1263,6 +1304,13 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
       />
     )}
 
+    {/* NEW: on open, fit the map to the whole Ratnagiri district */}
+    <InitialView
+      border={districtBorder}
+      points={locations
+        .filter((l) => l.latitude && l.longitude)
+        .map((l) => [l.latitude, l.longitude])}
+    />
     <MapController position={mapPosition} />
     <NearbyBoundsController origin={nearbyOrigin} nearby={nearbyLocations} />
     <ZoomWatcher onZoomChange={setCurrentZoom} />
@@ -1335,7 +1383,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
 </button>
 
 {selectedItem && (
-  <div className="fixed inset-0 z-[2000] bg-white overflow-y-auto md:static md:inset-auto md:z-auto md:w-[420px] md:border-l md:border-slate-200">
+  <div className="fixed inset-0 z-[2000] bg-white overflow-y-auto overscroll-contain md:static md:inset-auto md:z-auto md:w-[420px] md:border-l md:border-slate-200">
     <ProfileDetails
       loc={selectedItem.data}
       type={selectedItem.type}
