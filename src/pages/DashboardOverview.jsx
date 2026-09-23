@@ -1184,13 +1184,16 @@ export default function DashboardOverview() {
                   <Icon size={18} />
                 </span>
 
-                <div className="absolute inset-x-0 bottom-0 p-5">
+                                <div className="absolute inset-x-0 bottom-0 p-5">
                   <p className="text-white font-semibold text-base">{title}</p>
                   <p className="text-white/80 text-xs mt-1.5 leading-relaxed">{description}</p>
                 </div>
               </button>
             ))}
           </div>
+        </div>
+      </section>
+
       {/* ================= Footer ================= */}
       <footer className="relative overflow-hidden bg-slate-900 mt-0">
         <svg
