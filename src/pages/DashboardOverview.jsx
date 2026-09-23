@@ -23,6 +23,9 @@ import Slider3 from "../assets/Sliders3.jpg";
 import Slider4 from "../assets/Sliders4.jpg";
 import Slider5 from "../assets/Sliders5.jpg";
 import Slider6 from "../assets/Sliders6.jpg";
+import KokaniFoodImg from "../assets/Kokani-Food.jpeg";
+import GuidedWalksImg from "../assets/Guided-Walks.jpg";
+import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
@@ -327,23 +330,23 @@ export default function DashboardOverview() {
   };
 
   // ---- Panel 2: Experiences -------------------------------------------------
-  const experiencesData = [
+    const experiencesData = [
     {
       title: "Guided Walks",
       description: "Local guides lead you through forts, markets and coastal trails.",
-      image: Slider2,
+      image: GuidedWalksImg,
       route: "/guided-walks",
     },
     {
       title: "Konkani Food",
       description: "Taste solkadhi, fish curry-rice and other Malvani classics.",
-      image: Slider4,
+      image: KokaniFoodImg,
       route: "/traditional-food",
     },
     {
       title: "Community Interaction",
       description: "Meet fisherfolk, farmers and artisans in their own villages.",
-      image: Slider3,
+      image: CommunityInteractionImg,
       route: "/village-life",
     },
   ];
