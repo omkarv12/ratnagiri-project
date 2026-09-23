@@ -46,7 +46,7 @@ const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 // Small, unobtrusive legend — bottom-right corner only.
 function MapLegend() {
   return (
-    <div className="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex flex-col gap-1.5 max-w-[190px]">
+    <div className="hidden md:flex absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex-col gap-1.5 max-w-[190px]">
       {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
         <div key={category} className="flex items-center gap-2">
           <span
