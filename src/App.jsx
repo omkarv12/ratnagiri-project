@@ -11,6 +11,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Society from "./pages/Society";
 import Economy from "./pages/Economy";
 import GoodGovernance from "./pages/GoodGovernance";
+import MedicalFacilities from "./pages/MedicalFacilities";
+import PoliceStations from "./pages/PoliceStations";
 
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
@@ -103,6 +105,14 @@ export default function App() {
               path="/good-governance"
               element={<GoodGovernance />}
             />
+            <Route
+  path="/medical-facilities"
+  element={<MedicalFacilities />}
+/>
+<Route
+  path="/police-stations"
+  element={<PoliceStations />}
+/>
             <Route
   path="/stories"
   element={<Stories />}
