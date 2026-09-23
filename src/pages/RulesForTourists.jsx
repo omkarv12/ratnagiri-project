@@ -30,18 +30,24 @@ const references = [
 
 export default function RulesForTourists() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 animate-in fade-in duration-500">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        .font-display { font-family: 'Fraunces', Georgia, serif; }
+        .font-body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+      `}</style>
+
       <div className="text-center mb-10 sm:mb-12">
         <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
           <ShieldCheck className="text-orange-600" size={22} />
         </div>
-        <p className="text-[11px] font-bold uppercase tracking-wide text-orange-600 mb-2">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-orange-600 mb-2 font-body">
           Responsible Travel
         </p>
-        <h1 className="font-serif text-3xl sm:text-4xl text-slate-900 mb-4">
+        <h1 className="font-display text-3xl sm:text-4xl text-slate-900 mb-4">
           Rules for Tourists
         </h1>
-        <p className="max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed">
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-slate-600 leading-relaxed font-body">
           Tourist rules ensure visitor safety, protect natural and cultural
           heritage, and maintain the cleanliness of destinations. They
           encourage respect for local communities, support sustainable
@@ -57,7 +63,7 @@ export default function RulesForTourists() {
               <span className="shrink-0 w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-sm font-semibold flex items-center justify-center">
                 {i + 1}
               </span>
-              <p className="text-sm sm:text-base text-slate-700 leading-relaxed pt-1">
+              <p className="text-sm sm:text-base text-slate-700 leading-relaxed pt-1 font-body">
                 {rule}
               </p>
             </li>
@@ -66,23 +72,23 @@ export default function RulesForTourists() {
       </div>
 
       <div className="bg-orange-50/60 rounded-2xl p-6 sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600 mb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600 mb-4 font-body">
           Official References
         </p>
         <ul className="space-y-3">
           {references.map((ref) => (
             <li key={ref.href}>
               
-                href={ref.href}
+                <a href={ref.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-700 transition-colors duration-200"
-              
+                className="group inline-flex items-center gap-2 text-sm text-slate-700 hover:text-orange-700 transition-colors duration-200 font-body"
+              >
                 <span className="underline decoration-orange-300 underline-offset-2 group-hover:decoration-orange-500">
                   {ref.label}
                 </span>
                 <ExternalLink size={13} className="text-slate-400 group-hover:text-orange-600 shrink-0" />
-              
+              </a>
             </li>
           ))}
         </ul>

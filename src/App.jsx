@@ -57,7 +57,10 @@ export default function App() {
               path="/rules" 
               element={<RulesForTourists />} 
               />
-             
+             <Route 
+  path="/resources/dos-and-donts" 
+  element={<RulesForTourists />} 
+/>
             <Route
               path="/profile/:type/:id"
               element={<LocationProfile />}
