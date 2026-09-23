@@ -160,10 +160,10 @@ const RESOURCES_MENU = {
   label: "Resources",
   route: "/resources",
   children: [
-    { label: "Medical Facilities", route: "/resources/medical-facilities" },
-    { label: "Police Stations", route: "/resources/police-stations" },
-    { label: "Transport Facilities", route: "/resources/transport-facilities" },
-    { label: "Do's / Don'ts", route: "/resources/dos-and-donts" },
+    { label: "Medical Facilities", route: "/medical-facilities" },
+    { label: "Police Stations", route: "/police-stations" },
+    { label: "Transport Facilities", route: "/resources/transport-facilities" }, // new route
+    { label: "Do's / Don'ts", route: "/resources/dos-and-donts" }, // new route
   ],
 };
 
@@ -171,12 +171,13 @@ const ABOUT_MENU = {
   label: "About",
   route: "/about",
   children: [
-    {
+      {
       label: "About",
       children: [
-        { label: "Society & Economy", route: "/about/society-and-economy" },
-        { label: "Culture", route: "/about/culture" },
-        { label: "Governance", route: "/about/good-governance" },
+        { label: "Society", route: "/society" },
+        { label: "Economy", route: "/economy" },
+        { label: "Culture", route: "/about/culture" }, // new route
+        { label: "Governance", route: "/good-governance" },
       ],
     },
     {
