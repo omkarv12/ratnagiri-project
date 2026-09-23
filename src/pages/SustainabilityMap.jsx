@@ -48,17 +48,7 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-// Maps each tourism category to an emoji symbol + color
-const CATEGORY_ICON_MAP = {
-  "Beach Tourism": { emoji: "🏖️", color: "#0ea5e9" },
-  "Heritage Tourism": { emoji: "🏛️", color: "#a855f7" },
-  "Religious Tourism": { emoji: "🛕", color: "#f97316" },
-  "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
-  "Homestays": { emoji: "🏡", color: "#ffc1b6" },
-  "Taxi & Auto": { emoji: "🛺", color: "#0006a7" },
-  "Bus Stand": { emoji: "🚌", color: "#487c00" },
-};
-const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
+
 
 // Creates a pin-shaped divIcon with a category emoji inside.
 // Bigger + red when selected.
