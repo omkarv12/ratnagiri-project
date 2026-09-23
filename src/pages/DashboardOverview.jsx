@@ -27,8 +27,8 @@ import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
-import EconomyImg from "../assets/society.png";
-import GoodGovernanceImg from "../assets/good_governance.png";
+import EconomyImg from "../assets/Economy.jpg";
+import GoodGovernanceImg from "../assets/good_governance.jpg";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
