@@ -305,7 +305,7 @@ export default function DashboardLayout() {
         }`}
       >
         {/* ============ Single sticky bar: logo · pages · CTAs · Admin ============ */}
-        <header className="rt-header-in sticky top-0 z-40 bg-[#0b3149] shadow-md">
+        <header className="rt-header-in sticky top-0 z-40 bg-[#7b1e2b] shadow-md">
           <div className="mx-auto grid h-16 max-w-[1680px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-8 lg:px-12">
             {/* Left: mobile toggle + logo + title */}
             <div className="flex items-center gap-2 sm:gap-3">
@@ -361,7 +361,7 @@ export default function DashboardLayout() {
                 <span className="relative hidden xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-300" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-[#0b3149]" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-[#7b1e2b]" />
                 </span>
               </button>
 
