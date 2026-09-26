@@ -30,13 +30,13 @@ import Videos from "./pages/Videos";
 import VillagesTaluka from "./pages/VillagesTaluka";
 import VillageList from "./pages/VillageList";
 import VillageDetail from "./pages/VillageDetail";
-import { BrowserRouter } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   return (
     <LocationsProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -44,14 +44,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
 
           <Route path="/" element={<DashboardLayout />}>
-          function App() {
-        return (
-    <BrowserRouter>
-      <ScrollToTop />
-      {/* baaki routes */}
-    </BrowserRouter>
-  );
-}
             <Route
               path="/registration"
               element={<Registration />}
@@ -153,5 +145,4 @@ export default function App() {
       </Router>
     </LocationsProvider>
   );
-  
 }
