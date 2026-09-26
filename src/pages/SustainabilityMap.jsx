@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import * as ReactLeaflet from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2, ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon } from 'lucide-react';
+import {
+  TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2,
+  ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon,
+  Heart, LayoutGrid, RotateCcw, ArrowRight, Frown,
+} from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import RegistrationForm from '../components/forms/RegistrationForm';
@@ -46,6 +50,20 @@ const CATEGORY_ICON_MAP = {
 };
 const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
 
+// localStorage-backed favorites ("save for later"), shared across village
+// and homestay cards. Keyed as "type:id" so two different tables can never
+// collide (e.g. location #1 and homestay #1).
+const FAVORITES_KEY = "rt_favorites";
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 // Small, unobtrusive legend — bottom-right corner only.
 function MapLegend() {
   return (
@@ -64,6 +82,19 @@ function MapLegend() {
         </div>
       ))}
     </div>
+  );
+}
+
+// A removable filter pill — used for the active-filter chip rows.
+function FilterChip({ label, onClear }) {
+  return (
+    <button
+      onClick={onClear}
+      className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold hover:bg-orange-200 transition-colors"
+    >
+      {label}
+      <X size={12} />
+    </button>
   );
 }
 
@@ -282,7 +313,9 @@ function ZoomWatcher({ onZoomChange }) {
 export default function SustainabilityMap() {
   const navigate = useNavigate();
   const { locations, homestays, eco, drivers, busStops, loading } = useLocations();
-  const [activeTab, setActiveTab] = useState('villages');
+  // NEW: "all" is the default landing tab — a discovery overview before
+  // drilling into a specific list.
+  const [activeTab, setActiveTab] = useState('all');
   const [mapPosition, setMapPosition] = useState(null); // Used to trigger flyTo
   const [pinMode, setPinMode] = useState(false);
   const [customPins, setCustomPins] = useState([]);
@@ -310,6 +343,30 @@ const [mobileView, setMobileView] = useState('list');
 const [nearbyLocations, setNearbyLocations] = useState([]);
 const [nearbyOrigin, setNearbyOrigin] = useState(null);
 const [currentZoom, setCurrentZoom] = useState(11);
+
+// NEW: favorites ("save for later"), persisted to localStorage.
+const [favorites, setFavorites] = useState(loadFavorites);
+const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+// Namespaced marker-ref key so two different tables (e.g. a location #1
+// and a homestay #1) never overwrite each other's map marker reference.
+const refKey = (type, id) => `${type}:${id}`;
+
+const isFavorite = (type, id) => favorites.includes(refKey(type, id));
+
+const toggleFavorite = (type, id) => {
+  setFavorites((prev) => {
+    const key = refKey(type, id);
+    const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — favorites just
+      // won't persist across reloads, but the toggle still works this session.
+    }
+    return next;
+  });
+};
 
 const handleShowRoute = async (destLat, destLng) => {
   if (!userLocation) {
@@ -372,17 +429,12 @@ useEffect(() => {
   };
 
 const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
-  console.log("STEP 1: fetchNearbyLocations called with", locationName, mainLat, mainLng);
   try {
     const url = `${API_BASE_URL}/api/nearby-locations/${encodeURIComponent(locationName)}`;
-    console.log("STEP 2: fetching URL", url);
     const response = await fetch(url);
-    console.log("STEP 3: response status", response.status);
     const data = await response.json();
-    console.log("STEP 4: response data", data);
 
     if (!data.success) {
-      console.log("STEP 5: data.success was false, clearing state");
       setNearbyLocations([]);
       setNearbyOrigin(null);
       return;
@@ -394,20 +446,17 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
       duration: null,
     }));
 
-    console.log("STEP 6: setting nearbyLocations to", JSON.stringify(withDistance));
-    console.log("STEP 7: mapPosition is", mapPosition, "mobileView is", mobileView);
     setNearbyLocations(withDistance);
     setNearbyOrigin({ lat: mainLat, lng: mainLng });
   } catch (err) {
-    console.log("STEP ERROR: caught exception", err);
     setNearbyLocations([]);
     setNearbyOrigin(null);
   }
 };
   
   useEffect(() => {
-    if (selectedItem?.data?.id) {
-      const marker = markerRefs.current[selectedItem.data.id];
+    if (selectedItem?.data?.id && selectedItem?.type) {
+      const marker = markerRefs.current[refKey(selectedItem.type, selectedItem.data.id)];
       if (marker) {
         marker.openPopup();
       }
@@ -422,7 +471,8 @@ const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
   };
 
   const tabs = [
-    { id: "villages", label: "Locations", icon: TreePine },
+    { id: "all", label: "All", icon: LayoutGrid },
+    { id: "villages", label: "Places to Visit", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
     { id: "transportation", label: "Local Resources", icon: Bus },
     { id: "pins", label: "Add Location", icon: MapPin },
@@ -467,7 +517,9 @@ const filteredLocations = locations.filter((loc) => {
       .toLowerCase()
       .includes(locationSearch.toLowerCase());
 
-  return talukaMatch && tourismTypeMatch && searchMatch;
+  const favoriteMatch = !showFavoritesOnly || isFavorite('village', loc.id);
+
+  return talukaMatch && tourismTypeMatch && searchMatch && favoriteMatch;
 
 });
 
@@ -493,7 +545,9 @@ const filteredHomestays = homestays.filter((home) => {
     (home.owner &&
       home.owner.toLowerCase().includes(homestaySearch.toLowerCase()));
 
-  return talukaMatch && typeMatch && searchMatch;
+  const favoriteMatch = !showFavoritesOnly || isFavorite('homestay', home.id);
+
+  return talukaMatch && typeMatch && searchMatch && favoriteMatch;
 });
 
 const driverTalukas = [
@@ -559,102 +613,199 @@ const filteredBusStops = busStops
     return (distA ?? Infinity) - (distB ?? Infinity);
   });
 
+// NEW: nearest-first previews for the "All" tab overview sections.
+// Independent of any tab's own filters — this is a discovery layer, not a
+// filtered list.
+const sortByDistance = (arr, latKey = 'latitude', lngKey = 'longitude') => {
+  if (!userLocation) return arr;
+  return [...arr].sort((a, b) => {
+    const distA = calculateDistance(userLocation.lat, userLocation.lng, a[latKey], a[lngKey]);
+    const distB = calculateDistance(userLocation.lat, userLocation.lng, b[latKey], b[lngKey]);
+    return (distA ?? Infinity) - (distB ?? Infinity);
+  });
+};
+
+const overviewLocations = sortByDistance(locations).slice(0, 4);
+const overviewHomestays = sortByDistance(homestays).slice(0, 4);
+const overviewDrivers = sortByDistance(drivers.filter((d) => d.lat && d.lng), 'lat', 'lng').slice(0, 3);
+const overviewBusStops = sortByDistance(busStops.filter((b) => b.lat && b.lng), 'lat', 'lng').slice(0, 3);
+
+  // ---- Marker builders — shared between the per-tab list views and the
+  // combined "All" tab map, so popup markup is never duplicated. ----
+  const buildLocationMarkers = (arr) => arr.map(loc => (
+    <Marker
+      key={`village-${loc.id}`}
+      position={[loc.latitude, loc.longitude]}
+      ref={(ref) => { markerRefs.current[refKey('village', loc.id)] = ref; }}
+      icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
+    >
+      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
+      <Popup>
+        <div className="text-center">
+          {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
+            <img
+              src={driveIdToImageUrl(loc.photo_location)}
+              alt={loc.location_name}
+              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+            />
+          )}
+          <strong className="block text-base mb-1">{loc.location_name}</strong>
+          <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
+          {userLocation && (
+            <span className="text-xs text-emerald-700 font-medium mb-2 block">
+              {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away from your current location
+            </span>
+          )}
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
+              className="flex-1 py-1.5 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+            >
+              View Detailed Profile
+            </button>
+            <button
+              onClick={() => {
+                fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
+                const marker = markerRefs.current[refKey('village', loc.id)];
+                if (marker) marker.closePopup();
+              }}
+              title="Show nearby locations"
+              className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              📍
+            </button>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  ));
+
+  const buildHomestayMarkers = (arr) => arr.map(home => (
+    <Marker
+      key={`homestay-${home.id}`}
+      position={[home.latitude, home.longitude]}
+      ref={(ref) => { markerRefs.current[refKey('homestay', home.id)] = ref; }}
+      icon={createMarkerIcon(null, selectedItem?.type === 'homestay' && selectedItem?.data?.id === home.id)}
+    >
+      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-amber-500/90 shadow-sm border-0 text-white">{home.name}</Tooltip>
+      <Popup>
+        <div className="text-center">
+          {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
+            <img
+              src={driveIdToImageUrl(home.photo_homestay)}
+              alt={home.name}
+              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+            />
+          )}
+          <strong className="block text-base mb-1">{home.name}</strong>
+          <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
+          {userLocation && (
+            <span className="text-xs text-emerald-700 font-medium mb-1 block">
+              {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
+            </span>
+          )}
+          <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>
+          <button
+            onClick={() => setSelectedItem({ data: home, type: 'homestay' })}
+            className="w-full py-1.5 mt-1 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors mb-2"
+          >
+            View Homestay Profile
+          </button>
+        </div>
+      </Popup>
+    </Marker>
+  ));
+
+  const buildDriverMarkers = (arr) => arr.map(d => (
+    <Marker
+      key={`driver-${d.id}`}
+      position={[d.lat, d.lng]}
+      ref={(ref) => { markerRefs.current[refKey('driver', d.id)] = ref; }}
+      icon={createMarkerIcon('Taxi & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
+    >
+      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-500/90 shadow-sm border-0 text-slate-900">{d.name}</Tooltip>
+      <Popup>
+        <div className="text-left">
+          <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
+          <span className="text-xs text-slate-500 mb-2 block">{d.vehicleType}</span>
+          {userLocation && (
+            <span className="text-xs text-emerald-700 font-medium mb-2 block">
+              {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away from your current location
+            </span>
+          )}
+          <button
+            onClick={() => setSelectedItem({ data: d, type: 'driver' })}
+            className="w-full py-1.5 mt-1 bg-lime-500 text-slate-900 rounded text-xs font-bold hover:bg-lime-600 transition-colors"
+          >
+            View Driver Profile
+          </button>
+        </div>
+      </Popup>
+    </Marker>
+  ));
+
+  const buildBusStopMarkers = (arr) => arr.map(b => (
+    <Marker
+      key={`busstop-${b.id}`}
+      position={[b.lat, b.lng]}
+      ref={(ref) => { markerRefs.current[refKey('busstop', b.id)] = ref; }}
+      icon={createMarkerIcon('Bus Stand', selectedItem?.type === 'busstop' && selectedItem?.data?.id === b.id)}
+    >
+      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-700/90 shadow-sm border-0 text-white">{b.name}</Tooltip>
+      <Popup>
+        <div className="text-left">
+          {b.photo_url && (
+            <img
+              src={b.photo_url}
+              alt={b.name}
+              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
+            />
+          )}
+          <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
+          <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
+          {userLocation && (
+            <span className="text-xs text-emerald-700 font-medium mb-2 block">
+              {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
+            </span>
+          )}
+          {b.timetableLink ? (
+            
+              <a href={b.timetableLink}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
+            >
+              ⬇ Download Timetable PDF
+            </a>
+          ) : (
+            <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  ));
+
   const renderActivePins = () => {
+    if (activeTab === 'all') {
+      return [
+        ...buildLocationMarkers(locations),
+        ...buildHomestayMarkers(homestays),
+        ...buildDriverMarkers(drivers.filter((d) => d.lat && d.lng)),
+        ...buildBusStopMarkers(busStops.filter((b) => b.lat && b.lng)),
+      ];
+    }
     if (activeTab === 'villages') {
-      return filteredLocations.map(loc => (
-        <Marker 
-          key={loc.id} 
-          position={[loc.latitude, loc.longitude]}
-
-          ref={(ref) => { markerRefs.current[loc.id] = ref; }}
-icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
->
-          <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
-          <Popup>
-  <div className="text-center">
-    {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
-  <img
-    src={driveIdToImageUrl(loc.photo_location)}
-    alt={loc.location_name}
-    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-  />
-)}
-    <strong className="block text-base mb-1">{loc.location_name}</strong>
-    <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
-    {userLocation && (
-      <span className="text-xs text-emerald-700 font-medium mb-2 block">
-        {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away from your current location
-      </span>
-    )}
-    <div className="flex items-center gap-2 mt-1">
-  <button 
-    onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-    className="flex-1 py-1.5 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
-  >
-    View Detailed Profile
-  </button>
-
-  <button
-    onClick={() => {
-      fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
-      const marker = markerRefs.current[loc.id];
-      if (marker) marker.closePopup();
-    }}
-    title="Show nearby locations"
-    className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-  >
-    📍
-  </button>
-</div>
-  </div>
-</Popup>
-        </Marker>
-      ));
+      return buildLocationMarkers(filteredLocations);
     }
     if (activeTab === 'homestays') {
-      return filteredHomestays.map(home => (
-
-        <Marker 
-          key={home.id} 
-          position={[home.latitude, home.longitude]}
-          ref={(ref) => { markerRefs.current[home.id] = ref; }}
-          icon={createMarkerIcon(null, selectedItem?.type === 'homestay' && selectedItem?.data?.id === home.id)}
-        >
-          <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-amber-500/90 shadow-sm border-0 text-white">{home.name}</Tooltip>
-          <Popup>
-  <div className="text-center">
-    {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
-  <img
-    src={driveIdToImageUrl(home.photo_homestay)}
-    alt={home.name}
-    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-  />
-)}
-    <strong className="block text-base mb-1">{home.name}</strong>
-    <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
-    {userLocation && (
-      <span className="text-xs text-emerald-700 font-medium mb-1 block">
-        {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
-      </span>
-    )}
-    <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>
-              <button 
-                onClick={() => setSelectedItem({ data: home, type: 'homestay' })}
-                className="w-full py-1.5 mt-1 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors mb-2"
-              >
-                View Homestay Profile
-              </button>
-            </div>
-          </Popup>
-        </Marker>
-      ));
+      return buildHomestayMarkers(filteredHomestays);
     }
     if (activeTab === 'eco') {
       return eco.map(e => (
-        <Marker 
-          key={e.id} 
+        <Marker
+          key={`eco-${e.id}`}
           position={[e.latitude, e.longitude]}
-          ref={(ref) => { markerRefs.current[e.id] = ref; }}
+          ref={(ref) => { markerRefs.current[refKey('eco', e.id)] = ref; }}
           icon={createMarkerIcon(null, selectedItem?.type === 'eco' && selectedItem?.data?.id === e.id)}
         >
           <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-emerald-600/90 shadow-sm border-0 text-white">{e.name}</Tooltip>
@@ -665,7 +816,7 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                 <strong className="block text-emerald-700">Waste Management:</strong>
                 <a href={e.waste} target="_blank" rel="noreferrer" className="text-blue-600 truncate block w-40">View Doc</a>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedItem({ data: e, type: 'eco' })}
                 className="w-full py-1.5 mt-1 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 transition-colors"
               >
@@ -677,80 +828,10 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
       ));
     }
     if (activeTab === 'transportation') {
-      const driverMarkers = filteredDrivers
-        .filter(d => d.lat && d.lng)
-        .map(d => (
-          <Marker
-            key={`driver-${d.id}`}
-            position={[d.lat, d.lng]}
-            ref={(ref) => { markerRefs.current[d.id] = ref; }}
-            icon={createMarkerIcon('Taxi & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
-          >
-            <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-500/90 shadow-sm border-0 text-slate-900">{d.name}</Tooltip>
-            <Popup>
-              <div className="text-left">
-                <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
-                <span className="text-xs text-slate-500 mb-2 block">{d.vehicleType}</span>
-                {userLocation && (
-                  <span className="text-xs text-emerald-700 font-medium mb-2 block">
-                    {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away from your current location
-                  </span>
-                )}
-                <button
-                  onClick={() => setSelectedItem({ data: d, type: 'driver' })}
-                  className="w-full py-1.5 mt-1 bg-lime-500 text-slate-900 rounded text-xs font-bold hover:bg-lime-600 transition-colors"
-                >
-                  View Driver Profile
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ));
-
-      const busStopMarkers = filteredBusStops
-        .filter(b => b.lat && b.lng)
-        .map(b => (
-          <Marker
-            key={`busstop-${b.id}`}
-            position={[b.lat, b.lng]}
-            ref={(ref) => { markerRefs.current[b.id] = ref; }}
-            icon={createMarkerIcon('Bus Stand', selectedItem?.type === 'busstop' && selectedItem?.data?.id === b.id)}
-          >
-            <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-700/90 shadow-sm border-0 text-white">{b.name}</Tooltip>
-            <Popup>
-  <div className="text-left">
-    {b.photo_url && (
-  <img
-    src={b.photo_url}
-    alt={b.name}
-    className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
-  />
-)}
-    <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
-    <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
-    {userLocation && (
-      <span className="text-xs text-emerald-700 font-medium mb-2 block">
-        {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
-      </span>
-    )}
-    {b.timetableLink ? (
-      
-        <a href={b.timetableLink}
-        target="_blank"
-        rel="noreferrer"
-        className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
-      >
-        ⬇ Download Timetable PDF
-      </a>
-    ) : (
-      <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
-    )}
-  </div>
-</Popup>
-          </Marker>
-        ));
-
-      return [...driverMarkers, ...busStopMarkers];
+      return [
+        ...buildDriverMarkers(filteredDrivers.filter(d => d.lat && d.lng)),
+        ...buildBusStopMarkers(filteredBusStops.filter(b => b.lat && b.lng)),
+      ];
     }
     return null;
   };
@@ -794,7 +875,171 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
 
         {/* Tab Content — CHANGED: overscroll-contain so scrolling the list never scrolls the page */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6 min-h-0">
-          
+
+          {/* ALL TAB — discovery overview: nearest picks per category, each
+              with a "See all" hand-off into that category's full tab. */}
+          {activeTab === 'all' && (
+            <div className="animate-in slide-in-from-right-4 duration-300 space-y-8">
+
+              {favorites.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <Heart size={16} className="fill-rose-500 text-rose-500" /> Your Favorites
+                  </h2>
+                  <div className="space-y-3">
+                    {favorites.slice(0, 5).map((key) => {
+                      const [type, idStr] = key.split(':');
+                      const id = Number(idStr);
+                      const item =
+                        type === 'village' ? locations.find((l) => l.id === id) :
+                        type === 'homestay' ? homestays.find((h) => h.id === id) :
+                        null;
+                      if (!item) return null;
+                      const name = type === 'village' ? item.location_name : item.name;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => { handleFlyTo(item.latitude, item.longitude); setSelectedItem({ data: item, type }); }}
+                          className="w-full flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-rose-400 hover:shadow-md transition-all text-left"
+                        >
+                          <span className="font-semibold text-sm text-slate-800 truncate">{name}</span>
+                          <Heart size={14} className="fill-rose-500 text-rose-500 shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-orange-500 pl-3">Places to Visit</h2>
+                  <button
+                    onClick={() => setActiveTab('villages')}
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 shrink-0"
+                  >
+                    See all <ArrowRight size={13} />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {overviewLocations.map((loc) => (
+                    <div
+                      key={loc.id}
+                      onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
+                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      {loc.photo_location && driveIdToImageUrl(loc.photo_location) ? (
+                        <img src={driveIdToImageUrl(loc.photo_location)} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-100" />
+                      ) : (
+                        <span
+                          className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl"
+                          style={{ backgroundColor: (CATEGORY_ICON_MAP[loc.category] || DEFAULT_ICON).color + "22" }}
+                        >
+                          {(CATEGORY_ICON_MAP[loc.category] || DEFAULT_ICON).emoji}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-slate-800 truncate">{loc.location_name}</p>
+                        <p className="text-xs text-slate-500 truncate">{loc.category}</p>
+                        {userLocation && (
+                          <p className="text-xs text-emerald-700 font-medium">
+                            {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {overviewLocations.length === 0 && (
+                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No places added yet.</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-amber-500 pl-3">Where to Stay</h2>
+                  <button
+                    onClick={() => setActiveTab('homestays')}
+                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 shrink-0"
+                  >
+                    See all <ArrowRight size={13} />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {overviewHomestays.map((home) => (
+                    <div
+                      key={home.id}
+                      onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
+                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-amber-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) ? (
+                        <img src={driveIdToImageUrl(home.photo_homestay)} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-100" />
+                      ) : (
+                        <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-amber-50">🏡</span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-slate-800 truncate">{home.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{home.village}, {home.taluka}</p>
+                        {userLocation && (
+                          <p className="text-xs text-emerald-700 font-medium">
+                            {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {overviewHomestays.length === 0 && (
+                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No homestays added yet.</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-lime-500 pl-3">Getting Around</h2>
+                  <button
+                    onClick={() => setActiveTab('transportation')}
+                    className="text-xs font-semibold text-lime-700 hover:text-lime-800 flex items-center gap-1 shrink-0"
+                  >
+                    See all <ArrowRight size={13} />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {overviewDrivers.map((d) => (
+                    <div
+                      key={`ov-driver-${d.id}`}
+                      onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
+                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-lime-50">🛺</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-slate-800 truncate">{d.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{d.vehicleType} · {d.village}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {overviewBusStops.map((b) => (
+                    <div
+                      key={`ov-bus-${b.id}`}
+                      onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
+                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-lime-700 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-lime-50">🚌</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-slate-800 truncate">{b.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{b.taluka}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {overviewDrivers.length === 0 && overviewBusStops.length === 0 && (
+                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No transport resources added yet.</p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
           {/* VILLAGES TAB */}
           {activeTab === 'villages' && (
             <div className="animate-in slide-in-from-right-4 duration-300">
@@ -808,6 +1053,16 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     <label className="text-sm font-semibold text-slate-700 flex-1">
       Choose by Taluka
     </label>
+
+    <button
+      onClick={() => setShowFavoritesOnly((v) => !v)}
+      title="Show favorites only"
+      className={`p-1.5 border rounded-lg shrink-0 transition-colors ${
+        showFavoritesOnly ? "bg-rose-50 border-rose-300" : "border-slate-300 hover:bg-slate-100"
+      }`}
+    >
+      <Heart size={14} className={showFavoritesOnly ? "fill-rose-500 text-rose-500" : "text-slate-600"} />
+    </button>
 
     {isSearchOpen ? (
       <div className="flex items-center border border-slate-300 rounded-lg px-2 py-1 bg-white">
@@ -866,6 +1121,27 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
     ))}
   </select>
 
+  {(selectedTaluka !== "All" || selectedTourismType !== "All" || showFavoritesOnly) && (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {selectedTaluka !== "All" && (
+        <FilterChip label={`Taluka: ${selectedTaluka}`} onClear={() => setSelectedTaluka("All")} />
+      )}
+      {selectedTourismType !== "All" && (
+        <FilterChip
+          label={tourismTypes.find((t) => t.value === selectedTourismType)?.label || selectedTourismType}
+          onClear={() => setSelectedTourismType("All")}
+        />
+      )}
+      {showFavoritesOnly && (
+        <FilterChip label="❤ Favorites only" onClear={() => setShowFavoritesOnly(false)} />
+      )}
+    </div>
+  )}
+
+  <p className="text-xs text-slate-500 mt-3">
+    {filteredLocations.length} {filteredLocations.length === 1 ? "place" : "places"} found
+  </p>
+
 </div>
 
 
@@ -874,9 +1150,25 @@ icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selecte
                      <div 
                     key={loc.id} 
                     onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                   >
-                    <h3 className="font-bold text-slate-800 mb-2">{loc.location_name}</h3>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite('village', loc.id); }}
+                      aria-label={isFavorite('village', loc.id) ? "Remove from favorites" : "Save to favorites"}
+                      className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+                    >
+                      <Heart size={16} className={isFavorite('village', loc.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
+                    </button>
+
+                    {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
+                      <img
+                        src={driveIdToImageUrl(loc.photo_location)}
+                        alt={loc.location_name}
+                        className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
+                      />
+                    )}
+
+                    <h3 className="font-bold text-slate-800 mb-2 pr-8">{loc.location_name}</h3>
                     <div className="flex flex-wrap gap-2 mb-3">
   <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village_name}</span>
   <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka_name}</span>
@@ -901,6 +1193,18 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
 </div>              
                   </div>
                 ))}
+                {filteredLocations.length === 0 && (
+                  <div className="text-center py-10">
+                    <Frown className="mx-auto mb-3 text-slate-300" size={32} />
+                    <p className="text-sm text-slate-500 mb-3">No places match your filters.</p>
+                    <button
+                      onClick={() => { setSelectedTaluka("All"); setSelectedTourismType("All"); setLocationSearch(""); setShowFavoritesOnly(false); }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors"
+                    >
+                      <RotateCcw size={12} /> Clear filters
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -916,6 +1220,16 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
         <label className="text-sm font-semibold text-slate-700 flex-1">
           Choose by Taluka
         </label>
+
+        <button
+          onClick={() => setShowFavoritesOnly((v) => !v)}
+          title="Show favorites only"
+          className={`p-1.5 border rounded-lg shrink-0 transition-colors ${
+            showFavoritesOnly ? "bg-rose-50 border-rose-300" : "border-slate-300 hover:bg-slate-100"
+          }`}
+        >
+          <Heart size={14} className={showFavoritesOnly ? "fill-rose-500 text-rose-500" : "text-slate-600"} />
+        </button>
 
         {isHomestaySearchOpen ? (
           <div className="flex items-center border border-slate-300 rounded-lg px-2 py-1 bg-white">
@@ -974,6 +1288,24 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
         ))}
       </select>
 
+      {(selectedHomestayTaluka !== "All" || selectedHomestayType !== "All" || showFavoritesOnly) && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {selectedHomestayTaluka !== "All" && (
+            <FilterChip label={`Taluka: ${selectedHomestayTaluka}`} onClear={() => setSelectedHomestayTaluka("All")} />
+          )}
+          {selectedHomestayType !== "All" && (
+            <FilterChip label={selectedHomestayType} onClear={() => setSelectedHomestayType("All")} />
+          )}
+          {showFavoritesOnly && (
+            <FilterChip label="❤ Favorites only" onClear={() => setShowFavoritesOnly(false)} />
+          )}
+        </div>
+      )}
+
+      <p className="text-xs text-slate-500 mt-3">
+        {filteredHomestays.length} {filteredHomestays.length === 1 ? "homestay" : "homestays"} found
+      </p>
+
     </div>
 
     <div className="space-y-4">
@@ -981,9 +1313,25 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
         <div 
           key={home.id}
           onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
-          className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+          className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
         >
-          <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFavorite('homestay', home.id); }}
+            aria-label={isFavorite('homestay', home.id) ? "Remove from favorites" : "Save to favorites"}
+            className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+          >
+            <Heart size={16} className={isFavorite('homestay', home.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
+          </button>
+
+          {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
+            <img
+              src={driveIdToImageUrl(home.photo_homestay)}
+              alt={home.name}
+              className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
+            />
+          )}
+
+          <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2 pr-8">
             {home.name} <ShieldCheck size={14} className="text-emerald-500" />
           </h3>
           <p className="text-sm text-slate-600 mb-1">
@@ -1005,8 +1353,8 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
           <div className="flex flex-wrap justify-between items-center gap-2">
   <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
   <div className="flex items-center gap-3">
-    <a
-       href={`https://wa.me/91${home.phone.split('/')[0].replace(/\D/g, '')}`}
+    
+      <a href={`https://wa.me/91${home.phone.split('/')[0].replace(/\D/g, '')}`}
       target="_blank"
       rel="noreferrer"
       onClick={(e) => e.stopPropagation()}
@@ -1030,9 +1378,16 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
         </div>
       ))}
       {filteredHomestays.length === 0 && (
-        <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
-          No homestays match your filters.
-        </p>
+        <div className="text-center py-6">
+          <Frown className="mx-auto mb-2 text-slate-300" size={28} />
+          <p className="text-sm text-slate-500 mb-3">No homestays match your filters.</p>
+          <button
+            onClick={() => { setSelectedHomestayTaluka("All"); setSelectedHomestayType("All"); setHomestaySearch(""); setShowFavoritesOnly(false); }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-full transition-colors"
+          >
+            <RotateCcw size={12} /> Clear filters
+          </button>
+        </div>
       )}
     </div>
   </div>
@@ -1111,6 +1466,24 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                 ))}
               </select>
 
+              {(selectedDriverTaluka !== "All" || selectedVehicleType !== "All" || driverSearch.trim()) && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {selectedDriverTaluka !== "All" && (
+                    <FilterChip label={`Taluka: ${selectedDriverTaluka}`} onClear={() => setSelectedDriverTaluka("All")} />
+                  )}
+                  {selectedVehicleType !== "All" && (
+                    <FilterChip label={selectedVehicleType} onClear={() => setSelectedVehicleType("All")} />
+                  )}
+                  {driverSearch.trim() && (
+                    <FilterChip label={`"${driverSearch}"`} onClear={() => setDriverSearch("")} />
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 mb-3">
+                {filteredDrivers.length} {filteredDrivers.length === 1 ? "driver" : "drivers"} found
+              </p>
+
               <div className="space-y-4">
                 {filteredDrivers.map(d => (
                   <div
@@ -1165,9 +1538,16 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                   </div>
                 ))}
                 {filteredDrivers.length === 0 && (
-                  <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
-                    No drivers match your filters.
-                  </p>
+                  <div className="text-center py-6">
+                    <Frown className="mx-auto mb-2 text-slate-300" size={28} />
+                    <p className="text-sm text-slate-500 mb-3">No drivers match your filters.</p>
+                    <button
+                      onClick={() => { setSelectedDriverTaluka("All"); setSelectedVehicleType("All"); setDriverSearch(""); }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors"
+                    >
+                      <RotateCcw size={12} /> Clear filters
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -1181,7 +1561,7 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                 <select
                   value={selectedBusStopTaluka}
                   onChange={(e) => setSelectedBusStopTaluka(e.target.value)}
-                  className="w-full mb-4 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                  className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 >
                   {busStopTalukas.map((taluka) => (
                     <option key={taluka} value={taluka}>
@@ -1190,6 +1570,10 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                   ))}
                 </select>
               )}
+
+              <p className="text-xs text-slate-500 mb-3">
+                {filteredBusStops.length} bus {filteredBusStops.length === 1 ? "stand" : "stands"} found
+              </p>
 
               <div className="space-y-4">
                 {filteredBusStops.map(b => (
@@ -1210,8 +1594,8 @@ onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'villa
                       )}
                     </p>
                     {b.timetableLink ? (
-                      <a
-                        href={b.timetableLink}
+                      
+                        <a href={b.timetableLink}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
