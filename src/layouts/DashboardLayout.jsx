@@ -9,7 +9,7 @@ import {
   MapPlus,
   Compass,
 } from "lucide-react";
-
+import BackToTop from "../components/BackToTop";
 /* ------------------------------------------------------------------ */
 /*  Theme: fonts, colour tokens, animations (unchanged palette)        */
 /* ------------------------------------------------------------------ */
@@ -117,7 +117,8 @@ const THEME_CSS = `
 /* ------------------------------------------------------------------ */
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
-
+   
+  
 // Put this file in  public/logos/  (PNG or SVG, transparent background).
 // Until it exists, a dashed placeholder with the alt text is shown.
 const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
@@ -395,6 +396,7 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
+      <BackToTop />
     </div>
   );
 }

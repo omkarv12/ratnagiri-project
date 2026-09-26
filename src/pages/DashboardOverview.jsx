@@ -39,6 +39,8 @@ import {
 } from "../components/AmbientBackdrops";
 // NEW: cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
+import { Mail, Send, Phone } from "lucide-react";
+import VisitorCounter from "../components/VisitorCounter";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
@@ -269,6 +271,8 @@ export default function DashboardOverview() {
   const [stories, setStories] = useState([]);
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesError, setStoriesError] = useState(null);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     blogApi
@@ -1036,10 +1040,13 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Footer ================= */}
-      <footer className="relative overflow-hidden bg-slate-900 mt-0">
+            {/* ================= Footer ================= */}
+      <footer className="relative overflow-hidden bg-[#0b3149] mt-0">
+        {/* top accent bar — same gradient family as the header's CTA buttons */}
+        <div className="h-1 w-full bg-gradient-to-r from-[#B4532A] via-[#FBBF24] to-[#0f766e]" />
+
         <svg
-          className="absolute inset-x-0 top-0 w-full h-20 opacity-[0.05] pointer-events-none"
+          className="absolute inset-x-0 top-1 w-full h-20 opacity-[0.05] pointer-events-none"
           viewBox="0 0 1440 100"
           preserveAspectRatio="xMidYMin slice"
           fill="none"
@@ -1055,6 +1062,96 @@ export default function DashboardOverview() {
           fill="#5EEAD4"
         />
 
+        {/* ---- Stats strip: visitor counter + quick site stats + newsletter ---- */}
+        <div className="relative border-b border-white/10">
+          <div className="mx-auto max-w-[1680px] px-6 sm:px-10 py-6 flex flex-wrap items-center gap-x-10 gap-y-4">
+            <VisitorCounter />
+
+            <div className="h-8 w-px bg-white/10 hidden sm:block" />
+
+            <div className="leading-tight">
+              <p className="font-display text-lg font-bold text-white">
+                {stories.length > 0 ? stories.length : "—"}
+              </p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                Stories published
+              </p>
+            </div>
+
+            <div className="h-8 w-px bg-white/10 hidden sm:block" />
+
+            <div className="leading-tight">
+              <p className="font-display text-lg font-bold text-white">9</p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                Talukas covered
+              </p>
+            </div>
+
+            {/* Newsletter — currently wired to local state only.
+                TODO: point onSubmit at a real backend endpoint
+                (e.g. POST /api/newsletter) once one exists. */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setSubscribed(true);
+                setSubscribeEmail("");
+              }}
+              className="ml-auto flex items-center gap-2 w-full sm:w-auto"
+            >
+              <div className="flex-1 sm:flex-none flex items-center gap-2 bg-white/10 rounded-full pl-4 pr-1.5 py-1.5 ring-1 ring-white/10 focus-within:ring-teal-400/50 transition">
+                <Mail size={14} className="text-slate-400 shrink-0" />
+                <input
+                  type="email"
+                  required
+                  value={subscribeEmail}
+                  onChange={(e) => setSubscribeEmail(e.target.value)}
+                  placeholder="Get travel updates"
+                  className="min-w-0 w-40 sm:w-48 text-xs text-white placeholder:text-slate-400 bg-transparent outline-none font-body"
+                />
+                <button
+                  type="submit"
+                  aria-label="Subscribe"
+                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 hover:bg-teal-500 text-white transition"
+                >
+                  <Send size={12} />
+                </button>
+              </div>
+            </form>
+          </div>
+          {subscribed && (
+            <p className="relative px-6 sm:px-10 pb-4 text-xs text-teal-300">
+              Thanks — you're on the list for Ratnagiri travel updates.
+            </p>
+          )}
+        </div>
+
+        {/* ---- Emergency helpline quick-dial ---- */}
+        <div className="relative border-b border-white/10">
+          <div className="mx-auto max-w-[1680px] px-6 sm:px-10 py-4 flex flex-wrap items-center gap-x-8 gap-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-400">
+              Emergency Helpline
+            </p>
+            <a href="tel:100" className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition">
+              <Phone size={12} /> Police — 100
+            </a>
+            <a href="tel:108" className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition">
+              <Phone size={12} /> Ambulance — 108
+            </a>
+            <button
+              onClick={() => navigate("/police-stations")}
+              className="text-xs text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+            >
+              Nearby police stations
+            </button>
+            <button
+              onClick={() => navigate("/medical-facilities")}
+              className="text-xs text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+            >
+              Nearby hospitals
+            </button>
+          </div>
+        </div>
+
         <div className="relative px-6 sm:px-10 py-12 sm:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
             <div>
@@ -1067,13 +1164,13 @@ export default function DashboardOverview() {
               </p>
               <div className="flex gap-3">
                 {socialLinks.map(({ icon: Icon, label, href }) => (
-                  <a
-                    key={label}
+                  
+                    <a key={label}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-teal-600 hover:text-white hover:-translate-y-1 hover:shadow-[0_10px_22px_-6px_rgba(45,212,191,0.55)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-slate-300 hover:bg-teal-600 hover:text-white hover:-translate-y-1 hover:shadow-[0_10px_22px_-6px_rgba(45,212,191,0.55)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
                   >
                     <Icon size={16} />
                   </a>
@@ -1083,7 +1180,7 @@ export default function DashboardOverview() {
 
             {footerColumns.map((col) => (
               <div key={col.heading}>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-500 mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-400 mb-4">
                   {col.heading}
                 </p>
                 <ul className="space-y-3">
@@ -1091,8 +1188,9 @@ export default function DashboardOverview() {
                     <li key={link.label}>
                       <button
                         onClick={() => navigate(link.route)}
-                        className="text-sm text-slate-300 hover:text-white transition-colors duration-200 text-left cursor-pointer focus:outline-none focus:underline"
+                        className="group flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors duration-200 text-left cursor-pointer focus:outline-none focus:underline"
                       >
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-[#B4532A] group-hover:scale-125 transition-all duration-200 shrink-0" />
                         {link.label}
                       </button>
                     </li>
@@ -1102,7 +1200,7 @@ export default function DashboardOverview() {
             ))}
           </div>
 
-          <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
               © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
             </p>
