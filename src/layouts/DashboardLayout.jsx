@@ -119,8 +119,7 @@ const THEME_CSS = `
 /* ------------------------------------------------------------------ */
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
-   
-  
+
 // Put this file in  public/logos/  (PNG or SVG, transparent background).
 // Until it exists, a dashed placeholder with the alt text is shown.
 const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
@@ -128,75 +127,6 @@ const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
 // Shared classes for every top-level nav item: white, small semibold, single line.
 const NAV_ITEM_CLASS =
   "rt-nav-link flex min-h-[2.25rem] items-center whitespace-nowrap px-2.5 py-1.5 rounded-lg text-[0.8125rem] font-semibold text-white";
-
-/* Page structure — matches the requested menu tree. "Geography" is a
-   nested flyout inside "About". Routes marked with a comment are new
-   pages that weren't in the previous menu and may need adjusting. */
-const PLAN_MENU = {
-  label: "Plan Your Trip",
-  route: "/plan-your-trip",
-  children: [
-    { label: "Plan Your Trip", route: "/plan-your-trip" }, // new route
-    { label: "Plan Your Trip – Interactive Map", route: "/interactive-map" },
-  ],
-};
-
-const EXPERIENCES_MENU = {
-  label: "Experiences",
-  route: "/dashboard#experiences",
-  children: [
-    { label: "Upcoming Events", route: "/experiences/upcoming-events" }, // new route
-    { label: "Discover Your Stay", route: "/experiences/discover-your-stay" }, // new route
-  ],
-};
-
-const STORIES_MENU = {
-  label: "Stories",
-  route: "/dashboard#stories",
-  children: [
-    { label: "Videos", route: "/dashboard#stories" },
-    { label: "Reels", route: "/stories/reels" },
-  ],
-};
-
-const RESOURCES_MENU = {
-  label: "Resources",
-  route: "/resources",
-  children: [
-    { label: "Medical Facilities", route: "/medical-facilities" },
-    { label: "Police Stations", route: "/police-stations" },
-    { label: "Transport Facilities", route: "/resources/transport-facilities" }, // new route
-    { label: "Do's / Don'ts", route: "/resources/dos-and-donts" }, // new route
-  ],
-};
-
-const ABOUT_MENU = {
-  label: "About",
-  route: "/dashboard#about",
-  children: [
-      {
-      label: "About",
-      children: [
-        { label: "Society", route: "/society" },
-        { label: "Economy", route: "/economy" },
-        { label: "Culture", route: "/about/culture" }, // new route
-        { label: "Governance", route: "/good-governance" },
-      ],
-    },
-    {
-      label: "Geography",
-      children: [
-        { label: "Places", route: "/about/geography/places" }, // new route
-        { label: "Hidden Paths", route: "/experiences/hidden-paths" },
-        { label: "Explore Villages", route: "/experiences/explore-villages" },
-        { label: "Itineraries", route: "/experiences/itineraries" },
-        { label: "Circuits", route: "/experiences/circuits" },
-      ],
-    },
-  ],
-};
-
-const MENUS = [PLAN_MENU, EXPERIENCES_MENU, STORIES_MENU, RESOURCES_MENU, ABOUT_MENU];
 
 /* ------------------------------------------------------------------ */
 /*  Small components                                                   */
@@ -353,7 +283,7 @@ export default function DashboardLayout() {
 
             {/* Right: CTAs + Admin */}
             <div className="flex items-center justify-end gap-2.5 sm:gap-3">
-                            <button
+              <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
