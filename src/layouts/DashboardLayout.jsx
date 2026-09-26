@@ -10,6 +10,7 @@ import {
   Compass,
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
+import Breadcrumb from "../components/Breadcrumb";
 /* ------------------------------------------------------------------ */
 /*  Theme: fonts, colour tokens, animations (unchanged palette)        */
 /* ------------------------------------------------------------------ */
@@ -392,6 +393,7 @@ export default function DashboardLayout() {
 
         {/* Main content */}
         <div id="main-content" tabIndex={-1} className="pb-8 outline-none">
+          <Breadcrumb />
           <Outlet />
         </div>
       </main>
