@@ -351,21 +351,20 @@ export default function DashboardLayout() {
 
             {/* Right: CTAs + Admin */}
             <div className="flex items-center justify-end gap-2.5 sm:gap-3">
-              <button
+                            <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#C2410C] via-[#B4532A] to-[#9A3412] px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <Compass size={15} className="rt-compass relative" />
+                <Compass size={15} className="rt-compass relative text-[#B4532A]" />
                 <span className="relative hidden xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-                  <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-300" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-[#7b1e2b]" />
+                  <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
                 </span>
               </button>
-
               <button
                 onClick={() => navigate("/registration")}
                 aria-label="Add location and services"
