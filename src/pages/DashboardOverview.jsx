@@ -17,12 +17,12 @@ import {
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { blogApi } from "../api/blogApi";
-import Slider1 from "../assets/Sliders1.jpg";
-import Slider2 from "../assets/Sliders2.jpg";
-import Slider3 from "../assets/Sliders3.jpg";
-import Slider4 from "../assets/Sliders4.jpg";
-import Slider5 from "../assets/Sliders5.jpg";
-import Slider6 from "../assets/Sliders6.jpg";
+import Slider1 from "../assets/Slider1.jpg";
+import Slider2 from "../assets/Slider2.jpg";
+import Slider3 from "../assets/Slider3.jpg";
+import Slider4 from "../assets/Slider4.jpg";
+import Slider5 from "../assets/Slider5.jpg";
+import Slider6 from "../assets/Slider6.jpg";
 import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
