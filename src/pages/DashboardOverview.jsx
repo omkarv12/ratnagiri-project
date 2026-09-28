@@ -497,6 +497,15 @@ export default function DashboardOverview() {
         .rt-cta-arrow { transition: transform 0.25s ease; }
         .rt-cta:hover .rt-cta-arrow { transform: translateX(3px); }
 
+        /* Hero text panel: keeps the headline readable on every slide,
+           bright sky or dark sea. */
+        .rt-hero-panel {
+          background: linear-gradient(135deg, rgba(11, 49, 73, 0.88), rgba(11, 49, 73, 0.72));
+          -webkit-backdrop-filter: blur(10px) saturate(1.1);
+          backdrop-filter: blur(10px) saturate(1.1);
+        }
+        .rt-hero-text { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35); }
+
         /* Ambient "live wallpaper" animations (palms, mangoes, waves, birds...) */
         ${ambientCss}
       `}</style>
@@ -507,7 +516,7 @@ export default function DashboardOverview() {
 
         <div className="relative max-w-[1680px] mx-auto">
           {/* Full-width rotating photo carousel with search bar + caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[460px] sm:h-[580px] lg:h-[660px] shadow-[0_35px_70px_-20px_rgba(11,49,73,0.5)] ring-1 ring-black/5">
+          <div className="relative rounded-2xl overflow-hidden h-[520px] sm:h-[580px] lg:h-[660px] shadow-[0_35px_70px_-20px_rgba(11,49,73,0.5)] ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
                 key={index}
@@ -518,7 +527,8 @@ export default function DashboardOverview() {
                 }}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/40" />
+            {/* slightly stronger scrim than before, so bright skies never wash out the frame */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/45" />
 
             {/* black shade on the inner border — a soft vignette that frames
                 every slide the same way, so the carousel reads as one
@@ -541,17 +551,24 @@ export default function DashboardOverview() {
               <ChevronRight size={18} />
             </button>
 
-            {/* content block — vertically centered in the frame, sized to
-                sit comfortably instead of being cramped in the top corner */}
-            <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-10 lg:px-14 animate-fade-up">
-              <div className="max-w-xl">
-                <p className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-white/80 mb-3 font-body">
+            {/* content block — vertically centred, sitting on a deep-navy
+                frosted panel (site navy #0b3149) with a mango → laterite →
+                teal accent bar, so the text is readable on any photo.
+                Side padding keeps it clear of the carousel arrows. */}
+            <div className="absolute inset-0 flex flex-col justify-center px-12 sm:px-16 lg:px-20 pb-10 animate-fade-up">
+              <div className="rt-hero-panel relative max-w-xl rounded-2xl ring-1 ring-white/15 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.65)] p-5 pl-6 sm:p-7 sm:pl-9">
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-5 bottom-5 w-1 rounded-r-full bg-gradient-to-b from-[#FBBF24] via-[#B4532A] to-teal-500"
+                />
+
+                <p className="rt-hero-text text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-[#FBBF24] mb-3 font-body">
                   Explore &middot; Experience &middot; Support Local
                 </p>
-                <h1 className="font-display text-white leading-[1.05] text-4xl sm:text-5xl lg:text-6xl mb-4">
+                <h1 className="rt-hero-text font-display text-white leading-[1.05] text-4xl sm:text-5xl lg:text-6xl mb-4">
                   Discover <span className="text-teal-300">Ratnagiri</span>
                 </h1>
-                <p className="text-white/85 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
+                <p className="text-white/90 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
                   Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
                   homestays and Konkan flavours, all in one place.
                 </p>
@@ -560,8 +577,8 @@ export default function DashboardOverview() {
                     what's new, stories, footer links and any live locations
                     from context), with a live dropdown */}
                 <form onSubmit={handleHeroSearch} className="relative max-w-md">
-                  <div className="flex items-center gap-2 bg-white/95 backdrop-blur rounded-full pl-4 pr-1.5 py-2 shadow-[0_18px_40px_-15px_rgba(11,49,73,0.55)] ring-1 ring-transparent focus-within:ring-2 focus-within:ring-teal-400/60 transition-shadow duration-300">
-                    <Search size={16} className="text-slate-400 shrink-0" />
+                  <div className="flex items-center gap-2 bg-white rounded-full pl-4 pr-1.5 py-2 shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)] ring-1 ring-transparent focus-within:ring-2 focus-within:ring-teal-400/70 transition-shadow duration-300">
+                    <Search size={16} className="text-slate-500 shrink-0" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -571,12 +588,12 @@ export default function DashboardOverview() {
                       }}
                       onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                      placeholder="Search the whole site — beaches, forts, stays..."
-                      className="flex-1 min-w-0 text-sm text-slate-700 placeholder:text-slate-400 bg-transparent outline-none font-body"
+                      placeholder="Search beaches, forts, stays..."
+                      className="flex-1 min-w-0 text-sm text-slate-800 placeholder:text-slate-500 bg-transparent outline-none font-body"
                     />
                     <button
                       type="submit"
-                      className="shrink-0 bg-[#0b3149] hover:bg-[#0a2b3f] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
+                      className="shrink-0 bg-[#B4532A] hover:bg-[#9c4522] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
                     >
                       Search
                     </button>
@@ -600,7 +617,7 @@ export default function DashboardOverview() {
                                 {result.label}
                               </span>
                               {result.sub && (
-                                <span className="block text-xs text-slate-400 truncate">
+                                <span className="block text-xs text-slate-500 truncate">
                                   {result.sub}
                                 </span>
                               )}
@@ -616,7 +633,7 @@ export default function DashboardOverview() {
             </div>
 
             <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
-              <p className="font-display italic text-white/90 text-sm sm:text-base border-b border-dashed border-white/40 pb-1">
+              <p className="rt-hero-text font-display italic text-white text-sm sm:text-base border-b border-dashed border-white/50 pb-1">
                 Beaches, forts, culture &amp; Konkan flavours
               </p>
               <div className="flex gap-1.5 shrink-0">
@@ -1040,7 +1057,7 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-            {/* ================= Footer ================= */}
+      {/* ================= Footer ================= */}
       <footer className="relative overflow-hidden bg-[#0b3149] mt-0">
         {/* top accent bar — same gradient family as the header's CTA buttons */}
         <div className="h-1 w-full bg-gradient-to-r from-[#B4532A] via-[#FBBF24] to-[#0f766e]" />
@@ -1164,8 +1181,8 @@ export default function DashboardOverview() {
               </p>
               <div className="flex gap-3">
                 {socialLinks.map(({ icon: Icon, label, href }) => (
-                  
-                    <a key={label}
+                  <a
+                    key={label}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
