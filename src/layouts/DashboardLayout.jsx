@@ -108,6 +108,19 @@ const THEME_CSS = `
 .rt-cta:hover .rt-mapplus { transform: scale(1.15) rotate(-6deg); }
 .rt-cta:hover .rt-shield { transform: scale(1.12); }
 
+/* India flag: chakra spins, flag gently waves */
+@keyframes rt-spin { to { transform: rotate(360deg); } }
+@keyframes rt-wave {
+  0%, 100% { transform: rotate(-3deg) translateY(0); }
+  50%      { transform: rotate(3deg)  translateY(-1px); }
+}
+.rt-flag  { animation: rt-wave 3s ease-in-out infinite; transform-origin: left center; }
+.rt-chakra {
+  animation: rt-spin 6s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rt-root *, .rt-root *::before, .rt-root *::after {
     animation: none !important;
@@ -151,6 +164,35 @@ function LogoSlot({ src, alt, className = "" }) {
       onError={() => setFailed(true)}
       className={`object-contain ${className}`}
     />
+  );
+}
+
+// Small animated Indian flag: tricolour + rotating 24-spoke Ashoka Chakra
+function IndiaFlag({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 36 24"
+      role="img"
+      aria-label="India flag"
+      className={`rt-flag shrink-0 rounded-[3px] shadow-md shadow-black/30 ring-1 ring-white/30 ${className}`}
+    >
+      <rect width="36" height="8" y="0" fill="#FF9933" />
+      <rect width="36" height="8" y="8" fill="#FFFFFF" />
+      <rect width="36" height="8" y="16" fill="#138808" />
+
+      <g className="rt-chakra" fill="none" stroke="#000080">
+        <circle cx="18" cy="12" r="3.6" strokeWidth="0.6" />
+        <circle cx="18" cy="12" r="0.6" fill="#000080" stroke="none" />
+        {Array.from({ length: 24 }).map((_, i) => (
+          <line
+            key={i}
+            x1="18" y1="12" x2="18" y2="8.4"
+            strokeWidth="0.3"
+            transform={`rotate(${i * 15} 18 12)`}
+          />
+        ))}
+      </g>
+    </svg>
   );
 }
 
@@ -255,7 +297,7 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="flex items-center gap-2"
               >
-              
+                <IndiaFlag className="h-5 w-8 sm:h-6 sm:w-9" />
                 <span className="rt-display text-base sm:text-lg lg:text-xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                   Ratnagiri Tourism
                 </span>
