@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as ReactLeaflet from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import {
   TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2,
   ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon,
@@ -339,6 +340,8 @@ export default function SustainabilityMap() {
   const [selectedBusStopTaluka, setSelectedBusStopTaluka] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null); // { data, type }
   const markerRefs = useRef({});
+  // NEW: handle to the marker cluster group (used to reveal a clustered marker before opening its popup)
+  const clusterRef = useRef(null);
   const [districtBorder, setDistrictBorder] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [activeRoute, setActiveRoute] = useState(null);
@@ -441,10 +444,16 @@ export default function SustainabilityMap() {
     }
   };
 
+  // CHANGED: with clustering, the selected marker may be hidden inside a
+  // cluster, so reveal it first and only then open its popup.
   useEffect(() => {
     if (selectedItem?.data?.id && selectedItem?.type) {
       const marker = markerRefs.current[refKey(selectedItem.type, selectedItem.data.id)];
-      if (marker) {
+      if (!marker) return;
+      const cluster = clusterRef.current;
+      if (cluster?.zoomToShowLayer) {
+        cluster.zoomToShowLayer(marker, () => marker.openPopup());
+      } else {
         marker.openPopup();
       }
     }
@@ -614,6 +623,21 @@ export default function SustainabilityMap() {
   const overviewDrivers = sortByDistance(drivers.filter((d) => d.lat && d.lng), 'lat', 'lng').slice(0, 3);
   const overviewBusStops = sortByDistance(busStops.filter((b) => b.lat && b.lng), 'lat', 'lng').slice(0, 3);
 
+  // NEW: labels only appear once there's room for them (zoom >= 12).
+  // Below that, markers are icon-only so the district view stays clean.
+  const renderLabel = (text, className) =>
+    currentZoom >= 12 ? (
+      <Tooltip
+        direction="top"
+        offset={[0, -20]}
+        opacity={1}
+        permanent
+        className={`font-bold text-xs shadow-sm border-0 ${className}`}
+      >
+        {text}
+      </Tooltip>
+    ) : null;
+
   // ---- Marker builders — shared between the per-tab list views and the
   // combined "All" tab map, so popup markup is never duplicated. ----
   const buildLocationMarkers = (arr) => arr.map(loc => (
@@ -623,7 +647,7 @@ export default function SustainabilityMap() {
       ref={(ref) => { markerRefs.current[refKey('village', loc.id)] = ref; }}
       icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
     >
-      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-white/90 shadow-sm border-0 text-slate-800">{loc.location_name}</Tooltip>
+      {renderLabel(loc.location_name, "bg-white/90 text-slate-800")}
       <Popup>
         <div className="text-center">
           {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
@@ -674,7 +698,7 @@ export default function SustainabilityMap() {
       ref={(ref) => { markerRefs.current[refKey('homestay', home.id)] = ref; }}
       icon={createMarkerIcon(null, selectedItem?.type === 'homestay' && selectedItem?.data?.id === home.id)}
     >
-      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-amber-500/90 shadow-sm border-0 text-white">{home.name}</Tooltip>
+      {renderLabel(home.name, "bg-amber-500/90 text-white")}
       <Popup>
         <div className="text-center">
           {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
@@ -713,7 +737,7 @@ export default function SustainabilityMap() {
       ref={(ref) => { markerRefs.current[refKey('driver', d.id)] = ref; }}
       icon={createMarkerIcon('Taxi & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
     >
-      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-500/90 shadow-sm border-0 text-slate-900">{d.name}</Tooltip>
+      {renderLabel(d.name, "bg-lime-500/90 text-slate-900")}
       <Popup>
         <div className="text-left">
           <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
@@ -742,7 +766,7 @@ export default function SustainabilityMap() {
       ref={(ref) => { markerRefs.current[refKey('busstop', b.id)] = ref; }}
       icon={createMarkerIcon('Bus Stand', selectedItem?.type === 'busstop' && selectedItem?.data?.id === b.id)}
     >
-      <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-lime-700/90 shadow-sm border-0 text-white">{b.name}</Tooltip>
+      {renderLabel(b.name, "bg-lime-700/90 text-white")}
       <Popup>
         <div className="text-left">
           {b.photo_url && (
@@ -782,8 +806,13 @@ export default function SustainabilityMap() {
       return [
         ...buildLocationMarkers(locations),
         ...buildHomestayMarkers(homestays),
-        ...buildDriverMarkers(drivers.filter((d) => d.lat && d.lng)),
-        ...buildBusStopMarkers(busStops.filter((b) => b.lat && b.lng)),
+        // CHANGED: drivers and bus stops are hyper-local, so only show them when zoomed in
+        ...(currentZoom >= 13
+          ? [
+              ...buildDriverMarkers(drivers.filter((d) => d.lat && d.lng)),
+              ...buildBusStopMarkers(busStops.filter((b) => b.lat && b.lng)),
+            ]
+          : []),
       ];
     }
     if (activeTab === 'villages') {
@@ -1720,8 +1749,28 @@ export default function SustainabilityMap() {
           <ZoomWatcher onZoomChange={setCurrentZoom} />
           <MapClickHandler isActive={pinMode} onPinDropped={handlePinDropped} />
 
-          {/* Render Active Data Pins */}
-          {renderActivePins()}
+          {/* Render Active Data Pins — CHANGED: clustered so the district view stays readable */}
+          <MarkerClusterGroup
+            ref={clusterRef}
+            chunkedLoading
+            maxClusterRadius={50}
+            showCoverageOnHover={false}
+            spiderfyOnMaxZoom
+            iconCreateFunction={(cluster) => {
+              const count = cluster.getChildCount();
+              return L.divIcon({
+                html: `<div style="
+                  background:#B4532A;color:#fff;width:38px;height:38px;
+                  border-radius:50%;display:flex;align-items:center;justify-content:center;
+                  font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.35);
+                  border:2px solid white;">${count}</div>`,
+                className: "",
+                iconSize: [38, 38],
+              });
+            }}
+          >
+            {renderActivePins()}
+          </MarkerClusterGroup>
 
           {nearbyOrigin && nearbyLocations.map((n, idx) => (
             <Polyline
