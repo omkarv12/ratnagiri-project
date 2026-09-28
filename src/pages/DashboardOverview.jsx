@@ -565,9 +565,9 @@ export default function DashboardOverview() {
                 <p className="rt-hero-text text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-[#FBBF24] mb-3 font-body">
                   Explore &middot; Experience &middot; Support Local
                 </p>
-                <h1 className="rt-hero-text font-display text-white leading-[1.05] text-4xl sm:text-5xl lg:text-6xl mb-4">
-                  Discover <span className="text-teal-300">Ratnagiri</span>
-                </h1>
+                <h1 className="rt-hero-text font-display text-white leading-[1.05] whitespace-nowrap text-2xl sm:text-3xl lg:text-4xl mb-4">
+  Discover <span className="text-[#FBBF24]">Ratnagiri</span>
+</h1>
                 <p className="text-white/90 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
                   Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
                   homestays and Konkan flavours, all in one place.
