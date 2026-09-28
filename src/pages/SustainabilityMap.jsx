@@ -1712,11 +1712,13 @@ export default function SustainabilityMap() {
             </LayersControl.BaseLayer>
 
             <LayersControl.BaseLayer name="Street Map">
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-              />
-            </LayersControl.BaseLayer>
+  <TileLayer
+    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`}
+    attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OpenStreetMap contributors'
+    tileSize={512}
+    zoomOffset={-1}
+  />
+</LayersControl.BaseLayer>
           </LayersControl>
 
           <TileLayer
