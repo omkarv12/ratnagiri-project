@@ -108,29 +108,19 @@ const THEME_CSS = `
 .rt-cta:hover .rt-mapplus { transform: scale(1.15) rotate(-6deg); }
 .rt-cta:hover .rt-shield { transform: scale(1.12); }
 
-/* India emblem: tricolour ring turns slowly, chakra spins like a wheel */
+/* India flag: colours flow left to right like cloth, chakra spins like a wheel */
 @keyframes rt-spin { to { transform: rotate(360deg); } }
-@keyframes rt-breathe {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,.4), 0 0 10px rgba(255,153,51,.35), 0 0 16px rgba(19,136,8,.25); }
-  50%      { box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 0 16px rgba(255,153,51,.6),  0 0 24px rgba(19,136,8,.45); }
+@keyframes rt-flow {
+  from { transform: translateX(0); }
+  to   { transform: translateX(30px); } /* = one wave length (WAVE_P) */
 }
-.rt-emblem {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  padding: 2.5px;
-  border-radius: 9999px;
-  isolation: isolate;
-  animation: rt-breathe 3s ease-in-out infinite;
+@keyframes rt-bob {
+  0%, 100% { transform: translateY(0); }
+  25%      { transform: translateY(-1.6px); }
+  75%      { transform: translateY(1.6px); }
 }
-.rt-emblem::before {
-  content: "";
-  position: absolute; inset: 0;
-  border-radius: inherit;
-  background: conic-gradient(from 0deg, #FF9933, #ffffff, #138808, #FF9933);
-  animation: rt-spin 8s linear infinite reverse;
-  z-index: -1;
-}
+.rt-flow { animation: rt-flow 2.4s linear infinite; }
+.rt-bob  { animation: rt-bob 2.4s ease-in-out infinite; }
 .rt-chakra {
   animation: rt-spin 5s linear infinite;
   transform-box: fill-box;
@@ -184,63 +174,92 @@ function LogoSlot({ src, alt, className = "" }) {
   );
 }
 
-// Stylish round India emblem: tricolour disc + glowing ring + spinning Ashoka Chakra
-function IndiaEmblem({ className = "" }) {
+// Waving India flag: the three colours flow left -> right as cloth,
+// the Ashoka Chakra in the middle spins like a wheel.
+const WAVE_P = 30;   // wave length (must match translateX in rt-flow)
+const WAVE_A = 1.6;  // wave height (must match translateY in rt-bob)
+const wave = (x) => WAVE_A * Math.sin((2 * Math.PI * x) / WAVE_P);
+const WAVE_XS = Array.from({ length: 93 }, (_, i) => i - WAVE_P); // -30 … 62
+const edge = (y) => WAVE_XS.map((x) => `${x},${(y + wave(x)).toFixed(2)}`);
+const bandPath = (yTop, yBottom) =>
+  `M${edge(yTop).join(" L")} L${edge(yBottom).reverse().join(" L")} Z`;
+
+const FLAG_TOP = 6;
+const BAND_H = 8;
+const BANDS = [
+  { fill: "#FF9933", d: bandPath(FLAG_TOP, FLAG_TOP + BAND_H) },
+  { fill: "#FFFFFF", d: bandPath(FLAG_TOP + BAND_H, FLAG_TOP + BAND_H * 2) },
+  { fill: "#138808", d: bandPath(FLAG_TOP + BAND_H * 2, FLAG_TOP + BAND_H * 3) },
+];
+const SHADE_D = bandPath(FLAG_TOP, FLAG_TOP + BAND_H * 3);
+
+function IndiaFlag({ className = "" }) {
   const spokes = Array.from({ length: 24 });
   return (
-    <span className={`rt-emblem shrink-0 ${className}`} role="img" aria-label="India">
-      <svg viewBox="0 0 40 40" className="h-full w-full rounded-full">
-        <defs>
-          <clipPath id="rt-emblem-clip">
-            <circle cx="20" cy="20" r="20" />
-          </clipPath>
-          <linearGradient id="rt-saffron" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#FFB04D" />
-            <stop offset="1" stopColor="#FF8A1F" />
-          </linearGradient>
-          <linearGradient id="rt-green" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#1B9E0B" />
-            <stop offset="1" stopColor="#0E6E05" />
-          </linearGradient>
-          <radialGradient id="rt-gloss" cx="0.3" cy="0.2" r="0.8">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.55" />
-            <stop offset="0.6" stopColor="#fff" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+    <svg
+      viewBox="0 0 60 36"
+      role="img"
+      aria-label="India flag"
+      className={`shrink-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] ${className}`}
+    >
+      <defs>
+        {/* only cut left/right, so the top and bottom edges can wave freely */}
+        <clipPath id="rt-flag-clip">
+          <rect x="4" y="0" width="52" height="36" />
+        </clipPath>
+        {/* light + shadow ripples that travel with the wave */}
+        <linearGradient
+          id="rt-shade"
+          gradientUnits="userSpaceOnUse"
+          x1="0" y1="0" x2={WAVE_P} y2="0"
+          spreadMethod="repeat"
+        >
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.25" stopColor="#fff" stopOpacity="0.3" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.75" stopColor="#000" stopOpacity="0.22" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
 
-        <g clipPath="url(#rt-emblem-clip)">
-          {/* tricolour bands */}
-          <rect width="40" height="13" y="0" fill="url(#rt-saffron)" />
-          <rect width="40" height="14" y="13" fill="#FFFFFF" />
-          <rect width="40" height="13" y="27" fill="url(#rt-green)" />
+      {/* flag pole */}
+      <rect x="1.8" y="2" width="1.6" height="33" rx="0.8" fill="#E5E7EB" />
+      <circle cx="2.6" cy="2" r="1.5" fill="#FBBF24" />
 
-          {/* Ashoka Chakra: rim, 24 spokes, 24 rim dots, hub — all spinning */}
-          <g className="rt-chakra" stroke="#000080" fill="none">
-            <circle cx="20" cy="20" r="6.3" strokeWidth="0.75" />
-            <circle cx="20" cy="20" r="1.1" fill="#000080" stroke="none" />
-            {spokes.map((_, i) => (
-              <line
-                key={`s${i}`}
-                x1="20" y1="20" x2="20" y2="13.8"
-                strokeWidth="0.35"
-                transform={`rotate(${i * 15} 20 20)`}
-              />
-            ))}
-            {spokes.map((_, i) => (
-              <circle
-                key={`d${i}`}
-                cx="20" cy="14.7" r="0.42"
-                fill="#000080" stroke="none"
-                transform={`rotate(${i * 15 + 7.5} 20 20)`}
-              />
-            ))}
-          </g>
-
-          {/* glossy highlight */}
-          <circle cx="20" cy="20" r="20" fill="url(#rt-gloss)" />
+      <g clipPath="url(#rt-flag-clip)">
+        {/* colours flowing left to right */}
+        <g className="rt-flow">
+          {BANDS.map((b) => (
+            <path key={b.fill} d={b.d} fill={b.fill} stroke={b.fill} strokeWidth="0.25" />
+          ))}
+          <path d={SHADE_D} fill="url(#rt-shade)" />
         </g>
-      </svg>
-    </span>
+      </g>
+
+      {/* chakra rides the wave (bob) and spins (rotate) */}
+      <g className="rt-bob">
+        <g className="rt-chakra" stroke="#000080" fill="none">
+          <circle cx="30" cy="18" r="3.7" strokeWidth="0.5" />
+          <circle cx="30" cy="18" r="0.65" fill="#000080" stroke="none" />
+          {spokes.map((_, i) => (
+            <line
+              key={`s${i}`}
+              x1="30" y1="18" x2="30" y2="14.5"
+              strokeWidth="0.22"
+              transform={`rotate(${i * 15} 30 18)`}
+            />
+          ))}
+          {spokes.map((_, i) => (
+            <circle
+              key={`d${i}`}
+              cx="30" cy="14.9" r="0.25"
+              fill="#000080" stroke="none"
+              transform={`rotate(${i * 15 + 7.5} 30 18)`}
+            />
+          ))}
+        </g>
+      </g>
+    </svg>
   );
 }
 
@@ -345,7 +364,7 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="rt-logo-btn flex items-center gap-2.5"
               >
-                <IndiaEmblem className="h-10 w-10 sm:h-11 sm:w-11" />
+                <IndiaFlag className="h-9 w-[60px] sm:h-11 sm:w-[73px]" />
                 <span className="rt-display text-base sm:text-lg lg:text-xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                   Ratnagiri Tourism
                 </span>
