@@ -411,7 +411,7 @@ export default function TripPlanner({ userLocation }) {
                 </p>
                 {leg && (
                   <p className="text-xs text-slate-500">
-                    {fmtKm(leg.distanceKm)} · {fmtMin(leg.durationMin)} from previous stop
+                    {fmtKm(leg.distanceKm)} · {fmtMin(leg.durationMin)} from previous stops
                   </p>
                 )}
                 {!leg && i === 0 && <p className="text-xs text-slate-400">Starting point</p>}
