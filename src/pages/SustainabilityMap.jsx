@@ -8,6 +8,7 @@ import {
   TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2,
   ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon,
   Heart, LayoutGrid, RotateCcw, ArrowRight, Frown, Route as RouteIcon,
+  Wand2, // NEW: icon for the "Plan for me" tab
 } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
@@ -16,6 +17,8 @@ import API_BASE_URL from '../config';
 import RatnagiriCinematic from '../components/RatnagiriCinematic';
 // NEW: trip planner (tab + "Add to Trip" button + shared trip state hook)
 import TripPlanner, { AddToTripButton, useTripPlanner } from '../components/TripPlanner';
+// NEW: "Plan for me" wizard (suggests a trip from days, budget and interests)
+import PlanMyTrip from '../components/PlanMyTrip';
 const {
   MapContainer,
   TileLayer,
@@ -51,6 +54,16 @@ const CATEGORY_ICON_MAP = {
   "Bus Stand": { emoji: "🚌", color: "#487c00" },
 };
 const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
+
+// NEW: links your tourism categories to the interests in the "Plan for me"
+// wizard, so the planner doesn't have to guess from place names.
+const CATEGORY_TAGS = {
+  "Beach Tourism": ["beach"],
+  "Heritage Tourism": ["fort", "culture"],
+  "Religious Tourism": ["temple"],
+  "Nature & Eco Tourism": ["nature"],
+  "Adventure & Marine Tourism": ["adventure"],
+};
 
 // localStorage-backed favorites ("save for later"), shared across village
 // and homestay cards. Keyed as "type:id" so two different tables can never
@@ -470,11 +483,37 @@ export default function SustainabilityMap() {
     { id: "villages", label: "Places to Visit", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
     { id: "transportation", label: "Local Resources", icon: Bus },
+    { id: "plan", label: "Plan for me", icon: Wand2 }, // NEW
     { id: "trip", label: "Plan Trip", icon: RouteIcon }, // NEW
   ];
 
   // Replaces the old "Loading live database for map..." text
   if (loading) return <RatnagiriCinematic />;
+
+  // NEW: everything the "Plan for me" wizard can choose from.
+  // Add fee: <your entry-fee column> to villages and pricePerNight: <your
+  // price column> to homestays once you have them, so costs are included.
+  const allPlaces = [
+    ...locations
+      .filter((l) => l.latitude && l.longitude)
+      .map((l) => ({
+        type: 'village',
+        id: l.id,
+        name: l.location_name,
+        lat: l.latitude,
+        lng: l.longitude,
+        tags: CATEGORY_TAGS[l.category] || [],
+      })),
+    ...homestays
+      .filter((h) => h.latitude && h.longitude)
+      .map((h) => ({
+        type: 'homestay',
+        id: h.id,
+        name: h.name,
+        lat: h.latitude,
+        lng: h.longitude,
+      })),
+  ];
 
   const talukas = [
     "All",
@@ -1659,6 +1698,11 @@ export default function SustainabilityMap() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* NEW: PLAN FOR ME TAB — wizard that builds a trip from days, budget and interests */}
+          {activeTab === 'plan' && (
+            <PlanMyTrip places={allPlaces} onPlanCreated={() => setActiveTab('trip')} />
           )}
 
           {/* NEW: PLAN TRIP TAB */}

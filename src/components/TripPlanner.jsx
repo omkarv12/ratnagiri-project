@@ -26,6 +26,7 @@ const { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } = ReactLeaflet
       (trip is packed inside the link itself - no backend needed)
    8. Opening hours + entry fee warnings (pass openTime / closeTime / fee
       to <AddToTripButton />; without them nothing is shown)
+   9. loadPlan(plan) - lets PlanMyTrip.jsx drop a generated trip into the store
 ================================================================== */
 
 const STORE_KEY = "rt_trips_v2";
@@ -267,6 +268,17 @@ const actions = {
   },
   createTrip(name) {
     const t = newTrip(name || `Trip ${_store.trips.length + 1}`);
+    setStore({ trips: [..._store.trips, t], activeId: t.id });
+  },
+  // NEW: used by PlanMyTrip.jsx to add a ready-made trip and make it the active one
+  loadPlan(plan) {
+    const t = {
+      id: uid(),
+      name: plan.name,
+      numDays: plan.numDays,
+      startTime: plan.startTime || "09:00",
+      stops: plan.stops.map((s) => normStop(s, plan.numDays)),
+    };
     setStore({ trips: [..._store.trips, t], activeId: t.id });
   },
   renameTrip(name) {
