@@ -1704,21 +1704,22 @@ export default function SustainabilityMap() {
         <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
           <ZoomControl position="topright" />
           <LayersControl position="bottomleft">
-            <LayersControl.BaseLayer checked name="Satellite">
+            {/* CHANGED: Street Map now uses CARTO Voyager — free, no API key/token required */}
+            <LayersControl.BaseLayer checked name="Street Map">
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                subdomains="abcd"
+                maxZoom={20}
+              />
+            </LayersControl.BaseLayer>
+
+            <LayersControl.BaseLayer name="Satellite">
               <TileLayer
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
               />
             </LayersControl.BaseLayer>
-
-            <LayersControl.BaseLayer name="Street Map">
-  <TileLayer
-    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`}
-    attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; OpenStreetMap contributors'
-    tileSize={512}
-    zoomOffset={-1}
-  />
-</LayersControl.BaseLayer>
           </LayersControl>
 
           <TileLayer
