@@ -14,7 +14,7 @@ import CharacterCount from "@tiptap/extension-character-count";
 import DOMPurify from "dompurify";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Heading2, Heading3,
-  List, ListOrdered, Quote, Link2, Unlink, Image as ImageIcon, Youtube as YoutubeIcon,
+  List, ListOrdered, Quote, Link2, Unlink, Image as ImageIcon, Video as YoutubeIcon,
   AlignLeft, AlignCenter, AlignRight, Highlighter, Minus, Undo2, Redo2, Palette,
   Loader2, Eraser,
 } from "lucide-react";
