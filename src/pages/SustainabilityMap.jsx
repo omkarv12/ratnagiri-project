@@ -1704,13 +1704,13 @@ export default function SustainabilityMap() {
         <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
           <ZoomControl position="topright" />
           <LayersControl position="bottomleft">
-            {/* CHANGED: Street Map now uses CARTO Voyager — free, no API key/token required */}
+            {/* CHANGED: Street Map uses Esri Light Gray (free, no API key). Labels come from the Esri reference layer below. */}
             <LayersControl.BaseLayer checked name="Street Map">
               <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                subdomains="abcd"
-                maxZoom={20}
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                attribution="Tiles &copy; Esri — Source: Esri, DeLorme, HERE, MapmyIndia"
+                maxNativeZoom={16}
+                maxZoom={18}
               />
             </LayersControl.BaseLayer>
 
