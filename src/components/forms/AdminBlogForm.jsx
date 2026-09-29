@@ -1,17 +1,37 @@
 import { useEffect, useState } from "react";
 import { blogApi } from "../../api/blogApi";
 import API_BASE_URL from "../../config";
+import RichTextEditor from "../RichTextEditor";
+
 /**
- * Drop this into your admin panel (next to wherever RegistrationForm-style
- * "add location" forms live). On submit it POSTs straight to the same
- * backend the public Stories page reads from — so a post saved here with
- * status "published" shows up on /stories immediately, no extra wiring.
+ * Admin form to write / edit a story.
+ * Save as: src/components/forms/AdminBlogForm.jsx
+ * (RichTextEditor.jsx lives in src/components/)
  *
- * Props:
+ * Props (unchanged):
  *   onSaved?: () => void    called after a successful create/update
  *   onCancel?: () => void   called when the user backs out without saving
  *   existingBlog?: object   pass a blog object to edit instead of create
  */
+
+// Uses your existing upload endpoint for the cover AND for photos inside the story.
+async function uploadPhoto(file) {
+  const formData = new FormData();
+  formData.append("photo", file);
+  const res = await fetch(`${API_BASE_URL}/api/upload-photo`, { method: "POST", body: formData });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) throw new Error(data.error || "Image upload failed.");
+  return data.url;
+}
+
+const plainText = (html) =>
+  (html || "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
   const isEditing = Boolean(existingBlog);
 
@@ -25,7 +45,6 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
   const [coverImage, setCoverImage] = useState(existingBlog?.cover_image || "");
   const [authorName, setAuthorName] = useState(existingBlog?.author_name || "");
   const [categoryId, setCategoryId] = useState(existingBlog?.category?.id || "");
-  const [status, setStatus] = useState(existingBlog?.status || "draft");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -51,27 +70,16 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
     }
   };
 
-  // 👇 ADD handleImageUpload HERE 👇
-  const handleImageUpload = async (e) => {
+  const handleCoverUpload = async (e) => {
     const file = e.target.files[0];
+    e.target.value = "";
     if (!file) return;
     setUploading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("photo", file);
-      const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCoverImage(data.url);
-      } else {
-        setError(data.error || "Image upload failed.");
-      }
+      setCoverImage(await uploadPhoto(file));
     } catch (err) {
-      setError("Image upload failed.");
+      setError(err.message || "Image upload failed.");
     } finally {
       setUploading(false);
     }
@@ -79,7 +87,8 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
 
   const handleSubmit = async (e, submitStatus) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) {
+    const hasBody = plainText(content) || /<(img|iframe)/i.test(content);
+    if (!title.trim() || !hasBody) {
       setError("Title and content are required.");
       return;
     }
@@ -89,7 +98,8 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
 
     const payload = {
       title: title.trim(),
-      excerpt: excerpt.trim(),
+      // if left empty, build a clean text summary (no HTML tags) from the story
+      excerpt: excerpt.trim() || plainText(content).slice(0, 160),
       content,
       cover_image: coverImage.trim() || null,
       author_name: authorName.trim() || null,
@@ -106,7 +116,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
       setSuccess(true);
       if (!isEditing) {
         setTitle(""); setExcerpt(""); setContent(""); setCoverImage("");
-        setAuthorName(""); setCategoryId(""); setStatus("draft");
+        setAuthorName(""); setCategoryId("");
       }
       onSaved?.();
     } catch (err) {
@@ -117,7 +127,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
   };
 
   return (
-    <form className="space-y-5 max-w-2xl">
+    <form className="space-y-5 max-w-3xl" onSubmit={(e) => e.preventDefault()}>
       <h2 className="text-lg font-bold text-slate-800">
         {isEditing ? "Edit Story" : "Write a New Story"}
       </h2>
@@ -178,19 +188,28 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
       </div>
 
       <div>
-  <label className="block text-sm font-semibold text-slate-700 mb-1">Cover Image</label>
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageUpload}
-    disabled={uploading}
-    className="w-full border rounded-lg p-2.5 text-sm file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-orange-100 file:text-orange-700 file:font-semibold"
-  />
-  {uploading && <p className="text-xs text-slate-400 mt-1">Uploading...</p>}
-  {coverImage && (
-    <img src={coverImage} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border border-slate-200" />
-  )}
-</div>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">Cover Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleCoverUpload}
+          disabled={uploading}
+          className="w-full border rounded-lg p-2.5 text-sm file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-orange-100 file:text-orange-700 file:font-semibold"
+        />
+        {uploading && <p className="text-xs text-slate-400 mt-1">Uploading...</p>}
+        {coverImage && (
+          <div className="mt-2 flex items-start gap-3">
+            <img src={coverImage} alt="Preview" className="h-32 rounded-lg object-cover border border-slate-200" />
+            <button
+              type="button"
+              onClick={() => setCoverImage("")}
+              className="text-xs font-semibold text-red-600 hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+      </div>
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1">Excerpt</label>
@@ -198,6 +217,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
           value={excerpt}
           onChange={(e) => setExcerpt(e.target.value)}
           rows={2}
+          maxLength={200}
           placeholder="Short summary shown on the story cards — leave blank to auto-generate from the content."
           className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none resize-none"
         />
@@ -205,16 +225,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1">Content *</label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={12}
-          placeholder="Full story content. Paste HTML (e.g. <p>...</p>, <figure><img .../></figure>) — it's rendered as-is on the story page."
-          className="w-full border rounded-lg p-2.5 text-sm font-mono focus:ring-2 focus:ring-orange-500 outline-none"
-        />
-        <p className="text-xs text-slate-400 mt-1">
-          Swap this for a rich-text editor (TipTap, Quill, etc.) whenever you're ready — the backend just stores whatever HTML string comes through.
-        </p>
+        <RichTextEditor value={content} onChange={setContent} onUploadImage={uploadPhoto} />
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -224,7 +235,7 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
         <button
           type="button"
           onClick={(e) => handleSubmit(e, "draft")}
-          disabled={saving}
+          disabled={saving || uploading}
           className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
         >
           Save as Draft
@@ -232,10 +243,10 @@ export default function AdminBlogForm({ onSaved, onCancel, existingBlog }) {
         <button
           type="button"
           onClick={(e) => handleSubmit(e, "published")}
-          disabled={saving}
+          disabled={saving || uploading}
           className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
         >
-          {saving ? "Publishing..." : "Publish"}
+          {saving ? "Saving..." : isEditing && existingBlog.status === "published" ? "Update" : "Publish"}
         </button>
         {onCancel && (
           <button
