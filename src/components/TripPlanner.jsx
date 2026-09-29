@@ -10,7 +10,7 @@ import {
 const { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } = ReactLeaflet;
 
 /* ==================================================================
-   TripPlanner v2
+   TripPlanner v2 (with place images)
 
    Exports are unchanged (default TripPlanner, AddToTripButton,
    useTripPlanner) so SustainabilityMap.jsx keeps working as-is.
@@ -27,6 +27,8 @@ const { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } = ReactLeaflet
    8. Opening hours + entry fee warnings (pass openTime / closeTime / fee
       to <AddToTripButton />; without them nothing is shown)
    9. loadPlan(plan) - lets PlanMyTrip.jsx drop a generated trip into the store
+   10. NEW: place images. Pass image="..." to <AddToTripButton />.
+       Shown as a thumbnail in the planner and inside the PDF.
 ================================================================== */
 
 const STORE_KEY = "rt_trips_v2";
@@ -93,6 +95,15 @@ const numericFee = (fee) => (/^\d+(\.\d+)?$/.test(String(fee ?? "").trim()) ? Nu
 
 const escapeHtml = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Turns "/img/a.jpg" into a full URL so it also loads inside the print iframe.
+const absUrl = (u) => {
+  try {
+    return new URL(u, window.location.origin).href;
+  } catch {
+    return "";
+  }
+};
 
 const googleMapsUrl = (points) =>
   `https://www.google.com/maps/dir/${points.map((p) => `${p.lat},${p.lng}`).join("/")}`;
@@ -172,7 +183,10 @@ function buildShareUrl(trip) {
     n: trip.name,
     d: trip.numDays,
     t: trip.startTime,
-    s: trip.stops.map((s) => [s.type, s.id, s.name, s.lat, s.lng, s.day, s.mins, s.note || "", s.openTime || "", s.closeTime || "", s.fee ?? ""]),
+    s: trip.stops.map((s) => [
+      s.type, s.id, s.name, s.lat, s.lng, s.day, s.mins, s.note || "",
+      s.openTime || "", s.closeTime || "", s.fee ?? "", s.image || "",
+    ]),
   };
   const base = window.location.origin + window.location.pathname;
   return `${base}?trip=${b64enc(JSON.stringify(payload))}`;
@@ -270,7 +284,7 @@ const actions = {
     const t = newTrip(name || `Trip ${_store.trips.length + 1}`);
     setStore({ trips: [..._store.trips, t], activeId: t.id });
   },
-  // NEW: used by PlanMyTrip.jsx to add a ready-made trip and make it the active one
+  // used by PlanMyTrip.jsx to add a ready-made trip and make it the active one
   loadPlan(plan) {
     const t = {
       id: uid(),
@@ -346,6 +360,8 @@ export let hasSharedTripOnLoad = false;
             openTime: a[8] || undefined,
             closeTime: a[9] || undefined,
             fee: a[10] === "" ? undefined : a[10],
+            // only plain http(s) or site-relative image paths are accepted from a link
+            image: typeof a[11] === "string" && /^(https?:\/\/|\/)/.test(a[11]) ? a[11] : undefined,
           },
           numDays
         )
@@ -464,6 +480,7 @@ function tripText(trip, days, url) {
 
 // Builds a clean itinerary page and prints it from a hidden iframe.
 // The visitor chooses "Save as PDF". Only the itinerary is printed.
+// Printing waits for the place images to load (max 5 seconds).
 function downloadItineraryPdf(trip, days, url) {
   const totalFee = days.reduce(
     (sum, d) => sum + d.rows.reduce((s, r) => s + (r.p.type === "you" ? 0 : numericFee(r.p.fee)), 0),
@@ -478,9 +495,11 @@ function downloadItineraryPdf(trip, days, url) {
           const isYou = r.p.type === "you";
           if (!isYou) n += 1;
           const fee = isYou ? null : fmtFee(r.p.fee);
+          const img = !isYou && r.p.image ? absUrl(r.p.image) : "";
           return `<tr>
             <td class="n">${isYou ? "" : n}</td>
             <td class="t">${fmtClock(r.arrive)}</td>
+            <td class="img">${img ? `<img src="${escapeHtml(img)}" alt="" onerror="this.style.display='none'">` : ""}</td>
             <td><b>${escapeHtml(r.p.name)}</b>
               <div class="sub">${isYou ? "Start" : `Stay ${fmtDur(r.p.mins || 60)}`}${r.legKm ? ` · ${fmtKm(r.legKm)} drive from previous` : ""}${fee ? ` · ${escapeHtml(fee)}` : ""}</div>
               ${r.p.note ? `<div class="note">Note: ${escapeHtml(r.p.note)}</div>` : ""}
@@ -507,6 +526,8 @@ function downloadItineraryPdf(trip, days, url) {
     td{padding:9px 6px;border-bottom:1px solid #e2e8f0;vertical-align:top;font-size:13px}
     .n{width:24px;font-weight:bold;color:#c2410c}
     .t{width:70px;color:#475569;white-space:nowrap}
+    .img{width:96px}
+    .img img{width:90px;height:64px;object-fit:cover;border-radius:6px;display:block}
     .sub{color:#64748b;font-size:11px;margin-top:2px}
     .note{font-size:12px;margin-top:3px;color:#334155}
     .warn{font-size:11px;margin-top:3px;color:#b91c1c;font-weight:bold}
@@ -531,11 +552,23 @@ function downloadItineraryPdf(trip, days, url) {
   doc.open();
   doc.write(html);
   doc.close();
-  setTimeout(() => {
+
+  // wait for every image (or give up after 5s) so pictures are not blank in the PDF
+  const imgs = Array.from(doc.images);
+  const loaded = Promise.all(
+    imgs.map((img) =>
+      img.complete
+        ? null
+        : new Promise((res) => {
+            img.onload = img.onerror = res;
+          })
+    )
+  );
+  Promise.race([loaded, new Promise((res) => setTimeout(res, 5000))]).then(() => {
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
     setTimeout(() => document.body.removeChild(iframe), 2000);
-  }, 300);
+  });
 }
 
 /* ---------------------------------------------------------------
@@ -898,6 +931,17 @@ export default function TripPlanner({ userLocation }) {
                         >
                           {isYou ? "•" : n}
                         </span>
+                        {!isYou && p.image && (
+                          <img
+                            src={p.image}
+                            alt=""
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                            className="w-14 h-14 rounded-lg object-cover shrink-0 bg-slate-100"
+                          />
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-sm text-slate-800 truncate">
                             {!isYou && <span className="mr-1">{CATEGORY_ICON[p.type] || "📍"}</span>}
@@ -1107,12 +1151,14 @@ export default function TripPlanner({ userLocation }) {
 }
 
 /* ==================================================================
-   AddToTripButton - same as before, plus optional opening hours + fee.
+   AddToTripButton - same as before, plus optional opening hours, fee
+   and image.
    <AddToTripButton type="village" id={loc.id} name={loc.location_name}
        lat={loc.latitude} lng={loc.longitude}
-       openTime="09:00" closeTime="17:30" fee={50} />
+       openTime="09:00" closeTime="17:30" fee={50}
+       image={loc.image_url} />
 ================================================================== */
-export function AddToTripButton({ type, id, name, lat, lng, openTime, closeTime, fee, className = "" }) {
+export function AddToTripButton({ type, id, name, lat, lng, openTime, closeTime, fee, image, className = "" }) {
   const { addStop, removeStop, isInTrip, stops } = useTripPlanner();
   const inTrip = isInTrip(type, id);
 
@@ -1125,6 +1171,7 @@ export function AddToTripButton({ type, id, name, lat, lng, openTime, closeTime,
       if (openTime) item.openTime = openTime;
       if (closeTime) item.closeTime = closeTime;
       if (fee !== undefined && fee !== null && fee !== "") item.fee = fee;
+      if (image) item.image = image;
       addStop(item);
     }
   };
