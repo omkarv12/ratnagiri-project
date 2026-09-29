@@ -225,6 +225,14 @@ function driveIdToImageUrl(link) {
   return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1000`;
 }
 
+// NEW: small version of a Drive photo, used for trip PDFs and share links
+function driveThumb(link, width = 400) {
+  if (!link) return null;
+  const match = link.match(/[-\w]{25,}/);
+  if (!match) return null;
+  return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w${width}`;
+}
+
 // Component to handle map flyTo logic
 function MapController({ position }) {
   const map = useMap();
@@ -503,6 +511,7 @@ export default function SustainabilityMap() {
         lat: l.latitude,
         lng: l.longitude,
         tags: CATEGORY_TAGS[l.category] || [],
+        image: driveThumb(l.photo_location), // NEW: photo for the trip planner + PDF
       })),
     ...homestays
       .filter((h) => h.latitude && h.longitude)
@@ -512,6 +521,7 @@ export default function SustainabilityMap() {
         name: h.name,
         lat: h.latitude,
         lng: h.longitude,
+        image: driveThumb(h.photo_homestay), // NEW
       })),
   ];
 
@@ -721,7 +731,14 @@ export default function SustainabilityMap() {
             </button>
           </div>
           <div className="flex justify-center mt-1">
-            <AddToTripButton type="village" id={loc.id} name={loc.location_name} lat={loc.latitude} lng={loc.longitude} />
+            <AddToTripButton
+              type="village"
+              id={loc.id}
+              name={loc.location_name}
+              lat={loc.latitude}
+              lng={loc.longitude}
+              image={driveThumb(loc.photo_location)}
+            />
           </div>
         </div>
       </Popup>
@@ -760,7 +777,14 @@ export default function SustainabilityMap() {
             View Homestay Profile
           </button>
           <div className="flex justify-center">
-            <AddToTripButton type="homestay" id={home.id} name={home.name} lat={home.latitude} lng={home.longitude} />
+            <AddToTripButton
+              type="homestay"
+              id={home.id}
+              name={home.name}
+              lat={home.latitude}
+              lng={home.longitude}
+              image={driveThumb(home.photo_homestay)}
+            />
           </div>
         </div>
       </Popup>
@@ -832,7 +856,7 @@ export default function SustainabilityMap() {
           ) : (
             <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
           )}
-          <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} />
+          <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
         </div>
       </Popup>
     </Marker>
@@ -1259,6 +1283,7 @@ export default function SustainabilityMap() {
                         name={loc.location_name}
                         lat={loc.latitude}
                         lng={loc.longitude}
+                        image={driveThumb(loc.photo_location)}
                       />
                     </div>
                   </div>
@@ -1451,6 +1476,7 @@ export default function SustainabilityMap() {
                           name={home.name}
                           lat={home.latitude}
                           lng={home.longitude}
+                          image={driveThumb(home.photo_homestay)}
                         />
                       </div>
                     </div>
@@ -1687,7 +1713,7 @@ export default function SustainabilityMap() {
                         <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
                       )}
                       {/* NEW */}
-                      <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} />
+                      <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
                     </div>
                   </div>
                 ))}

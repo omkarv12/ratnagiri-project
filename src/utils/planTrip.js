@@ -190,7 +190,7 @@ function assemble(chosen, cfg) {
 /* ---------------- public: build the plan ---------------- */
 /**
  * places: [{ type, id, name, lat, lng, tags?, fee?, mins?, openTime?, closeTime?,
- *            popularity?, pricePerNight? (homestays) }]
+ *            popularity?, pricePerNight? (homestays), image? }]
  * opts:   { days, people, budget (total rupees, 0 = no limit), interests[],
  *           pace, transport, includeStay }
  */
@@ -274,6 +274,7 @@ export function buildPlan(places, opts) {
       note: s.note || "",
       ...(s.openTime ? { openTime: s.openTime } : {}),
       ...(s.closeTime ? { closeTime: s.closeTime } : {}),
+      ...(s.image ? { image: s.image } : {}),
       ...(!s.isStay && s.fee !== undefined && s.fee !== null && s.fee !== "" ? { fee: s.fee } : {}),
     })),
     cost: plan.cost,
