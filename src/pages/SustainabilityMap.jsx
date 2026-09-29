@@ -1704,13 +1704,12 @@ export default function SustainabilityMap() {
         <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
           <ZoomControl position="topright" />
           <LayersControl position="bottomleft">
-            {/* CHANGED: Street Map uses Esri Light Gray (free, no API key). Labels come from the Esri reference layer below. */}
+            {/* CHANGED: Street Map now uses Stadia Maps (alidade_smooth) with the user's API key */}
             <LayersControl.BaseLayer checked name="Street Map">
               <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles &copy; Esri — Source: Esri, DeLorme, HERE, MapmyIndia"
-                maxNativeZoom={16}
-                maxZoom={18}
+                url={`https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_KEY}`}
+                attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                maxZoom={20}
               />
             </LayersControl.BaseLayer>
 
