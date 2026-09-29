@@ -9,6 +9,13 @@ function timeAgo(dateStr) {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Old stories have HTML in their excerpts; render them as plain text.
+function stripTags(html) {
+  if (!html) return "";
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+}
+
 function BlogCard({ blog, onOpen }) {
   return (
     <article
@@ -31,7 +38,7 @@ function BlogCard({ blog, onOpen }) {
           </span>
         )}
         <h3 className="text-lg font-bold text-slate-800 mb-1 leading-snug">{blog.title}</h3>
-        <p className="text-sm text-slate-600 mb-3 line-clamp-2">{blog.excerpt}</p>
+        <p className="text-sm text-slate-600 mb-3 line-clamp-2">{stripTags(blog.excerpt)}</p>
         <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
           {blog.author_name && (
             <span className="flex items-center gap-1"><User size={12} /> {blog.author_name}</span>

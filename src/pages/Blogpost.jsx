@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Eye, MessageCircle, Send } from "lucide-react";
-import { blogApi } from "../api/blogapi";
+import { blogApi } from "../api/blogApi";
+import StoryContent from "../components/StoryContent"; // adjust path to wherever StoryContent lives
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -109,12 +110,8 @@ export default function BlogPost() {
             <span className="flex items-center gap-1"><MessageCircle size={14} /> {blog.comment_count} comments</span>
           </div>
 
-          {/* Article body — content stored as HTML from the admin editor.
-              If you're storing markdown instead, swap this for a markdown renderer. */}
-          <article
-            className="prose prose-slate max-w-none prose-img:rounded-xl prose-headings:font-bold text-lg leading-8 text-slate-700"
-            dangerouslySetInnerHTML={{ __html: blog.content }}
-          />
+          {/* Article body */}
+          <StoryContent html={blog.content} />
 
           {/* COMMENTS */}
           <section className="mt-12 pt-8 border-t border-slate-200">
