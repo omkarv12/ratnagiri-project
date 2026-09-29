@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
-import RegistrationForm from '../components/forms/RegistrationForm';
 import API_BASE_URL from '../config';
 // NEW: loading screen
 import RatnagiriCinematic from '../components/RatnagiriCinematic';
@@ -472,7 +471,6 @@ export default function SustainabilityMap() {
     { id: "homestays", label: "Homestays", icon: BedDouble },
     { id: "transportation", label: "Local Resources", icon: Bus },
     { id: "trip", label: "Plan Trip", icon: RouteIcon }, // NEW
-    { id: "pins", label: "Add Location", icon: MapPin },
   ];
 
   // Replaces the old "Loading live database for map..." text
@@ -854,8 +852,8 @@ export default function SustainabilityMap() {
         ...buildBusStopMarkers(filteredBusStops.filter(b => b.lat && b.lng)),
       ];
     }
-    // 'trip' and 'pins' tabs: the trip tab draws its own preview map inside
-    // the sidebar, so the main map shows no data pins here.
+    // 'trip' tab draws its own preview map inside the sidebar, so the main
+    // map shows no data pins here.
     return null;
   };
 
@@ -1665,20 +1663,6 @@ export default function SustainabilityMap() {
 
           {/* NEW: PLAN TRIP TAB */}
           {activeTab === 'trip' && <TripPlanner userLocation={userLocation} />}
-
-          {/* ADD LOCATION TAB - REGISTRATION FORM */}
-          {activeTab === 'pins' && (
-            <div className="animate-in slide-in-from-right-4 duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">
-                Register a New Location or Homestay
-              </h2>
-              <RegistrationForm
-                onSuccess={() => {
-                  alert("Submitted! Waiting for admin approval.");
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
 

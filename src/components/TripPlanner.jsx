@@ -365,12 +365,13 @@ export default function TripPlanner({ userLocation }) {
         </button>
       </div>
 
-      {/* preview map */}
+      {/* preview map — CHANGED: same Stadia Maps "outdoors" tile layer as the main map */}
       <div className="h-56 rounded-xl overflow-hidden border border-slate-200 mb-5">
         <MapContainer center={[17.7554, 73.1923]} zoom={11} className="w-full h-full" scrollWheelZoom={false}>
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-            attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+            url={`https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_KEY}`}
+            attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            maxZoom={20}
           />
           <FitToStops points={orderedPoints} />
           {orderedPoints.map((p, i) => (
