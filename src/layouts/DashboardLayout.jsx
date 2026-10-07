@@ -147,7 +147,7 @@ const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
 // Shared classes for every top-level nav item: white, base size, semibold, single line.
 // (Bigger text + taller hit area than before: text-base, min-h 2.75rem.)
 const NAV_ITEM_CLASS =
-  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3.5 py-2 rounded-lg text-base font-semibold text-white";
+  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-2.5 xl:px-3 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
 
 /* ------------------------------------------------------------------ */
 /*  Small components                                                   */
@@ -353,7 +353,7 @@ export default function DashboardLayout() {
               takes all the leftover space so the nav buttons can spread out. */}
           <div className="grid h-20 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-3 sm:px-6 lg:px-8">
             {/* Left: mobile toggle + logo + title */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle menu"
@@ -375,7 +375,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* Center: page structure */}
-            <div className="hidden lg:flex items-center justify-center gap-2 xl:gap-3">
+            <div className="hidden lg:flex min-w-0 items-center justify-start gap-0.5 xl:gap-1 pl-2 xl:pl-6">
               <button
                 onClick={() => navigate("/dashboard")}
                 data-active={location.pathname === "/dashboard"}
@@ -394,7 +394,7 @@ export default function DashboardLayout() {
             </div>
 
             {/* Right: CTAs + Admin */}
-            <div className="flex items-center justify-end gap-2.5 sm:gap-3">
+            <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
               <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
@@ -403,7 +403,7 @@ export default function DashboardLayout() {
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <Compass size={18} className="rt-compass relative text-[#B4532A]" />
-                <span className="relative hidden xl:inline">Interactive Map</span>
+                <span className="relative hidden 2xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
@@ -417,7 +417,8 @@ export default function DashboardLayout() {
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <MapPlus size={18} className="rt-mapplus relative" />
-                <span className="relative hidden xl:inline">Add location and services</span>
+                <span className="relative hidden min-[1700px]:inline">Add location and services</span>
+                <span className="relative hidden xl:inline min-[1700px]:hidden">Add location</span>
               </button>
 
               <button

@@ -39,8 +39,6 @@ import {
 } from "../components/AmbientBackdrops";
 // NEW: cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
-// NEW: pictorial calendar that replaces the old "Upcoming Events" list
-import CalendarPanel from "../components/CalendarPanel";
 import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
 
@@ -237,34 +235,33 @@ export default function DashboardOverview() {
     },
   ];
 
-  // Events shown in the pictorial calendar (replaces the old "Upcoming
-  // Events" scrolling list). Dates are "YYYY-MM-DD".
-  // TODO: replace these sample entries with your real events (or load them
-  // from the backend).
-  const calendarEvents = [
+  // "Upcoming Events" scrolling list — replaces the single Upcoming Event tile
+  const whatsNewData = [
     {
-      date: "2026-10-11",
-      title: "Navratri begins",
-      description: "Garba and devi festivals in village temples.",
-      route: "/cultural-events",
+      title: "Ganeshotsav",
+      description: "Konkan's biggest festival is coming — reserve early for the best rates.",
+      image: Slider1,
+      badge: "NEW",
+      route: "/homestays",
     },
     {
-      date: "2026-10-15",
       title: "New Guided Trail: Fort to Bhagwati Bandar",
-      description: "A 3 km coastal walk with a local guide.",
+      description: "A 3 km coastal walk with a local guide, launching this season.",
+      image: Slider3,
+      badge: "NEW",
       route: "/guided-walks",
     },
     {
-      date: "2026-10-20",
-      title: "Dussehra",
-      description: "Processions and fairs across the district.",
-      route: "/cultural-events",
+      title: "Monsoon Travel Advisory",
+      description: "Some beach and fort routes have seasonal restrictions.",
+      image: Slider6,
+      route: "/transport",
     },
     {
-      date: "2026-11-08",
-      title: "Diwali",
-      description: "Fort illuminations and local markets.",
-      route: "/cultural-events",
+      title: "Alphonso Season Calendar",
+      description: "Orchard visits and tasting trails run from March to May.",
+      image: Slider2,
+      route: "/traditional-food",
     },
   ];
 
@@ -422,7 +419,7 @@ export default function DashboardOverview() {
   const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...aboutPillars.map((p) => ({ label: p.title, sub: p.description, route: p.route })),
-    ...calendarEvents.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
+    ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
     ...stories.map((s) => ({
       label: s.title,
       sub: s.excerpt,
@@ -694,14 +691,47 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* Pictorial events calendar — replaces the old Upcoming Events list */}
-            <CalendarPanel
-              events={calendarEvents}
-              image={Slider1}
-              onEventClick={(route) => navigate(route)}
-              onView={() => navigate("/whats-new")}
-              onContribute={() => navigate("/events/contribute")} // TODO: create this route/form
-            />
+            {/* Upcoming Events — static list panel, scrollable, no auto-scroll */}
+            <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
+                <p className="text-sm font-semibold">Upcoming Events</p>
+                <button
+                  onClick={() => navigate("/whats-new")}
+                  className="text-xs font-medium text-white/85 hover:text-white transition"
+                >
+                  More
+                </button>
+              </div>
+              <div className="rt-feed flex-1 overflow-y-auto relative">
+                <div className="divide-y divide-slate-100">
+                  {whatsNewData.map(({ title, description, image, badge, route }, idx) => (
+                    <button
+                      key={`${title}-${idx}`}
+                      onClick={() => navigate(route)}
+                      className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
+                        style={{ backgroundImage: `url(${image})` }}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
+                          {badge && (
+                            <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                              {badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
+                          {description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
