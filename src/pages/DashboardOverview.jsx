@@ -39,6 +39,8 @@ import {
 } from "../components/AmbientBackdrops";
 // NEW: cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
+// NEW: pictorial calendar that replaces the old "Upcoming Events" list
+import CalendarPanel from "../components/CalendarPanel";
 import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
 
@@ -235,33 +237,34 @@ export default function DashboardOverview() {
     },
   ];
 
-  // "Upcoming Events" scrolling list — replaces the single Upcoming Event tile
-  const whatsNewData = [
+  // Events shown in the pictorial calendar (replaces the old "Upcoming
+  // Events" scrolling list). Dates are "YYYY-MM-DD".
+  // TODO: replace these sample entries with your real events (or load them
+  // from the backend).
+  const calendarEvents = [
     {
-      title: "Ganeshotsav",
-      description: "Konkan's biggest festival is coming — reserve early for the best rates.",
-      image: Slider1,
-      badge: "NEW",
-      route: "/homestays",
+      date: "2026-10-11",
+      title: "Navratri begins",
+      description: "Garba and devi festivals in village temples.",
+      route: "/cultural-events",
     },
     {
+      date: "2026-10-15",
       title: "New Guided Trail: Fort to Bhagwati Bandar",
-      description: "A 3 km coastal walk with a local guide, launching this season.",
-      image: Slider3,
-      badge: "NEW",
+      description: "A 3 km coastal walk with a local guide.",
       route: "/guided-walks",
     },
     {
-      title: "Monsoon Travel Advisory",
-      description: "Some beach and fort routes have seasonal restrictions.",
-      image: Slider6,
-      route: "/transport",
+      date: "2026-10-20",
+      title: "Dussehra",
+      description: "Processions and fairs across the district.",
+      route: "/cultural-events",
     },
     {
-      title: "Alphonso Season Calendar",
-      description: "Orchard visits and tasting trails run from March to May.",
-      image: Slider2,
-      route: "/traditional-food",
+      date: "2026-11-08",
+      title: "Diwali",
+      description: "Fort illuminations and local markets.",
+      route: "/cultural-events",
     },
   ];
 
@@ -411,15 +414,15 @@ export default function DashboardOverview() {
   ];
 
   // ---- Site-wide search index -------------------------------------------
-  // Flattens every section of this page (experiences, what's new, stories,
-  // footer links) plus the live `locations` data from context into one
-  // searchable list, so the hero search bar can actually find things across
-  // the whole site instead of only deep-linking to a /search route that may
-  // not exist yet.
+  // Flattens every section of this page (experiences, calendar events,
+  // stories, footer links) plus the live `locations` data from context into
+  // one searchable list, so the hero search bar can actually find things
+  // across the whole site instead of only deep-linking to a /search route
+  // that may not exist yet.
   const searchIndex = [
     ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
     ...aboutPillars.map((p) => ({ label: p.title, sub: p.description, route: p.route })),
-    ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
+    ...calendarEvents.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
     ...stories.map((s) => ({
       label: s.title,
       sub: s.excerpt,
@@ -463,8 +466,8 @@ export default function DashboardOverview() {
         }
         .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
 
-        /* Slim scrollbar, reused for horizontal strips and the Upcoming
-           Events list */
+        /* Slim scrollbar, reused for horizontal strips and the calendar's
+           event list */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
@@ -574,8 +577,8 @@ export default function DashboardOverview() {
                 </p>
 
                 {/* search bar — searches across the whole site (experiences,
-                    what's new, stories, footer links and any live locations
-                    from context), with a live dropdown */}
+                    calendar events, stories, footer links and any live
+                    locations from context), with a live dropdown */}
                 <form onSubmit={handleHeroSearch} className="relative max-w-md">
                   <div className="flex items-center gap-2 bg-white rounded-full pl-4 pr-1.5 py-2 shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)] ring-1 ring-transparent focus-within:ring-2 focus-within:ring-teal-400/70 transition-shadow duration-300">
                     <Search size={16} className="text-slate-500 shrink-0" />
@@ -654,7 +657,7 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Panel 2 — Experiences ================= */}
-      <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
+      <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
         <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
@@ -691,53 +694,20 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* Upcoming Events — static list panel, scrollable, no auto-scroll */}
-            <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
-              <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
-                <p className="text-sm font-semibold">Upcoming Events</p>
-                <button
-                  onClick={() => navigate("/whats-new")}
-                  className="text-xs font-medium text-white/85 hover:text-white transition"
-                >
-                  More
-                </button>
-              </div>
-              <div className="rt-feed flex-1 overflow-y-auto relative">
-                <div className="divide-y divide-slate-100">
-                  {whatsNewData.map(({ title, description, image, badge, route }, idx) => (
-                    <button
-                      key={`${title}-${idx}`}
-                      onClick={() => navigate(route)}
-                      className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
-                        style={{ backgroundImage: `url(${image})` }}
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
-                          {badge && (
-                            <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                              {badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
-                          {description}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Pictorial events calendar — replaces the old Upcoming Events list */}
+            <CalendarPanel
+              events={calendarEvents}
+              image={Slider1}
+              onEventClick={(route) => navigate(route)}
+              onView={() => navigate("/whats-new")}
+              onContribute={() => navigate("/events/contribute")} // TODO: create this route/form
+            />
           </div>
         </div>
       </section>
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
-      <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
+      <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
         <WaveLayer height={110} fill="#0f766e" opacity={0.08} duration={16} />
         <WaveLayer height={70} fill="#0f766e" opacity={0.06} duration={10} reverse />
 
@@ -1009,7 +979,7 @@ export default function DashboardOverview() {
       </section>
 
       {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
-      <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-20">
+      <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>

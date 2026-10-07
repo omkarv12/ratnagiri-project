@@ -144,9 +144,10 @@ const THEME_CSS = `
 // Until it exists, a dashed placeholder with the alt text is shown.
 const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
 
-// Shared classes for every top-level nav item: white, small semibold, single line.
+// Shared classes for every top-level nav item: white, base size, semibold, single line.
+// (Bigger text + taller hit area than before: text-base, min-h 2.75rem.)
 const NAV_ITEM_CLASS =
-  "rt-nav-link flex min-h-[2.25rem] items-center whitespace-nowrap px-2.5 py-1.5 rounded-lg text-[0.8125rem] font-semibold text-white";
+  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3.5 py-2 rounded-lg text-base font-semibold text-white";
 
 /* ------------------------------------------------------------------ */
 /*  Small components                                                   */
@@ -268,13 +269,13 @@ function IndiaFlag({ className = "" }) {
 // to the right of the parent item.
 function DropdownPanel({ items, navigate }) {
   return (
-    <div className="w-64 bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
+    <div className="w-72 bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
       {items.map((child) =>
         child.children ? (
           <div key={child.label} className="relative group/sub">
             <button
               type="button"
-              className="rt-dd-item flex w-[calc(100%-8px)] items-center justify-between gap-2.5 text-left px-3.5 py-2.5 text-[0.9375rem] font-medium text-slate-800 rounded-lg mx-1"
+              className="rt-dd-item flex w-[calc(100%-8px)] items-center justify-between gap-2.5 text-left px-3.5 py-2.5 text-base font-medium text-slate-800 rounded-lg mx-1"
             >
               <span className="flex items-center gap-2.5">
                 <span className="rt-dot shrink-0" />
@@ -290,7 +291,7 @@ function DropdownPanel({ items, navigate }) {
           <button
             key={child.label}
             onClick={() => navigate(child.route)}
-            className="rt-dd-item flex items-center gap-2.5 text-left px-3.5 py-2.5 text-[0.9375rem] font-medium text-slate-800 rounded-lg mx-1 w-[calc(100%-8px)]"
+            className="rt-dd-item flex items-center gap-2.5 text-left px-3.5 py-2.5 text-base font-medium text-slate-800 rounded-lg mx-1 w-[calc(100%-8px)]"
           >
             <span className="rt-dot shrink-0" />
             {child.label}
@@ -348,15 +349,17 @@ export default function DashboardLayout() {
       >
         {/* ============ Single sticky bar: logo · pages · CTAs · Admin ============ */}
         <header className="rt-header-in sticky top-0 z-40 bg-[#7b1e2b] shadow-md">
-          <div className="mx-auto grid h-16 max-w-[1680px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-8 lg:px-12">
+          {/* Full-width bar (no max-width cap), taller, and the centre column
+              takes all the leftover space so the nav buttons can spread out. */}
+          <div className="grid h-20 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-3 sm:px-6 lg:px-8">
             {/* Left: mobile toggle + logo + title */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle menu"
-                className="lg:hidden flex h-9 items-center gap-1.5 rounded-lg px-2 text-[0.8125rem] font-semibold text-white hover:bg-white/10 transition"
+                className="lg:hidden flex h-11 items-center gap-1.5 rounded-lg px-2 text-base font-semibold text-white hover:bg-white/10 transition"
               >
-                {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
 
               <button
@@ -364,15 +367,15 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="rt-logo-btn flex items-center gap-2.5"
               >
-                <IndiaFlag className="h-9 w-[60px] sm:h-11 sm:w-[73px]" />
-                <span className="rt-display text-base sm:text-lg lg:text-xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
+                <IndiaFlag className="h-10 w-[66px] sm:h-12 sm:w-[80px]" />
+                <span className="rt-display text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
                   Ratnagiri Tourism
                 </span>
               </button>
             </div>
 
             {/* Center: page structure */}
-            <div className="hidden lg:flex items-center justify-center gap-1">
+            <div className="hidden lg:flex items-center justify-center gap-2 xl:gap-3">
               <button
                 onClick={() => navigate("/dashboard")}
                 data-active={location.pathname === "/dashboard"}
@@ -396,10 +399,10 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-white px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <Compass size={15} className="rt-compass relative text-[#B4532A]" />
+                <Compass size={18} className="rt-compass relative text-[#B4532A]" />
                 <span className="relative hidden xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
@@ -410,10 +413,10 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/registration")}
                 aria-label="Add location and services"
                 title="Add location and services"
-                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={15} className="rt-mapplus relative" />
+                <MapPlus size={18} className="rt-mapplus relative" />
                 <span className="relative hidden xl:inline">Add location and services</span>
               </button>
 
@@ -421,10 +424,10 @@ export default function DashboardLayout() {
                 onClick={() => navigate(user ? "/admin" : "/login")}
                 aria-label="Admin"
                 title="Admin"
-                className="rt-cta relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#0b3149] px-3 lg:px-3.5 text-[0.8125rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <ShieldCheck size={15} className="rt-shield relative" />
+                <ShieldCheck size={18} className="rt-shield relative" />
                 <span className="relative hidden sm:inline">Admin login</span>
               </button>
             </div>
