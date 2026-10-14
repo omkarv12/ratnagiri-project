@@ -1,26 +1,27 @@
+import { useEffect, useState } from "react";
 import { CalendarDays, MapPin } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import PictorialCalendarSection from "../components/PictorialCalendarSection";
 import Slider1 from "../assets/Slider1.jpg";
 
-// TODO: replace these sample events with your real ones (or load from the
-// backend). Dates are "YYYY-MM-DD".
-const EVENTS = [
-  { date: "2026-10-11", title: "Navratri begins", description: "Garba and devi festivals in village temples.", route: "/cultural-events" },
-  { date: "2026-10-15", title: "New Guided Trail: Fort to Bhagwati Bandar", description: "A 3 km coastal walk with a local guide.", route: "/guided-walks" },
-  { date: "2026-10-20", title: "Dussehra", description: "Processions and fairs across the district.", route: "/cultural-events" },
-  { date: "2026-11-08", title: "Diwali", description: "Fort illuminations and local markets.", route: "/cultural-events" },
-];
-
 const formatDate = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", {
+  new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 
 export default function UpcomingEventsPage() {
-  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Approved upcoming events from the Flask / Postgres backend
+  useEffect(() => {
+    fetch("/api/events/upcoming?limit=12")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setEvents(Array.isArray(data) ? data : []))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -39,31 +40,45 @@ export default function UpcomingEventsPage() {
         </div>
       </header>
 
-      {/* Click the card to open the pictorial calendar */}
+      {/* Click the card to open the calendar (with the Contribute form) */}
       <div className="max-w-[1680px] mx-auto">
-        <PictorialCalendarSection events={EVENTS} image={Slider1} />
+        <PictorialCalendarSection image={Slider1} />
       </div>
 
-      {/* Full list — the calendar's "View" button scrolls here */}
+      {/* Full list of upcoming approved events */}
       <section
         id="events-list"
         className="px-5 sm:px-10 lg:px-16 py-6 scroll-mt-24"
       >
         <div className="max-w-[1680px] mx-auto grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {EVENTS.map((e) => (
-            <button
-              key={e.title}
-              onClick={() => navigate(e.route)}
-              className="text-left rounded-xl bg-white p-4 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)] hover:-translate-y-1 hover:shadow-[0_26px_50px_-18px_rgba(180,83,42,0.4)] transition-all duration-300"
+          {loading && (
+            <p className="text-sm text-slate-400">Loading events...</p>
+          )}
+          {!loading && events.length === 0 && (
+            <p className="text-sm text-slate-400">
+              No upcoming events yet. Open the calendar to contribute one.
+            </p>
+          )}
+          {events.map((e) => (
+            <div
+              key={e.id}
+              className="rounded-xl bg-white p-4 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
             >
               <p className="flex items-center gap-1.5 text-xs font-semibold text-[#B4532A] mb-1">
-                <MapPin size={12} /> {formatDate(e.date)}
+                <MapPin size={12} /> {formatDate(e.event_date)}
               </p>
               <p className="text-base font-semibold text-slate-800">{e.title}</p>
-              <p className="text-sm text-slate-500 mt-1 leading-snug">
-                {e.description}
-              </p>
-            </button>
+              {e.organizer_name && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  by {e.organizer_name}
+                </p>
+              )}
+              {e.description && (
+                <p className="text-sm text-slate-500 mt-1 leading-snug">
+                  {e.description}
+                </p>
+              )}
+            </div>
           ))}
         </div>
       </section>

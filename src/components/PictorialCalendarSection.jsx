@@ -1,40 +1,15 @@
 import { useState, useEffect } from "react";
 import { CalendarDays, ChevronRight, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import CalendarPanel from "./CalendarPanel";
+import EventsCalendar from "./EventsCalendar";
 
 /* ------------------------------------------------------------------
-   Drop this section into the existing "Upcoming Events" page
-   (the page behind the menu bar / the dashboard's "More" link).
-
-   It shows a card that says "Pictorial Calendar Format". Clicking the
-   card opens the pictorial calendar in a pop-up, with the Contribute
-   and View buttons at the bottom.
-
-   Usage (inside the Upcoming Events page component):
-
-     import PictorialCalendarSection from "../components/PictorialCalendarSection";
-     ...
-     <PictorialCalendarSection events={events} image={Slider1} />
-
-   `events` = [{ date: "YYYY-MM-DD", title, description?, route? }]
+   Card that says "Pictorial Calendar Format". Clicking it opens the
+   full Ratnagiri Tourism Calendar (month grid + Contribute form) in
+   a large pop-up. Events are loaded by EventsCalendar from the API,
+   so no `events` prop is needed any more.
 ------------------------------------------------------------------ */
 
-// Sample events — pass your real ones via the `events` prop.
-const SAMPLE_EVENTS = [
-  { date: "2026-10-11", title: "Navratri begins", description: "Garba and devi festivals in village temples.", route: "/cultural-events" },
-  { date: "2026-10-15", title: "New Guided Trail: Fort to Bhagwati Bandar", description: "A 3 km coastal walk with a local guide.", route: "/guided-walks" },
-  { date: "2026-10-20", title: "Dussehra", description: "Processions and fairs across the district.", route: "/cultural-events" },
-  { date: "2026-11-08", title: "Diwali", description: "Fort illuminations and local markets.", route: "/cultural-events" },
-];
-
-export default function PictorialCalendarSection({
-  events = SAMPLE_EVENTS,
-  image,
-  onView,
-  onContribute,
-}) {
-  const navigate = useNavigate();
+export default function PictorialCalendarSection({ image }) {
   const [open, setOpen] = useState(false);
 
   // Close on Esc, and lock page scroll while the pop-up is open.
@@ -52,7 +27,6 @@ export default function PictorialCalendarSection({
 
   return (
     <section className="px-5 sm:px-10 lg:px-16 py-6">
-      {/* The label card — click to open the calendar */}
       <button
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
@@ -83,36 +57,26 @@ export default function PictorialCalendarSection({
         </div>
       </button>
 
-      {/* Pop-up with the calendar */}
       {open && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Events calendar"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 sm:p-6"
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative w-full max-w-sm"
+            className="relative mx-auto max-w-6xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setOpen(false)}
               aria-label="Close calendar"
-              className="absolute -top-3 -right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-700 shadow-lg hover:bg-slate-100"
+              className="absolute top-2 right-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 shadow-lg hover:bg-slate-100"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
-            <CalendarPanel
-              events={events}
-              image={image}
-              onEventClick={(route) => {
-                setOpen(false);
-                navigate(route);
-              }}
-              onView={onView}
-              onContribute={onContribute || (() => navigate("/events/contribute"))} // TODO: create this route/form
-            />
+            <EventsCalendar />
           </div>
         </div>
       )}
