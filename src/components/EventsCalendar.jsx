@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, PlusCircle, ArrowUp } from "lucide-react";
+import API_BASE_URL from "../config";
 
 /* ------------------------------------------------------------------
    Ratnagiri Tourism Calendar — full month grid + contribute form.
@@ -8,7 +9,7 @@ import { ChevronLeft, ChevronRight, PlusCircle, ArrowUp } from "lucide-react";
    POST {api}/contribute             -> creates a pending event (admin approves)
 ------------------------------------------------------------------ */
 
-const API = "/api/events";
+const API = `${API_BASE_URL}/api/events`;
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",

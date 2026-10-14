@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CalendarDays, MapPin } from "lucide-react";
 import PictorialCalendarSection from "../components/PictorialCalendarSection";
 import Slider1 from "../assets/Slider1.jpg";
+import API_BASE_URL from "../config";
 
 const formatDate = (iso) =>
   new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
@@ -16,7 +17,7 @@ export default function UpcomingEventsPage() {
 
   // Approved upcoming events from the Flask / Postgres backend
   useEffect(() => {
-    fetch("/api/events/upcoming?limit=12")
+    fetch(`${API_BASE_URL}/api/events/upcoming?limit=12`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setEvents(Array.isArray(data) ? data : []))
       .catch(() => setEvents([]))
