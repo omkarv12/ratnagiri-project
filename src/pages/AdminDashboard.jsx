@@ -4,6 +4,7 @@ import API_BASE_URL from "../config";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import AdminBlogForm from "../components/forms/AdminBlogForm";
 import AdminVillageProfileForm from "../components/forms/AdminVillageProfileForm";
+import AdminEventsPanel from "../components/AdminEventsPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -214,12 +215,13 @@ export default function AdminDashboard() {
     { key: "pendingSubmissions", label: "Pending Submissions" },
     { key: "addEditItineraries", label: "Itineraries & Stories" },
     { key: "villageProfiles", label: "Village Profiles" },
+    { key: "events", label: "Events" },
   ];
 
   return (
-    <div className="flex min-h-screen m-0 p-0 w-full h-screen">
-      {/* Sidebar */}
-      <aside className="fixed top-0 left-0 h-screen w-64 bg-black text-white flex flex-col p-4">
+    <div className="flex w-full items-start">
+      {/* Sidebar (sticky: stays below the site navbar, doesn't overlap content) */}
+      <aside className="sticky top-0 self-start h-screen w-64 shrink-0 overflow-y-auto bg-black text-white flex flex-col p-4">
         <div className="mb-8">
           <p className="text-sm opacity-70">Hello,</p>
           <p className="text-lg font-semibold truncate max-w-full">{user?.email || "User"}</p>
@@ -241,7 +243,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 flex-grow bg-gray-50 p-6 overflow-auto">
+      <main className="flex-1 min-w-0 min-h-screen bg-gray-50 p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tourism Administration Panel</h1>
         <p className="text-gray-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
@@ -603,6 +605,8 @@ export default function AdminDashboard() {
             )}
           </section>
         )}
+
+        {activeTab === "events" && <AdminEventsPanel />}
       </main>
     </div>
   );
