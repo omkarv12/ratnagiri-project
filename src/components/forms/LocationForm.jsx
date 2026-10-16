@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 import DraftResumeModal from "./DraftResumeModal";
-import GeoSelect from "./GeoSelect";
+// CHANGED: GeoSelect (fetched the village list from the API) is replaced by the
+// local Ratnagiri District -> Taluka -> Village component. Adjust this path if
+// you saved RatnagiriLocationFields somewhere other than src/components/.
+import RatnagiriLocationFields from "../RatnagiriLocationFields";
 import { useFormDraft } from "../../hooks/useFormDraft";
 
 const MIN_PHOTO_SIZE = 500 * 1024;
@@ -626,9 +629,9 @@ export default function LocationForm({ onSuccess }) {
                     </div>
                 </Full>
 
-                {/* District -> Taluka -> Village, fed by the Info list */}
-                <GeoSelect
-                    district={formData.district_name}
+                {/* CHANGED: District (fixed to Ratnagiri) -> Taluka -> Village.
+                    The village list comes from a local file, so nothing can fail to load. */}
+                <RatnagiriLocationFields
                     taluka={formData.taluka_name}
                     village={formData.village_name}
                     onChange={(patch) => {
