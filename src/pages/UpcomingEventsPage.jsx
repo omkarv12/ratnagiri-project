@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { CalendarDays, MapPin } from "lucide-react";
-import PictorialCalendarSection from "../components/PictorialCalendarSection";
-import Slider1 from "../assets/Slider1.jpg";
+import EventsCalendar from "../components/EventsCalendar";
 import API_BASE_URL from "../config";
 
 const formatDate = (iso) =>
@@ -41,46 +40,65 @@ export default function UpcomingEventsPage() {
         </div>
       </header>
 
-      {/* Click the card to open the calendar (with the Contribute form) */}
-      <div className="max-w-[1680px] mx-auto">
-        <PictorialCalendarSection image={Slider1} />
-      </div>
+      {/* Calendar shown directly on the page */}
+      <section className="px-3 sm:px-10 lg:px-16 py-6">
+        <div className="max-w-[1680px] mx-auto">
+          <EventsCalendar />
+        </div>
+      </section>
 
       {/* Full list of upcoming approved events */}
       <section
         id="events-list"
-        className="px-5 sm:px-10 lg:px-16 py-6 scroll-mt-24"
+        className="px-5 sm:px-10 lg:px-16 pb-10 scroll-mt-24"
       >
-        <div className="max-w-[1680px] mx-auto grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {loading && (
-            <p className="text-sm text-slate-400">Loading events...</p>
-          )}
-          {!loading && events.length === 0 && (
-            <p className="text-sm text-slate-400">
-              No upcoming events yet. Open the calendar to contribute one.
-            </p>
-          )}
-          {events.map((e) => (
-            <div
-              key={e.id}
-              className="rounded-xl bg-white p-4 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
-            >
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-[#B4532A] mb-1">
-                <MapPin size={12} /> {formatDate(e.event_date)}
+        <div className="max-w-[1680px] mx-auto">
+          <h2 className="font-display text-2xl font-bold text-slate-900 mb-4">
+            Coming up
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {loading && (
+              <p className="text-sm text-slate-400">Loading events...</p>
+            )}
+            {!loading && events.length === 0 && (
+              <p className="text-sm text-slate-400">
+                No upcoming events yet. Use the form above to contribute one.
               </p>
-              <p className="text-base font-semibold text-slate-800">{e.title}</p>
-              {e.organizer_name && (
-                <p className="text-xs text-slate-400 mt-0.5">
-                  by {e.organizer_name}
-                </p>
-              )}
-              {e.description && (
-                <p className="text-sm text-slate-500 mt-1 leading-snug">
-                  {e.description}
-                </p>
-              )}
-            </div>
-          ))}
+            )}
+            {events.map((e) => (
+              <div
+                key={e.id}
+                className="overflow-hidden rounded-xl bg-white shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
+              >
+                {e.photo_url && (
+                  <img
+                    src={e.photo_url}
+                    alt={e.title}
+                    loading="lazy"
+                    className="h-36 w-full object-cover"
+                  />
+                )}
+                <div className="p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-[#B4532A] mb-1">
+                    <MapPin size={12} /> {formatDate(e.event_date)}
+                  </p>
+                  <p className="text-base font-semibold text-slate-800">
+                    {e.title}
+                  </p>
+                  {e.organizer_name && (
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      by {e.organizer_name}
+                    </p>
+                  )}
+                  {e.description && (
+                    <p className="text-sm text-slate-500 mt-1 leading-snug line-clamp-3">
+                      {e.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

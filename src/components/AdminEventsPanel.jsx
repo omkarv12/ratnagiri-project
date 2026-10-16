@@ -98,46 +98,58 @@ export default function AdminEventsPanel() {
       ) : (
         <div className="space-y-4">
           {events.map((ev) => (
-            <div key={ev.id} className="bg-white p-4 rounded shadow">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h3 className="font-semibold text-lg">📅 {ev.title}</h3>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
-                    CATEGORY_COLORS[ev.category] || "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {ev.category}
-                </span>
-              </div>
-
-              <p><strong>Date:</strong> {formatDate(ev.event_date)}</p>
-              <p><strong>Organizer:</strong> {ev.organizer_name}</p>
-              <p><strong>Phone:</strong> {ev.organizer_contact}</p>
-              {ev.organizer_email && (
-                <p><strong>Email:</strong> {ev.organizer_email}</p>
-              )}
-              {ev.description && (
-                <p className="text-gray-600 mt-1">{ev.description}</p>
+            <div key={ev.id} className="bg-white p-4 rounded shadow flex gap-4 flex-wrap">
+              {ev.photo_url && (
+                <a href={ev.photo_url} target="_blank" rel="noreferrer">
+                  <img
+                    src={ev.photo_url}
+                    alt={ev.title}
+                    className="h-28 w-40 rounded object-cover border"
+                  />
+                </a>
               )}
 
-              {user?.role === "admin" && (
-                <div className="flex gap-3 mt-4">
-                  {status === "pending" && (
-                    <button
-                      onClick={() => act(ev.id, "approve")}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Approve
-                    </button>
-                  )}
-                  <button
-                    onClick={() => act(ev.id, "reject")}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="font-semibold text-lg">📅 {ev.title}</h3>
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
+                      CATEGORY_COLORS[ev.category] || "bg-gray-200 text-gray-700"
+                    }`}
                   >
-                    {status === "pending" ? "Reject" : "Delete"}
-                  </button>
+                    {ev.category}
+                  </span>
                 </div>
-              )}
+
+                <p><strong>Date:</strong> {formatDate(ev.event_date)}</p>
+                <p><strong>Organizer:</strong> {ev.organizer_name}</p>
+                <p><strong>Phone:</strong> {ev.organizer_contact}</p>
+                {ev.organizer_email && (
+                  <p><strong>Email:</strong> {ev.organizer_email}</p>
+                )}
+                {ev.description && (
+                  <p className="text-gray-600 mt-1">{ev.description}</p>
+                )}
+
+                {user?.role === "admin" && (
+                  <div className="flex gap-3 mt-4">
+                    {status === "pending" && (
+                      <button
+                        onClick={() => act(ev.id, "approve")}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
+                    )}
+                    <button
+                      onClick={() => act(ev.id, "reject")}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      {status === "pending" ? "Reject" : "Delete"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

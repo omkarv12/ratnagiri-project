@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, PlusCircle, ArrowUp } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  PlusCircle,
+  ArrowUp,
+  ImagePlus,
+  X,
+} from "lucide-react";
 import API_BASE_URL from "../config";
 
 /* ------------------------------------------------------------------
    Ratnagiri Tourism Calendar — full month grid + contribute form.
 
-   GET  {api}?year=YYYY&month=M      -> [{ id, title, event_date, category, organizer_name, description }]
-   POST {api}/contribute             -> creates a pending event (admin approves)
+   GET  {api}?year=YYYY&month=M   -> [{ id, title, event_date, category,
+                                        organizer_name, description, photo_url }]
+   POST {api}/contribute          -> creates a pending event (admin approves)
+   POST /api/upload-photo         -> Cloudinary upload, returns { url }
 ------------------------------------------------------------------ */
 
 const API = `${API_BASE_URL}/api/events`;
+const MAX_PHOTO_MB = 5;
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -28,6 +38,14 @@ const CATEGORIES = {
 const toKey = (y, m, d) =>
   `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
+const formatDate = (iso) =>
+  new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
 const emptyForm = {
   title: "",
   event_date: "",
@@ -44,10 +62,14 @@ export default function EventsCalendar() {
   const [month, setMonth] = useState(now.getMonth());
   const [events, setEvents] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null); // { type: "ok" | "err", text }
+  const [activeEvent, setActiveEvent] = useState(null);
   const calendarRef = useRef(null);
   const formRef = useRef(null);
+  const fileRef = useRef(null);
 
   // Load events for the visible month
   useEffect(() => {
@@ -60,6 +82,21 @@ export default function EventsCalendar() {
       cancelled = true;
     };
   }, [year, month]);
+
+  // Close event detail on Esc
+  useEffect(() => {
+    if (!activeEvent) return;
+    const onKey = (e) => e.key === "Escape" && setActiveEvent(null);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [activeEvent]);
+
+  // Free the preview object URL when it changes
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
   const eventsByDate = useMemo(() => {
     const map = {};
@@ -93,21 +130,63 @@ export default function EventsCalendar() {
   const update = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNotice({ type: "err", text: "Please choose an image file." });
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+      setNotice({
+        type: "err",
+        text: `Photo must be smaller than ${MAX_PHOTO_MB} MB.`,
+      });
+      e.target.value = "";
+      return;
+    }
+    setNotice(null);
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const clearPhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const uploadPhoto = async (file) => {
+    const fd = new FormData();
+    fd.append("photo", file);
+    const res = await fetch(`${API_BASE_URL}/api/upload-photo`, {
+      method: "POST",
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) throw new Error(data.error || "Photo upload failed");
+    return data.url;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setNotice(null);
     try {
+      const photo_url = photoFile ? await uploadPhoto(photoFile) : null;
+
       const res = await fetch(`${API}/contribute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, photo_url }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Could not submit event");
       }
       setForm(emptyForm);
+      clearPhoto();
       setNotice({
         type: "ok",
         text: "Thank you! Your event was submitted and will appear after review.",
@@ -206,7 +285,7 @@ export default function EventsCalendar() {
           return (
             <div
               key={i}
-              className={`min-h-[75px] md:min-h-[110px] p-1.5 border-r border-b border-slate-100 flex flex-col ${
+              className={`min-h-[75px] md:min-h-[120px] p-1.5 border-r border-b border-slate-100 flex flex-col ${
                 c.muted ? "bg-[#f8f6f0] text-slate-300" : "bg-white"
               }`}
             >
@@ -221,16 +300,25 @@ export default function EventsCalendar() {
               {dayEvents.map((ev) => {
                 const cat = CATEGORIES[ev.category] || CATEGORIES.beaches;
                 return (
-                  <div
+                  <button
                     key={ev.id}
-                    title={`${ev.title}${
-                      ev.organizer_name ? ` — ${ev.organizer_name}` : ""
-                    }${ev.description ? `\n${ev.description}` : ""}`}
-                    className="mb-1 rounded-full px-2 py-0.5 text-[10px] md:text-[11px] font-semibold leading-tight shadow-sm truncate cursor-default"
+                    onClick={() => setActiveEvent(ev)}
+                    title={ev.title}
+                    className="mb-1 w-full overflow-hidden rounded-lg text-left shadow-sm hover:shadow-md hover:-translate-y-px transition"
                     style={{ background: cat.bg, color: cat.fg }}
                   >
-                    {ev.title}
-                  </div>
+                    {ev.photo_url && (
+                      <img
+                        src={ev.photo_url}
+                        alt={ev.title}
+                        loading="lazy"
+                        className="h-10 md:h-14 w-full object-cover"
+                      />
+                    )}
+                    <span className="block truncate px-1.5 py-0.5 text-[10px] md:text-[11px] font-semibold leading-tight">
+                      {ev.title}
+                    </span>
+                  </button>
                 );
               })}
             </div>
@@ -337,6 +425,45 @@ export default function EventsCalendar() {
             />
           </Field>
 
+          {/* Photo upload */}
+          <div className="mt-4">
+            <p className="text-[13px] font-semibold text-slate-700 mb-1.5">
+              Event Photo (shown on the calendar)
+            </p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhoto}
+              className="hidden"
+            />
+            {photoPreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={photoPreview}
+                  alt="Selected event"
+                  className="h-32 w-48 rounded-lg object-cover border border-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={clearPhoto}
+                  aria-label="Remove photo"
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 hover:border-[#76abae] hover:bg-slate-50 px-5 py-4 text-sm font-semibold text-slate-600 transition"
+              >
+                <ImagePlus size={18} /> Choose a photo (max {MAX_PHOTO_MB} MB)
+              </button>
+            )}
+          </div>
+
           {notice && (
             <p
               className={`mt-4 text-sm font-medium ${
@@ -366,7 +493,69 @@ export default function EventsCalendar() {
         </form>
       </section>
 
-      {/* Shared input style (Tailwind @apply-free) */}
+      {/* ---------- Event detail pop-up ---------- */}
+      {activeEvent && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={activeEvent.title}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setActiveEvent(null)}
+        >
+          <div
+            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setActiveEvent(null)}
+              aria-label="Close"
+              className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"
+            >
+              <X size={16} />
+            </button>
+
+            {activeEvent.photo_url && (
+              <img
+                src={activeEvent.photo_url}
+                alt={activeEvent.title}
+                className="h-56 w-full object-cover"
+              />
+            )}
+
+            <div className="p-5">
+              {(() => {
+                const cat = CATEGORIES[activeEvent.category] || CATEGORIES.beaches;
+                return (
+                  <span
+                    className="inline-block rounded-full px-3 py-0.5 text-xs font-bold"
+                    style={{ background: cat.bg, color: cat.fg }}
+                  >
+                    {cat.label}
+                  </span>
+                );
+              })()}
+              <h3 className="mt-2 text-xl font-bold text-[#173b45]">
+                {activeEvent.title}
+              </h3>
+              <p className="text-sm font-semibold text-[#B4532A] mt-1">
+                {formatDate(activeEvent.event_date)}
+              </p>
+              {activeEvent.organizer_name && (
+                <p className="text-sm text-slate-500 mt-1">
+                  by {activeEvent.organizer_name}
+                </p>
+              )}
+              {activeEvent.description && (
+                <p className="text-sm text-slate-600 mt-3 leading-relaxed whitespace-pre-line">
+                  {activeEvent.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shared input style */}
       <style>{`
         .input {
           width: 100%;
