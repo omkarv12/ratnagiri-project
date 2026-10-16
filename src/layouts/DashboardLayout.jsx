@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { MENUS } from "../config/navMenus";
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
 import Breadcrumb from "../components/Breadcrumb";
+
 /* ------------------------------------------------------------------ */
 /*  Theme: fonts, colour tokens, animations (unchanged palette)        */
 /* ------------------------------------------------------------------ */
@@ -71,12 +72,14 @@ const THEME_CSS = `
   transition: transform .25s ease;
 }
 .rt-nav-link:hover,
-.group:hover > .rt-nav-link {
+.group:hover > .rt-nav-link,
+.group:focus-within > .rt-nav-link {
   background-color: rgba(255, 255, 255, .12);
   transform: scale(1.04);
 }
 .rt-nav-link:hover::after,
 .group:hover > .rt-nav-link::after,
+.group:focus-within > .rt-nav-link::after,
 .rt-nav-link[data-active="true"]::after { transform: scaleX(1); }
 
 /* Dropdown items: teal wash, laterite dot, small slide */
@@ -108,26 +111,6 @@ const THEME_CSS = `
 .rt-cta:hover .rt-mapplus { transform: scale(1.15) rotate(-6deg); }
 .rt-cta:hover .rt-shield { transform: scale(1.12); }
 
-/* India flag: colours flow left to right like cloth, chakra spins like a wheel */
-@keyframes rt-spin { to { transform: rotate(360deg); } }
-@keyframes rt-flow {
-  from { transform: translateX(0); }
-  to   { transform: translateX(30px); } /* = one wave length (WAVE_P) */
-}
-@keyframes rt-bob {
-  0%, 100% { transform: translateY(0); }
-  25%      { transform: translateY(-1.6px); }
-  75%      { transform: translateY(1.6px); }
-}
-.rt-flow { animation: rt-flow 2.4s linear infinite; }
-.rt-bob  { animation: rt-bob 2.4s ease-in-out infinite; }
-.rt-chakra {
-  animation: rt-spin 5s linear infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.rt-logo-btn:hover .rt-chakra { animation-duration: 1.4s; }
-
 @media (prefers-reduced-motion: reduce) {
   .rt-root *, .rt-root *::before, .rt-root *::after {
     animation: none !important;
@@ -140,136 +123,35 @@ const THEME_CSS = `
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
 
-// Put this file in  public/logos/  (PNG or SVG, transparent background).
-// Until it exists, a dashed placeholder with the alt text is shown.
-const LOGO = { src: "/logos/ratnagiri-tourism.png", alt: "Ratnagiri Tourism" };
-
 // Shared classes for every top-level nav item: white, base size, semibold, single line.
-// (Bigger text + taller hit area than before: text-base, min-h 2.75rem.)
 const NAV_ITEM_CLASS =
   "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-2.5 xl:px-3 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
+
+// Every top-level nav entry, in order. Home is first, then the configured menus.
+const NAV_ITEMS = [{ label: "Home", route: "/dashboard", exact: true }, ...MENUS];
+
+const NAV_GAP = 4; // px — must match the gap-1 used by the nav row
 
 /* ------------------------------------------------------------------ */
 /*  Small components                                                   */
 /* ------------------------------------------------------------------ */
 
-// Logo image with a graceful placeholder when the file hasn't been added yet.
-function LogoSlot({ src, alt, className = "" }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return (
-      <div
-        className={`flex items-center justify-center text-center rounded-lg border border-dashed border-white/30 bg-white/10 text-white/70 text-[0.625rem] leading-tight px-1.5 aspect-square ${className}`}
-      >
-        {alt}
-      </div>
-    );
-  }
+function Caret() {
   return (
-    <img
-      src={src}
-      alt={alt}
-      onError={() => setFailed(true)}
-      className={`object-contain ${className}`}
+    <span
+      aria-hidden="true"
+      className="ml-0.5 h-0 w-0 border-x-[4px] border-t-[5px] border-x-transparent border-t-white/80 group-hover:border-t-white group-focus-within:border-t-white group-hover:rotate-180 group-focus-within:rotate-180 transition-transform duration-200"
     />
-  );
-}
-
-// Waving India flag: the three colours flow left -> right as cloth,
-// the Ashoka Chakra in the middle spins like a wheel.
-const WAVE_P = 30;   // wave length (must match translateX in rt-flow)
-const WAVE_A = 1.6;  // wave height (must match translateY in rt-bob)
-const wave = (x) => WAVE_A * Math.sin((2 * Math.PI * x) / WAVE_P);
-const WAVE_XS = Array.from({ length: 93 }, (_, i) => i - WAVE_P); // -30 … 62
-const edge = (y) => WAVE_XS.map((x) => `${x},${(y + wave(x)).toFixed(2)}`);
-const bandPath = (yTop, yBottom) =>
-  `M${edge(yTop).join(" L")} L${edge(yBottom).reverse().join(" L")} Z`;
-
-const FLAG_TOP = 6;
-const BAND_H = 8;
-const BANDS = [
-  { fill: "#FF9933", d: bandPath(FLAG_TOP, FLAG_TOP + BAND_H) },
-  { fill: "#FFFFFF", d: bandPath(FLAG_TOP + BAND_H, FLAG_TOP + BAND_H * 2) },
-  { fill: "#138808", d: bandPath(FLAG_TOP + BAND_H * 2, FLAG_TOP + BAND_H * 3) },
-];
-const SHADE_D = bandPath(FLAG_TOP, FLAG_TOP + BAND_H * 3);
-
-function IndiaFlag({ className = "" }) {
-  const spokes = Array.from({ length: 24 });
-  return (
-    <svg
-      viewBox="0 0 60 36"
-      role="img"
-      aria-label="India flag"
-      className={`shrink-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] ${className}`}
-    >
-      <defs>
-        {/* only cut left/right, so the top and bottom edges can wave freely */}
-        <clipPath id="rt-flag-clip">
-          <rect x="4" y="0" width="52" height="36" />
-        </clipPath>
-        {/* light + shadow ripples that travel with the wave */}
-        <linearGradient
-          id="rt-shade"
-          gradientUnits="userSpaceOnUse"
-          x1="0" y1="0" x2={WAVE_P} y2="0"
-          spreadMethod="repeat"
-        >
-          <stop offset="0" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.25" stopColor="#fff" stopOpacity="0.3" />
-          <stop offset="0.5" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.75" stopColor="#000" stopOpacity="0.22" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
-      {/* flag pole */}
-      <rect x="1.8" y="2" width="1.6" height="33" rx="0.8" fill="#E5E7EB" />
-      <circle cx="2.6" cy="2" r="1.5" fill="#FBBF24" />
-
-      <g clipPath="url(#rt-flag-clip)">
-        {/* colours flowing left to right */}
-        <g className="rt-flow">
-          {BANDS.map((b) => (
-            <path key={b.fill} d={b.d} fill={b.fill} stroke={b.fill} strokeWidth="0.25" />
-          ))}
-          <path d={SHADE_D} fill="url(#rt-shade)" />
-        </g>
-      </g>
-
-      {/* chakra rides the wave (bob) and spins (rotate) */}
-      <g className="rt-bob">
-        <g className="rt-chakra" stroke="#000080" fill="none">
-          <circle cx="30" cy="18" r="3.7" strokeWidth="0.5" />
-          <circle cx="30" cy="18" r="0.65" fill="#000080" stroke="none" />
-          {spokes.map((_, i) => (
-            <line
-              key={`s${i}`}
-              x1="30" y1="18" x2="30" y2="14.5"
-              strokeWidth="0.22"
-              transform={`rotate(${i * 15} 30 18)`}
-            />
-          ))}
-          {spokes.map((_, i) => (
-            <circle
-              key={`d${i}`}
-              cx="30" cy="14.9" r="0.25"
-              fill="#000080" stroke="none"
-              transform={`rotate(${i * 15 + 7.5} 30 18)`}
-            />
-          ))}
-        </g>
-      </g>
-    </svg>
   );
 }
 
 // One dropdown panel. Renders flat items, and recurses for any item that
 // itself has "children" (used for About → Geography), opening as a flyout
-// to the right of the parent item.
-function DropdownPanel({ items, navigate }) {
+// beside the parent item. `flyLeft` makes flyouts open to the left so panels
+// near the right edge of the screen never run off-screen.
+function DropdownPanel({ items, navigate, flyLeft = false }) {
   return (
-    <div className="w-72 bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
+    <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
       {items.map((child) =>
         child.children ? (
           <div key={child.label} className="relative group/sub">
@@ -281,10 +163,16 @@ function DropdownPanel({ items, navigate }) {
                 <span className="rt-dot shrink-0" />
                 {child.label}
               </span>
-              <span aria-hidden="true" className="text-xs text-slate-400">▸</span>
+              <span aria-hidden="true" className="text-xs text-slate-400">
+                {flyLeft ? "◂" : "▸"}
+              </span>
             </button>
-            <div className="absolute left-full top-0 pl-2 opacity-0 invisible translate-x-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-x-0 transition-all duration-200 z-50">
-              <DropdownPanel items={child.children} navigate={navigate} />
+            <div
+              className={`absolute top-0 z-50 opacity-0 invisible transition-all duration-200 group-hover/sub:opacity-100 group-hover/sub:visible group-focus-within/sub:opacity-100 group-focus-within/sub:visible group-hover/sub:translate-x-0 group-focus-within/sub:translate-x-0 ${
+                flyLeft ? "right-full pr-2 -translate-x-1" : "left-full pl-2 translate-x-1"
+              }`}
+            >
+              <DropdownPanel items={child.children} navigate={navigate} flyLeft={flyLeft} />
             </div>
           </div>
         ) : (
@@ -302,23 +190,152 @@ function DropdownPanel({ items, navigate }) {
   );
 }
 
-function NavDropdown({ menu, active, navigate }) {
+// A top-level nav item. With children it opens a dropdown on hover or keyboard
+// focus; without children it is a plain link. `align="right"` anchors the panel
+// to the item's right edge (used for items near the right side of the bar).
+function NavDropdown({ menu, active, navigate, align = "left", noNavigate = false }) {
+  const right = align === "right";
+  const hasChildren = Array.isArray(menu.children) && menu.children.length > 0;
+
+  if (!hasChildren) {
+    return (
+      <button
+        onClick={() => menu.route && navigate(menu.route)}
+        data-active={active}
+        className={NAV_ITEM_CLASS}
+      >
+        {menu.label}
+      </button>
+    );
+  }
+
   return (
     <div className="relative group">
       <button
-        onClick={() => navigate(menu.route)}
+        onClick={() => {
+          if (!noNavigate && menu.route) navigate(menu.route);
+        }}
         data-active={active}
-        className={`${NAV_ITEM_CLASS} gap-1`}
+        aria-haspopup="true"
+        className={`${NAV_ITEM_CLASS} gap-1 ${noNavigate ? "cursor-default" : ""}`}
       >
         {menu.label}
-        <span
-          aria-hidden="true"
-          className="ml-0.5 h-0 w-0 border-x-[4px] border-t-[5px] border-x-transparent border-t-white/80 group-hover:border-t-white group-hover:rotate-180 transition-transform duration-200"
-        />
+        <Caret />
       </button>
 
-      <div className="absolute left-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-50">
-        <DropdownPanel items={menu.children} navigate={navigate} />
+      <div
+        className={`absolute top-full z-50 pt-2 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 ${
+          right ? "right-0" : "left-0"
+        }`}
+      >
+        <DropdownPanel items={menu.children} navigate={navigate} flyLeft={right} />
+      </div>
+    </div>
+  );
+}
+
+// The page links in the header. It measures how many fit in the space it has
+// and moves the rest into a "More" dropdown, so links never wrap, get cut off
+// or push the buttons on the right out of place — at any screen width.
+function PrimaryNav({ items, navigate, isItemActive }) {
+  const wrapRef = useRef(null);
+  const measureRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(items.length);
+
+  const recalc = useCallback(() => {
+    const wrap = wrapRef.current;
+    const measure = measureRef.current;
+    if (!wrap || !measure) return;
+
+    const available = wrap.clientWidth;
+    const widths = Array.from(measure.querySelectorAll("[data-measure='item']")).map(
+      (el) => el.offsetWidth
+    );
+    const moreWidth = measure.querySelector("[data-measure='more']")?.offsetWidth || 0;
+
+    const total = widths.reduce((sum, w) => sum + w + NAV_GAP, 0) - NAV_GAP;
+    if (total <= available) {
+      setVisibleCount(items.length);
+      return;
+    }
+
+    // Not everything fits: keep as many as fit next to the "More" button.
+    let used = moreWidth;
+    let count = 0;
+    for (const w of widths) {
+      if (used + NAV_GAP + w > available) break;
+      used += NAV_GAP + w;
+      count += 1;
+    }
+    setVisibleCount(Math.max(1, count));
+  }, [items.length]);
+
+  useLayoutEffect(() => {
+    recalc();
+  }, [recalc]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(recalc);
+    observer.observe(wrap);
+    // Web fonts change text widths once they load.
+    if (document.fonts?.ready) document.fonts.ready.then(recalc);
+    return () => observer.disconnect();
+  }, [recalc]);
+
+  const shown = items.slice(0, visibleCount);
+  const hidden = items.slice(visibleCount);
+  const moreMenu = {
+    label: "More",
+    children: hidden.map((item) => ({
+      label: item.label,
+      route: item.route,
+      children: item.children?.length ? item.children : undefined,
+    })),
+  };
+  const moreActive = hidden.some(isItemActive);
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative flex min-w-0 items-center justify-start gap-1 pl-2 xl:pl-6"
+    >
+      {shown.map((item, i) => (
+        <NavDropdown
+          key={item.label}
+          menu={item}
+          active={isItemActive(item)}
+          navigate={navigate}
+          // Items in the right half open their panels toward the left.
+          align={i >= Math.ceil(items.length / 2) ? "right" : "left"}
+        />
+      ))}
+
+      {hidden.length > 0 && (
+        <NavDropdown menu={moreMenu} active={moreActive} navigate={navigate} align="right" noNavigate />
+      )}
+
+      {/* Invisible copy of every item, used only to measure natural widths. */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        className="pointer-events-none invisible absolute left-0 top-0 flex h-0 gap-1 overflow-hidden"
+      >
+        {items.map((item) => (
+          <span
+            key={item.label}
+            data-measure="item"
+            className={`${NAV_ITEM_CLASS} shrink-0 gap-1`}
+          >
+            {item.label}
+            {item.children?.length ? <Caret /> : null}
+          </span>
+        ))}
+        <span data-measure="more" className={`${NAV_ITEM_CLASS} shrink-0 gap-1`}>
+          More
+          <Caret />
+        </span>
       </div>
     </div>
   );
@@ -334,7 +351,9 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (route) => location.pathname.startsWith(route);
+  const isItemActive = (item) =>
+    !!item.route &&
+    (item.exact ? location.pathname === item.route : location.pathname.startsWith(item.route));
 
   return (
     <div className="rt-root flex min-h-screen bg-[#F4F8F9]">
@@ -347,17 +366,17 @@ export default function DashboardLayout() {
           sidebarOpen ? "ml-64" : "ml-0"
         }`}
       >
-        {/* ============ Single sticky bar: logo · pages · CTAs · Admin ============ */}
+        {/* ============ Single sticky bar: title · pages · CTAs · Admin ============ */}
         <header className="rt-header-in sticky top-0 z-40 bg-[#7b1e2b] shadow-md">
-          {/* Full-width bar (no max-width cap), taller, and the centre column
-              takes all the leftover space so the nav buttons can spread out. */}
-          <div className="grid h-20 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-3 sm:px-6 lg:px-8">
-            {/* Left: mobile toggle + logo + title */}
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* The middle column takes all leftover space; PrimaryNav fits as many
+              links as it can there and tucks the rest under "More". */}
+          <div className="grid h-20 w-full grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:gap-4 sm:px-6 lg:px-8">
+            {/* Left: mobile toggle + title */}
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle menu"
-                className="lg:hidden flex h-11 items-center gap-1.5 rounded-lg px-2 text-base font-semibold text-white hover:bg-white/10 transition"
+                className="lg:hidden flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-base font-semibold text-white hover:bg-white/10 transition"
               >
                 {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
@@ -365,33 +384,19 @@ export default function DashboardLayout() {
               <button
                 onClick={() => navigate("/dashboard")}
                 aria-label="Ratnagiri Tourism — home"
-                className="rt-logo-btn flex items-center gap-2.5"
+                className="flex min-w-0 items-center"
               >
-                <IndiaFlag className="h-10 w-[66px] sm:h-12 sm:w-[80px]" />
-                <span className="rt-display text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight whitespace-nowrap">
+                <span className="rt-display truncate text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
                   Ratnagiri Tourism
                 </span>
               </button>
             </div>
 
-            {/* Center: page structure */}
-            <div className="hidden lg:flex min-w-0 items-center justify-start gap-0.5 xl:gap-1 pl-2 xl:pl-6">
-              <button
-                onClick={() => navigate("/dashboard")}
-                data-active={location.pathname === "/dashboard"}
-                className={NAV_ITEM_CLASS}
-              >
-                Home
-              </button>
-              {MENUS.map((menu) => (
-                <NavDropdown
-                  key={menu.label}
-                  menu={menu}
-                  active={isActive(menu.route)}
-                  navigate={navigate}
-                />
-              ))}
+            {/* Center: page links (desktop only; phones and tablets use the sidebar) */}
+            <div className="hidden lg:block min-w-0">
+              <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
             </div>
+            <div className="lg:hidden" aria-hidden="true" />
 
             {/* Right: CTAs + Admin */}
             <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
