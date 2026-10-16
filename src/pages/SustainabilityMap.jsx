@@ -1,27 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import * as ReactLeaflet from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import {
-  TreePine, BedDouble, MapPin, Image as ImageIcon, Crosshair, Trash2,
-  ShieldCheck, Link, Search, X, Bus, List, Map as MapIcon,
+  TreePine, BedDouble, MapPin, Image as ImageIcon,
+  ShieldCheck, Search, X, Bus, List, Map as MapIcon,
   Heart, LayoutGrid, RotateCcw, ArrowRight, Frown, Route as RouteIcon,
-  Wand2, // NEW: icon for the "Plan for me" tab
+  Wand2,
 } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import API_BASE_URL from '../config';
-// NEW: loading screen
 import RatnagiriCinematic from '../components/RatnagiriCinematic';
-// NEW: trip planner (tab + "Add to Trip" button + shared trip state hook)
 import TripPlanner, { AddToTripButton, useTripPlanner } from '../components/TripPlanner';
-// NEW: "Plan for me" wizard (suggests a trip from days, budget and interests)
 import PlanMyTrip from '../components/PlanMyTrip';
+
 const {
   MapContainer,
   TileLayer,
+  LayerGroup,
   Marker,
   Popup,
   Tooltip,
@@ -33,30 +31,24 @@ const {
   ZoomControl,
 } = ReactLeaflet;
 
-// Maps each tourism category to a marker color. No emoji — plain colored pins.
-const CATEGORY_COLOR_MAP = {
-  "Beach Tourism": "#0ea5e9",
-  "Heritage Tourism": "#a855f7",
-  "Religious Tourism": "#f97316",
-  "Nature & Eco Tourism": "#16a34a",
-  "Homestays": "#ffc1b6",
-  "Taxi & Auto": "#0006a7",
-  "Bus Stand": "#487c00",
-};
-// Maps each tourism category to an emoji + color
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+// Maps each category to an emoji + color (used for pins, legend, list thumbnails).
 const CATEGORY_ICON_MAP = {
   "Beach Tourism": { emoji: "🏖️", color: "#0ea5e9" },
   "Heritage Tourism": { emoji: "🏛️", color: "#a855f7" },
   "Religious Tourism": { emoji: "🛕", color: "#f97316" },
   "Nature & Eco Tourism": { emoji: "🌿", color: "#16a34a" },
-  "Homestays": { emoji: "🏡", color: "#ffc1b6" },
+  "Adventure & Marine Tourism": { emoji: "🚤", color: "#0891b2" },
+  "Homestays": { emoji: "🏡", color: "#e08b01" },
   "Taxi & Auto": { emoji: "🛺", color: "#0006a7" },
   "Bus Stand": { emoji: "🚌", color: "#487c00" },
 };
-const DEFAULT_ICON = { emoji: "🏡", color: "#e08b01" };
+const DEFAULT_ICON = { emoji: "📍", color: "#e08b01" };
 
-// NEW: links your tourism categories to the interests in the "Plan for me"
-// wizard, so the planner doesn't have to guess from place names.
+// Links tourism categories to the interests in the "Plan for me" wizard.
 const CATEGORY_TAGS = {
   "Beach Tourism": ["beach"],
   "Heritage Tourism": ["fort", "culture"],
@@ -65,9 +57,16 @@ const CATEGORY_TAGS = {
   "Adventure & Marine Tourism": ["adventure"],
 };
 
-// localStorage-backed favorites ("save for later"), shared across village
-// and homestay cards. Keyed as "type:id" so two different tables can never
-// collide (e.g. location #1 and homestay #1).
+const TOURISM_TYPES = [
+  { value: "All", label: "All Types" },
+  { value: "Beach Tourism", label: "🏖️ Beach Tourism" },
+  { value: "Heritage Tourism", label: "🏛️ Heritage Tourism" },
+  { value: "Religious Tourism", label: "🛕 Religious Tourism" },
+  { value: "Nature & Eco Tourism", label: "🌿 Nature & Eco Tourism" },
+  { value: "Adventure & Marine Tourism", label: "🚤 Adventure & Marine Tourism" },
+];
+
+// localStorage-backed favorites, keyed as "type:id" so different tables never collide.
 const FAVORITES_KEY = "rt_favorites";
 
 function loadFavorites() {
@@ -79,106 +78,44 @@ function loadFavorites() {
   }
 }
 
-// Small, unobtrusive legend — top-left corner only.
-function MapLegend() {
-  return (
-    <div className="hidden md:flex absolute top-4 left-4 z-20 bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex-col gap-1.5 max-w-[190px]">
-      {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
-        <div key={category} className="flex items-center gap-2">
-          <span
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: color }}
-          >
-            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
-          </span>
-          <span className="text-[10px] font-medium text-slate-700 leading-tight">
-            {category}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+// ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
+
+// Haversine distance in km.
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// A removable filter pill — used for the active-filter chip rows.
-function FilterChip({ label, onClear }) {
-  return (
-    <button
-      onClick={onClear}
-      className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold hover:bg-orange-200 transition-colors"
-    >
-      {label}
-      <X size={12} />
-    </button>
-  );
+// "12.3" or null when we don't know where the user is.
+function distanceKm(user, lat, lng) {
+  if (!user) return null;
+  const d = calculateDistance(user.lat, user.lng, lat, lng);
+  return d == null ? null : d.toFixed(1);
 }
 
-// Fix Leaflet's default icon missing issue in webpack/vite
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// Creates a pin-shaped divIcon with a category emoji inside.
-// Bigger + red when selected.
-function createMarkerIcon(category, isSelected) {
-  const { emoji, color } = CATEGORY_ICON_MAP[category] || DEFAULT_ICON;
-  const bg = isSelected ? "#dc2626" : color;
-  const size = isSelected ? 42 : 32;
-  const fontSize = isSelected ? 20 : 16;
-
-  const html = `
-    <div style="
-      width: ${size}px;
-      height: ${size}px;
-      background: ${bg};
-      border: 2px solid white;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    ">
-      <span style="
-        transform: rotate(45deg);
-        font-size: ${fontSize}px;
-        line-height: 1;
-      ">${emoji}</span>
-    </div>
-  `;
-
-  return L.divIcon({
-    html,
-    className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size],
-  });
+// Google Drive link -> thumbnail URL of a given width.
+function driveThumb(link, width = 400) {
+  if (!link) return null;
+  const match = link.match(/[-\w]{25,}/);
+  if (!match) return null;
+  return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w${width}`;
 }
-function createNearbyIcon(zoom) {
-  const scale = Math.max(0.55, Math.min(1, (zoom - 9) / 5));
-  const size = Math.round(26 * scale);
-  const fontSize = Math.round(13 * scale);
-  const html = `
-    <div style="
-      width: ${size}px;
-      height: ${size}px;
-      background: #2563eb;
-      border: 2px solid white;
-      border-radius: 50%;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: ${fontSize}px;
-    ">📍</div>
-  `;
-  return L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
-}
+const driveIdToImageUrl = (link) => driveThumb(link, 1000);
 
+const firstPhone = (p) => (p || '').split('/')[0].trim();
+const hasCoords = (p, latKey = 'latitude', lngKey = 'longitude') => !!(p[latKey] && p[lngKey]);
+const truncate = (s, n) => (s && s.length > n ? `${s.slice(0, n)}…` : s || '');
 
 async function fetchRoute(lat1, lon1, lat2, lon2) {
   try {
@@ -200,56 +137,311 @@ async function fetchRoute(lat1, lon1, lat2, lon2) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Leaflet icons — cached so markers aren't re-created on every render
+// ---------------------------------------------------------------------------
 
-// Calculates distance in km between two lat/lng points using the Haversine formula
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+const markerIconCache = new Map();
+
+function getMarkerIcon(category, isSelected) {
+  const key = `${category || 'default'}:${isSelected ? 1 : 0}`;
+  if (markerIconCache.has(key)) return markerIconCache.get(key);
+
+  const { emoji, color } = CATEGORY_ICON_MAP[category] || DEFAULT_ICON;
+  const bg = isSelected ? "#dc2626" : color;
+  const size = isSelected ? 42 : 32;
+  const fontSize = isSelected ? 20 : 16;
+
+  const icon = L.divIcon({
+    html: `
+      <div style="
+        width:${size}px;height:${size}px;background:${bg};
+        border:2px solid white;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);box-shadow:0 2px 5px rgba(0,0,0,0.4);
+        display:flex;align-items:center;justify-content:center;">
+        <span style="transform:rotate(45deg);font-size:${fontSize}px;line-height:1;">${emoji}</span>
+      </div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
+  });
+  markerIconCache.set(key, icon);
+  return icon;
 }
 
-// Convert a Google Drive "open?id=" link into a directly-viewable image URL
-function driveIdToImageUrl(link) {
-  if (!link) return null;
-  const match = link.match(/[-\w]{25,}/);
-  if (!match) return null;
-  return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1000`;
+const nearbyIconCache = new Map();
+
+function getNearbyIcon(zoom) {
+  const scale = Math.max(0.55, Math.min(1, (zoom - 9) / 5));
+  const size = Math.round(26 * scale);
+  if (nearbyIconCache.has(size)) return nearbyIconCache.get(size);
+  const fontSize = Math.round(13 * scale);
+  const icon = L.divIcon({
+    html: `
+      <div style="
+        width:${size}px;height:${size}px;background:#2563eb;
+        border:2px solid white;border-radius:50%;
+        box-shadow:0 2px 5px rgba(0,0,0,0.4);
+        display:flex;align-items:center;justify-content:center;
+        font-size:${fontSize}px;">📍</div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+  nearbyIconCache.set(size, icon);
+  return icon;
 }
 
-// NEW: small version of a Drive photo, used for trip PDFs and share links
-function driveThumb(link, width = 400) {
-  if (!link) return null;
-  const match = link.match(/[-\w]{25,}/);
-  if (!match) return null;
-  return `https://drive.google.com/thumbnail?id=${match[0]}&sz=w${width}`;
+// Pulsing blue dot for "you are here". (animate-ping is a Tailwind utility.)
+const USER_ICON = L.divIcon({
+  className: "",
+  html: `
+    <div style="position:relative;width:20px;height:20px;">
+      <span class="animate-ping" style="position:absolute;inset:0;border-radius:50%;background:#2563eb66;"></span>
+      <span style="position:absolute;inset:4px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
+    </div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
+
+// ---------------------------------------------------------------------------
+// Small presentational components
+// ---------------------------------------------------------------------------
+
+function MapLegend() {
+  return (
+    <div className="hidden md:flex absolute top-4 left-4 z-20 bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex-col gap-1.5 max-w-[190px]">
+      {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
+        <div key={category} className="flex items-center gap-2">
+          <span
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: color }}
+          >
+            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
+          </span>
+          <span className="text-[10px] font-medium text-slate-700 leading-tight">{category}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-// Component to handle map flyTo logic
+// Floating category chips on the map — filter pins without leaving the map.
+function MapCategoryChips({ value, onChange }) {
+  return (
+    <div className="absolute top-3 left-3 right-16 md:left-52 z-[1000] flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+      {TOURISM_TYPES.map((t) => {
+        const active = value === t.value;
+        return (
+          <button
+            key={t.value}
+            onClick={() => onChange(t.value)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md border transition-colors ${
+              active
+                ? 'bg-slate-900 text-white border-slate-900'
+                : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-white'
+            }`}
+          >
+            {t.value === 'All' ? 'All' : t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// A removable filter pill.
+function FilterChip({ label, onClear }) {
+  return (
+    <button
+      onClick={onClear}
+      className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold hover:bg-orange-200 transition-colors"
+    >
+      {label}
+      <X size={12} />
+    </button>
+  );
+}
+
+function FavoriteFilterButton({ active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      title="Show favorites only"
+      className={`p-1.5 border rounded-lg shrink-0 transition-colors ${
+        active ? "bg-rose-50 border-rose-300" : "border-slate-300 hover:bg-slate-100"
+      }`}
+    >
+      <Heart size={14} className={active ? "fill-rose-500 text-rose-500" : "text-slate-600"} />
+    </button>
+  );
+}
+
+// Search icon that expands into an input.
+function SearchToggle({ open, setOpen, value, onChange, placeholder, title }) {
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="p-1.5 border border-slate-300 rounded-lg hover:bg-slate-100 shrink-0"
+        title={title}
+      >
+        <Search className="w-3.5 h-3.5 text-slate-600" />
+      </button>
+    );
+  }
+  return (
+    <div className="flex items-center border border-slate-300 rounded-lg px-2 py-1 bg-white">
+      <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
+      <input
+        autoFocus
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="outline-none text-xs w-24 sm:w-32 bg-transparent"
+      />
+      <button
+        onClick={() => { setOpen(false); onChange(""); }}
+        className="ml-1 shrink-0"
+        aria-label="Close search"
+      >
+        <X className="w-3.5 h-3.5 text-slate-400" />
+      </button>
+    </div>
+  );
+}
+
+function WhatsAppLink({ phone }) {
+  // Use the last 10 digits so numbers saved as "098…", "+91 98…" or "98…" all work.
+  const digits = firstPhone(phone).replace(/\D/g, '').slice(-10);
+  if (digits.length < 10) return null;
+  return (
+    <a
+      href={`https://wa.me/91${digits}`}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700 py-1"
+      title="Chat on WhatsApp"
+    >
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+        <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.36.101 11.943c0 2.105.549 4.161 1.595 5.972L0 24l6.238-1.635a11.918 11.918 0 005.804 1.477h.005c6.585 0 11.941-5.362 11.943-11.943a11.86 11.86 0 00-3.47-8.45zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.36-.214-3.735.98.998-3.641-.235-.374a9.86 9.86 0 01-1.51-5.264C2.176 6.463 6.634 2.006 12.05 2.006c2.629 0 5.098 1.024 6.955 2.883a9.788 9.788 0 012.876 6.966c-.003 5.416-4.46 9.93-9.831 9.93z"/>
+      </svg>
+      WhatsApp
+    </a>
+  );
+}
+
+function PhoneLink({ phone }) {
+  const first = firstPhone(phone);
+  if (!first) return <span className="text-slate-400">Not provided</span>;
+  return (
+    <a
+      href={`tel:${first}`}
+      onClick={(e) => e.stopPropagation()}
+      className="text-blue-600 hover:underline font-medium"
+    >
+      {phone}
+    </a>
+  );
+}
+
+function ShowRouteButton({ onClick }) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
+    >
+      🧭 Show Route
+    </button>
+  );
+}
+
+function EmptyState({ message, onClear, buttonClass, big }) {
+  return (
+    <div className={`text-center ${big ? 'py-10' : 'py-6'}`}>
+      <Frown className="mx-auto mb-2 text-slate-300" size={big ? 32 : 28} />
+      <p className="text-sm text-slate-500 mb-3">{message}</p>
+      <button
+        onClick={onClear}
+        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${buttonClass}`}
+      >
+        <RotateCcw size={12} /> Clear filters
+      </button>
+    </div>
+  );
+}
+
+// "All" tab pieces ----------------------------------------------------------
+
+function OverviewHeader({ title, accent, linkClass, onSeeAll }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <h2 className={`text-lg font-bold text-slate-800 border-l-4 pl-3 ${accent}`}>{title}</h2>
+      <button
+        onClick={onSeeAll}
+        className={`text-xs font-semibold flex items-center gap-1 shrink-0 ${linkClass}`}
+      >
+        See all <ArrowRight size={13} />
+      </button>
+    </div>
+  );
+}
+
+function Thumb({ src, emoji, bg, bgClass = '' }) {
+  if (src) {
+    return <img src={src} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-100" />;
+  }
+  return (
+    <span
+      className={`w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl ${bgClass}`}
+      style={bg ? { backgroundColor: bg } : undefined}
+    >
+      {emoji}
+    </span>
+  );
+}
+
+function OverviewRow({ onClick, hoverClass, thumb, title, subtitle, distance }) {
+  return (
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all active:scale-[0.99] ${hoverClass}`}
+    >
+      {thumb}
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-sm text-slate-800 truncate">{title}</p>
+        {subtitle && <p className="text-xs text-slate-500 truncate">{subtitle}</p>}
+        {distance && <p className="text-xs text-emerald-700 font-medium">{distance} km away</p>}
+      </div>
+    </div>
+  );
+}
+
+function EmptyNote({ children }) {
+  return <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">{children}</p>;
+}
+
+// ---------------------------------------------------------------------------
+// Map helper components (render nothing, drive the Leaflet map)
+// ---------------------------------------------------------------------------
+
 function MapController({ position }) {
   const map = useMap();
 
-  // Watch the map container's size and tell Leaflet whenever it changes
+  // Tell Leaflet whenever its container changes size.
   useEffect(() => {
     const container = map.getContainer();
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
+    const resizeObserver = new ResizeObserver(() => map.invalidateSize());
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
   }, [map]);
 
   useEffect(() => {
     if (position) {
-      // let layout settle first, then invalidate size, then fly
       const timer = setTimeout(() => {
         map.invalidateSize();
         map.flyTo(position, 14, { animate: true, duration: 1.5 });
@@ -261,16 +453,14 @@ function MapController({ position }) {
   return null;
 }
 
-// Fits the map to the whole Ratnagiri district border when the page
-// opens. Falls back to fitting all location pins if the border file fails
-// to load.
+// Fits the map to the Ratnagiri district border on open; falls back to the pins.
 function InitialView({ border, points }) {
   const map = useMap();
   const settled = useRef(false);
 
   const fit = () => {
     const el = map.getContainer();
-    if (!el.clientWidth || !el.clientHeight) return false; // map hidden (mobile list view)
+    if (!el.clientWidth || !el.clientHeight) return false; // hidden (mobile list view)
     let bounds = null;
     if (border) bounds = L.geoJSON(border).getBounds();
     else if (points.length) bounds = L.latLngBounds(points);
@@ -282,15 +472,17 @@ function InitialView({ border, points }) {
 
   useEffect(() => {
     if (!settled.current) settled.current = fit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [border, points.length]);
 
-  // On mobile the map starts hidden; fit again the first time it becomes visible
+  // On mobile the map starts hidden; fit again the first time it becomes visible.
   useEffect(() => {
     const ro = new ResizeObserver(() => {
       if (!settled.current) settled.current = fit();
     });
     ro.observe(map.getContainer());
     return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, border, points.length]);
 
   return null;
@@ -310,62 +502,55 @@ function NearbyBoundsController({ origin, nearby }) {
   return null;
 }
 
-// Component to handle map click events
-function MapClickHandler({ isActive, onPinDropped }) {
-  useMapEvents({
-    click(e) {
-      if (isActive) {
-        onPinDropped(e.latlng);
-      }
-    },
-  });
-  return null;
-}
-
 function ZoomWatcher({ onZoomChange }) {
   const map = useMapEvents({
     zoomend: () => onZoomChange(map.getZoom()),
   });
   useEffect(() => {
     onZoomChange(map.getZoom());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export default function SustainabilityMap() {
-  const navigate = useNavigate();
-  const { locations, homestays, eco, drivers, busStops, loading } = useLocations();
-  // NEW: trip stop count, used for the badge on the "Plan Trip" tab.
-  // (Hook must stay above the early `if (loading) return` below.)
+  const { locations, homestays, drivers, busStops, loading } = useLocations();
+  // Trip stop count for the badge on the "Plan Trip" tab.
+  // (Hooks must stay above the early `if (loading) return` below.)
   const { stops: tripStops } = useTripPlanner();
-  // "all" is the default landing tab — a discovery overview before
-  // drilling into a specific list.
+
   const [activeTab, setActiveTab] = useState('all');
-  const [mapPosition, setMapPosition] = useState(null); // Used to trigger flyTo
-  const [pinMode, setPinMode] = useState(false);
-  const [customPins, setCustomPins] = useState([]);
+  const [mapPosition, setMapPosition] = useState(null);
+
+  // Places filters (selectedTourismType is also driven by the chips on the map)
   const [selectedTaluka, setSelectedTaluka] = useState("All");
   const [selectedTourismType, setSelectedTourismType] = useState("All");
   const [locationSearch, setLocationSearch] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [roadsData, setRoadsData] = useState(null);
+
+  // Homestay filters
   const [selectedHomestayTaluka, setSelectedHomestayTaluka] = useState("All");
   const [selectedHomestayType, setSelectedHomestayType] = useState("All");
   const [homestaySearch, setHomestaySearch] = useState("");
   const [isHomestaySearchOpen, setIsHomestaySearchOpen] = useState(false);
+
+  // Driver + bus stop filters
   const [selectedDriverTaluka, setSelectedDriverTaluka] = useState("All");
   const [selectedVehicleType, setSelectedVehicleType] = useState("All");
   const [driverSearch, setDriverSearch] = useState("");
-  const [isDriverSearchOpen, setIsDriverSearchOpen] = useState(false);
   const [selectedBusStopTaluka, setSelectedBusStopTaluka] = useState("All");
+
   const [selectedItem, setSelectedItem] = useState(null); // { data, type }
   const markerRefs = useRef({});
-  // NEW: handle to the marker cluster group (used to reveal a clustered marker before opening its popup)
   const clusterRef = useRef(null);
   const [districtBorder, setDistrictBorder] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [activeRoute, setActiveRoute] = useState(null);
-  // Mobile: which pane is visible — 'list' (sidebar) or 'map'. Ignored on md+ where both show.
+  // Mobile: which pane is visible. Ignored on md+ where both show.
   const [mobileView, setMobileView] = useState('list');
   const [nearbyLocations, setNearbyLocations] = useState([]);
   const [nearbyOrigin, setNearbyOrigin] = useState(null);
@@ -375,24 +560,18 @@ export default function SustainabilityMap() {
   const [favorites, setFavorites] = useState(loadFavorites);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  // Namespaced marker-ref key so two different tables (e.g. a location #1
-  // and a homestay #1) never overwrite each other's map marker reference.
   const refKey = (type, id) => `${type}:${id}`;
-
   const isFavorite = (type, id) => favorites.includes(refKey(type, id));
 
   const toggleFavorite = (type, id) => {
-    setFavorites((prev) => {
-      const key = refKey(type, id);
-      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
-      try {
-        localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
-      } catch {
-        // localStorage unavailable (private browsing, etc.) — favorites just
-        // won't persist across reloads, but the toggle still works this session.
-      }
-      return next;
-    });
+    const key = refKey(type, id);
+    const next = favorites.includes(key) ? favorites.filter((k) => k !== key) : [...favorites, key];
+    setFavorites(next);
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — the toggle still works this session.
+    }
   };
 
   const handleShowRoute = async (destLat, destLng) => {
@@ -404,7 +583,7 @@ export default function SustainabilityMap() {
     if (route) {
       setActiveRoute(route);
       setMapPosition([destLat, destLng]);
-      setMobileView('map'); // jump to the map so the user actually sees the route
+      setMobileView('map');
     } else {
       alert("Could not calculate route.");
     }
@@ -426,16 +605,14 @@ export default function SustainabilityMap() {
             lng: position.coords.longitude,
           });
         },
-        (error) => {
-          console.log("Location access denied or unavailable:", error.message);
-        }
+        (error) => console.log("Location access denied or unavailable:", error.message)
       );
     }
   }, []);
 
   const handleFlyTo = (lat, lng) => {
     setMapPosition([lat, lng]);
-    setMobileView('map'); // tapping a list item on mobile should switch to the map
+    setMobileView('map');
   };
 
   const fetchNearbyLocations = async (locationName, mainLat, mainLng) => {
@@ -458,14 +635,14 @@ export default function SustainabilityMap() {
 
       setNearbyLocations(withDistance);
       setNearbyOrigin({ lat: mainLat, lng: mainLng });
-    } catch (err) {
+    } catch {
       setNearbyLocations([]);
       setNearbyOrigin(null);
     }
   };
 
-  // CHANGED: with clustering, the selected marker may be hidden inside a
-  // cluster, so reveal it first and only then open its popup.
+  // With clustering, the selected marker may be hidden inside a cluster:
+  // reveal it first, then open its popup.
   useEffect(() => {
     if (selectedItem?.data?.id && selectedItem?.type) {
       const marker = markerRefs.current[refKey(selectedItem.type, selectedItem.data.id)];
@@ -478,12 +655,11 @@ export default function SustainabilityMap() {
       }
     }
   }, [selectedItem]);
-  const handlePinDropped = (latlng) => {
-    const name = window.prompt("Enter a Name for this Custom Pinned Location:");
-    if (name) {
-      setCustomPins(prev => [...prev, { id: Date.now(), name, lat: latlng.lat, lng: latlng.lng }]);
-    }
-    setPinMode(false);
+
+  // Open a village's profile + nearby spots (shared by list rows, cards and popups).
+  const openVillage = (loc) => {
+    setSelectedItem({ data: loc, type: 'village' });
+    fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
   };
 
   const tabs = [
@@ -491,187 +667,101 @@ export default function SustainabilityMap() {
     { id: "villages", label: "Places to Visit", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
     { id: "transportation", label: "Local Resources", icon: Bus },
-    { id: "plan", label: "Plan for me", icon: Wand2 }, // NEW
-    { id: "trip", label: "Plan Trip", icon: RouteIcon }, // NEW
+    { id: "plan", label: "Plan for me", icon: Wand2 },
+    { id: "trip", label: "Plan Trip", icon: RouteIcon },
   ];
 
-  // Replaces the old "Loading live database for map..." text
   if (loading) return <RatnagiriCinematic />;
 
-  // NEW: everything the "Plan for me" wizard can choose from.
-  // Add fee: <your entry-fee column> to villages and pricePerNight: <your
-  // price column> to homestays once you have them, so costs are included.
+  // ---- Derived data -------------------------------------------------------
+
+  // Everything the "Plan for me" wizard can choose from.
   const allPlaces = [
-    ...locations
-      .filter((l) => l.latitude && l.longitude)
-      .map((l) => ({
-        type: 'village',
-        id: l.id,
-        name: l.location_name,
-        lat: l.latitude,
-        lng: l.longitude,
-        tags: CATEGORY_TAGS[l.category] || [],
-        image: driveThumb(l.photo_location), // NEW: photo for the trip planner + PDF
-      })),
-    ...homestays
-      .filter((h) => h.latitude && h.longitude)
-      .map((h) => ({
-        type: 'homestay',
-        id: h.id,
-        name: h.name,
-        lat: h.latitude,
-        lng: h.longitude,
-        image: driveThumb(h.photo_homestay), // NEW
-      })),
+    ...locations.filter((l) => hasCoords(l)).map((l) => ({
+      type: 'village',
+      id: l.id,
+      name: l.location_name,
+      lat: l.latitude,
+      lng: l.longitude,
+      tags: CATEGORY_TAGS[l.category] || [],
+      image: driveThumb(l.photo_location),
+    })),
+    ...homestays.filter((h) => hasCoords(h)).map((h) => ({
+      type: 'homestay',
+      id: h.id,
+      name: h.name,
+      lat: h.latitude,
+      lng: h.longitude,
+      image: driveThumb(h.photo_homestay),
+    })),
   ];
 
-  const talukas = [
-    "All",
-    ...new Set(
-      locations
-        .map((loc) => loc.taluka_name)
-        .filter(Boolean)
-        .sort()
-    ),
-  ];
+  const uniqueSorted = (arr) => ["All", ...new Set(arr.filter(Boolean).sort())];
 
-  const tourismTypes = [
-    { value: "All", label: "All Types" },
-    { value: "Beach Tourism", label: "🏖️ Beach Tourism" },
-    { value: "Heritage Tourism", label: "🏛️ Heritage Tourism" },
-    { value: "Religious Tourism", label: "🛕 Religious Tourism" },
-    { value: "Nature & Eco Tourism", label: "🌿 Nature & Eco Tourism" },
-    { value: "Adventure & Marine Tourism", label: "🚤 Adventure & Marine Tourism" },
-  ];
+  const talukas = uniqueSorted(locations.map((l) => l.taluka_name));
+  // Built from homestays themselves so every homestay's taluka can be selected.
+  const homestayTalukas = uniqueSorted(homestays.map((h) => h.taluka));
+  const homestayTypes = uniqueSorted(homestays.map((h) => h.type));
+  const driverTalukas = uniqueSorted(drivers.map((d) => d.taluka));
+  const vehicleTypes = uniqueSorted(drivers.map((d) => d.vehicleType));
+  const busStopTalukas = uniqueSorted(busStops.map((b) => b.taluka));
 
   const filteredLocations = locations.filter((loc) => {
-    const talukaMatch =
-      selectedTaluka === "All" ||
-      loc.taluka_name === selectedTaluka;
-
-    const tourismTypeMatch =
-      selectedTourismType === "All" ||
-      loc.category === selectedTourismType;
-
-    const searchMatch =
-      (loc.location_name || "")
-        .toLowerCase()
-        .includes(locationSearch.toLowerCase());
-
+    const talukaMatch = selectedTaluka === "All" || loc.taluka_name === selectedTaluka;
+    const typeMatch = selectedTourismType === "All" || loc.category === selectedTourismType;
+    const searchMatch = (loc.location_name || "").toLowerCase().includes(locationSearch.toLowerCase());
     const favoriteMatch = !showFavoritesOnly || isFavorite('village', loc.id);
-
-    return talukaMatch && tourismTypeMatch && searchMatch && favoriteMatch;
-  });
-
-  const homestayTypes = [
-    "All",
-    ...new Set(
-      homestays
-        .map((h) => h.type)
-        .filter(Boolean)
-        .sort()
-    ),
-  ];
-
-  const filteredHomestays = homestays.filter((home) => {
-    const talukaMatch =
-      selectedHomestayTaluka === "All" || home.taluka === selectedHomestayTaluka;
-
-    const typeMatch =
-      selectedHomestayType === "All" || home.type === selectedHomestayType;
-
-    const searchMatch =
-      home.name.toLowerCase().includes(homestaySearch.toLowerCase()) ||
-      (home.owner &&
-        home.owner.toLowerCase().includes(homestaySearch.toLowerCase()));
-
-    const favoriteMatch = !showFavoritesOnly || isFavorite('homestay', home.id);
-
     return talukaMatch && typeMatch && searchMatch && favoriteMatch;
   });
 
-  const driverTalukas = [
-    "All",
-    ...new Set(
-      drivers
-        .map((d) => d.taluka)
-        .filter(Boolean)
-        .sort()
-    ),
-  ];
+  const filteredHomestays = homestays.filter((home) => {
+    const q = homestaySearch.toLowerCase();
+    const talukaMatch = selectedHomestayTaluka === "All" || home.taluka === selectedHomestayTaluka;
+    const typeMatch = selectedHomestayType === "All" || home.type === selectedHomestayType;
+    const searchMatch =
+      (home.name || "").toLowerCase().includes(q) ||
+      (home.owner || "").toLowerCase().includes(q);
+    const favoriteMatch = !showFavoritesOnly || isFavorite('homestay', home.id);
+    return talukaMatch && typeMatch && searchMatch && favoriteMatch;
+  });
 
-  const vehicleTypes = [
-    "All",
-    ...new Set(
-      drivers
-        .map((d) => d.vehicleType)
-        .filter(Boolean)
-        .sort()
-    ),
-  ];
+  const byDistance = (latKey, lngKey) => (a, b) => {
+    if (!userLocation) return 0;
+    const distA = calculateDistance(userLocation.lat, userLocation.lng, a[latKey], a[lngKey]);
+    const distB = calculateDistance(userLocation.lat, userLocation.lng, b[latKey], b[lngKey]);
+    return (distA ?? Infinity) - (distB ?? Infinity);
+  };
 
   const filteredDrivers = drivers
     .filter((d) => {
-      const talukaMatch =
-        selectedDriverTaluka === "All" || d.taluka === selectedDriverTaluka;
-
-      const typeMatch =
-        selectedVehicleType === "All" || d.vehicleType === selectedVehicleType;
-
       const query = driverSearch.toLowerCase();
+      const talukaMatch = selectedDriverTaluka === "All" || d.taluka === selectedDriverTaluka;
+      const typeMatch = selectedVehicleType === "All" || d.vehicleType === selectedVehicleType;
       const searchMatch =
         query === "" ||
         (d.village || "").toLowerCase().includes(query) ||
         (d.taluka || "").toLowerCase().includes(query) ||
         (d.serviceArea || "").toLowerCase().includes(query);
-
       return talukaMatch && typeMatch && searchMatch;
     })
-    .sort((a, b) => {
-      if (!userLocation) return 0;
-      const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
-      const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
-      return (distA ?? Infinity) - (distB ?? Infinity);
-    });
-
-  const busStopTalukas = [
-    "All",
-    ...new Set(
-      busStops
-        .map((b) => b.taluka)
-        .filter(Boolean)
-        .sort()
-    ),
-  ];
+    .sort(byDistance('lat', 'lng'));
 
   const filteredBusStops = busStops
     .filter((b) => selectedBusStopTaluka === "All" || b.taluka === selectedBusStopTaluka)
-    .sort((a, b) => {
-      if (!userLocation) return 0;
-      const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
-      const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
-      return (distA ?? Infinity) - (distB ?? Infinity);
-    });
+    .sort(byDistance('lat', 'lng'));
 
-  // Nearest-first previews for the "All" tab overview sections.
-  // Independent of any tab's own filters — this is a discovery layer, not a
-  // filtered list.
-  const sortByDistance = (arr, latKey = 'latitude', lngKey = 'longitude') => {
-    if (!userLocation) return arr;
-    return [...arr].sort((a, b) => {
-      const distA = calculateDistance(userLocation.lat, userLocation.lng, a[latKey], a[lngKey]);
-      const distB = calculateDistance(userLocation.lat, userLocation.lng, b[latKey], b[lngKey]);
-      return (distA ?? Infinity) - (distB ?? Infinity);
-    });
-  };
+  // Nearest-first previews for the "All" tab. Places respect the map's category chips.
+  const sortByDistance = (arr, latKey = 'latitude', lngKey = 'longitude') =>
+    userLocation ? [...arr].sort(byDistance(latKey, lngKey)) : arr;
 
-  const overviewLocations = sortByDistance(locations).slice(0, 4);
+  const overviewPlaceSource =
+    selectedTourismType === "All" ? locations : locations.filter((l) => l.category === selectedTourismType);
+  const overviewLocations = sortByDistance(overviewPlaceSource).slice(0, 4);
   const overviewHomestays = sortByDistance(homestays).slice(0, 4);
-  const overviewDrivers = sortByDistance(drivers.filter((d) => d.lat && d.lng), 'lat', 'lng').slice(0, 3);
-  const overviewBusStops = sortByDistance(busStops.filter((b) => b.lat && b.lng), 'lat', 'lng').slice(0, 3);
+  const overviewDrivers = sortByDistance(drivers.filter((d) => hasCoords(d, 'lat', 'lng')), 'lat', 'lng').slice(0, 3);
+  const overviewBusStops = sortByDistance(busStops.filter((b) => hasCoords(b, 'lat', 'lng')), 'lat', 'lng').slice(0, 3);
 
-  // NEW: labels only appear once there's room for them (zoom >= 12).
-  // Below that, markers are icon-only so the district view stays clean.
+  // Labels only appear once there's room for them (zoom >= 12).
   const renderLabel = (text, className) =>
     currentZoom >= 12 ? (
       <Tooltip
@@ -685,248 +775,222 @@ export default function SustainabilityMap() {
       </Tooltip>
     ) : null;
 
-  // ---- Marker builders — shared between the per-tab list views and the
-  // combined "All" tab map, so popup markup is never duplicated. ----
-  const buildLocationMarkers = (arr) => arr.map(loc => (
-    <Marker
-      key={`village-${loc.id}`}
-      position={[loc.latitude, loc.longitude]}
-      ref={(ref) => { markerRefs.current[refKey('village', loc.id)] = ref; }}
-      icon={createMarkerIcon(loc.category, selectedItem?.type === 'village' && selectedItem?.data?.id === loc.id)}
-    >
-      {renderLabel(loc.location_name, "bg-white/90 text-slate-800")}
-      <Popup>
-        <div className="text-center">
-          {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
-            <img
-              src={driveIdToImageUrl(loc.photo_location)}
-              alt={loc.location_name}
-              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-            />
-          )}
-          <strong className="block text-base mb-1">{loc.location_name}</strong>
-          <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
-          {userLocation && (
-            <span className="text-xs text-emerald-700 font-medium mb-2 block">
-              {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away from your current location
-            </span>
-          )}
-          <div className="flex items-center gap-2 mt-1">
+  const isSelected = (type, id) => selectedItem?.type === type && selectedItem?.data?.id === id;
+
+  const distanceLabel = (lat, lng, suffix = "km away from your current location") => {
+    const km = distanceKm(userLocation, lat, lng);
+    return km ? `${km} ${suffix}` : null;
+  };
+
+  // ---- Marker builders (shared by the per-tab views and the "All" tab) ----
+
+  const buildLocationMarkers = (arr) => arr.filter((l) => hasCoords(l)).map((loc) => {
+    const img = driveIdToImageUrl(loc.photo_location);
+    const dist = distanceLabel(loc.latitude, loc.longitude);
+    return (
+      <Marker
+        key={`village-${loc.id}`}
+        position={[loc.latitude, loc.longitude]}
+        ref={(ref) => { markerRefs.current[refKey('village', loc.id)] = ref; }}
+        icon={getMarkerIcon(loc.category, isSelected('village', loc.id))}
+      >
+        {renderLabel(loc.location_name, "bg-white/90 text-slate-800")}
+        <Popup>
+          <div className="text-center">
+            {img && (
+              <img
+                src={img}
+                alt={loc.location_name}
+                className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+              />
+            )}
+            <strong className="block text-base mb-1">{loc.location_name}</strong>
+            <span className="text-xs text-slate-500 mb-2 block">{loc.category}</span>
+            {dist && <span className="text-xs text-emerald-700 font-medium mb-2 block">{dist}</span>}
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={() => openVillage(loc)}
+                className="flex-1 py-1.5 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+              >
+                View Detailed Profile
+              </button>
+              <button
+                onClick={() => {
+                  fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
+                  markerRefs.current[refKey('village', loc.id)]?.closePopup();
+                }}
+                title="Show nearby locations"
+                className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                📍
+              </button>
+            </div>
+            <div className="flex justify-center mt-1">
+              <AddToTripButton
+                type="village"
+                id={loc.id}
+                name={loc.location_name}
+                lat={loc.latitude}
+                lng={loc.longitude}
+                image={driveThumb(loc.photo_location)}
+              />
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  });
+
+  const buildHomestayMarkers = (arr) => arr.filter((h) => hasCoords(h)).map((home) => {
+    const img = driveIdToImageUrl(home.photo_homestay);
+    const dist = distanceLabel(home.latitude, home.longitude);
+    return (
+      <Marker
+        key={`homestay-${home.id}`}
+        position={[home.latitude, home.longitude]}
+        ref={(ref) => { markerRefs.current[refKey('homestay', home.id)] = ref; }}
+        icon={getMarkerIcon('Homestays', isSelected('homestay', home.id))}
+      >
+        {renderLabel(home.name, "bg-amber-500/90 text-white")}
+        <Popup>
+          <div className="text-center">
+            {img && (
+              <img
+                src={img}
+                alt={home.name}
+                className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
+              />
+            )}
+            <strong className="block text-base mb-1">{home.name}</strong>
+            <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
+            {dist && <span className="text-xs text-emerald-700 font-medium mb-1 block">{dist}</span>}
+            {home.owner && <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>}
             <button
-              onClick={() => { setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-              className="flex-1 py-1.5 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
+              onClick={() => setSelectedItem({ data: home, type: 'homestay' })}
+              className="w-full py-1.5 mt-1 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors mb-1"
             >
-              View Detailed Profile
+              View Homestay Profile
             </button>
+            <div className="flex justify-center">
+              <AddToTripButton
+                type="homestay"
+                id={home.id}
+                name={home.name}
+                lat={home.latitude}
+                lng={home.longitude}
+                image={driveThumb(home.photo_homestay)}
+              />
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  });
+
+  const buildDriverMarkers = (arr) => arr.filter((d) => hasCoords(d, 'lat', 'lng')).map((d) => {
+    const dist = distanceLabel(d.lat, d.lng);
+    return (
+      <Marker
+        key={`driver-${d.id}`}
+        position={[d.lat, d.lng]}
+        ref={(ref) => { markerRefs.current[refKey('driver', d.id)] = ref; }}
+        icon={getMarkerIcon('Taxi & Auto', isSelected('driver', d.id))}
+      >
+        {renderLabel(d.name, "bg-lime-500/90 text-slate-900")}
+        <Popup>
+          <div className="text-left">
+            <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
+            <span className="text-xs text-slate-500 mb-2 block">{d.vehicleType}</span>
+            {dist && <span className="text-xs text-emerald-700 font-medium mb-2 block">{dist}</span>}
             <button
-              onClick={() => {
-                fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
-                const marker = markerRefs.current[refKey('village', loc.id)];
-                if (marker) marker.closePopup();
-              }}
-              title="Show nearby locations"
-              className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              onClick={() => setSelectedItem({ data: d, type: 'driver' })}
+              className="w-full py-1.5 mt-1 bg-lime-500 text-slate-900 rounded text-xs font-bold hover:bg-lime-600 transition-colors"
             >
-              📍
+              View Driver Profile
             </button>
+            <AddToTripButton type="driver" id={d.id} name={d.name} lat={d.lat} lng={d.lng} />
           </div>
-          <div className="flex justify-center mt-1">
-            <AddToTripButton
-              type="village"
-              id={loc.id}
-              name={loc.location_name}
-              lat={loc.latitude}
-              lng={loc.longitude}
-              image={driveThumb(loc.photo_location)}
-            />
+        </Popup>
+      </Marker>
+    );
+  });
+
+  const buildBusStopMarkers = (arr) => arr.filter((b) => hasCoords(b, 'lat', 'lng')).map((b) => {
+    const dist = distanceLabel(b.lat, b.lng);
+    return (
+      <Marker
+        key={`busstop-${b.id}`}
+        position={[b.lat, b.lng]}
+        ref={(ref) => { markerRefs.current[refKey('busstop', b.id)] = ref; }}
+        icon={getMarkerIcon('Bus Stand', isSelected('busstop', b.id))}
+      >
+        {renderLabel(b.name, "bg-lime-700/90 text-white")}
+        <Popup>
+          <div className="text-left">
+            {b.photo_url && (
+              <img
+                src={b.photo_url}
+                alt={b.name}
+                className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
+              />
+            )}
+            <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
+            <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
+            {dist && <span className="text-xs text-emerald-700 font-medium mb-2 block">{dist}</span>}
+            {b.timetableLink ? (
+              <a
+                href={b.timetableLink}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
+              >
+                ⬇ Download Timetable PDF
+              </a>
+            ) : (
+              <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+            )}
+            <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
           </div>
-        </div>
-      </Popup>
-    </Marker>
-  ));
-
-  const buildHomestayMarkers = (arr) => arr.map(home => (
-    <Marker
-      key={`homestay-${home.id}`}
-      position={[home.latitude, home.longitude]}
-      ref={(ref) => { markerRefs.current[refKey('homestay', home.id)] = ref; }}
-      icon={createMarkerIcon(null, selectedItem?.type === 'homestay' && selectedItem?.data?.id === home.id)}
-    >
-      {renderLabel(home.name, "bg-amber-500/90 text-white")}
-      <Popup>
-        <div className="text-center">
-          {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
-            <img
-              src={driveIdToImageUrl(home.photo_homestay)}
-              alt={home.name}
-              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200"
-            />
-          )}
-          <strong className="block text-base mb-1">{home.name}</strong>
-          <span className="text-xs text-slate-500 mb-2 block">{home.type}</span>
-          {userLocation && (
-            <span className="text-xs text-emerald-700 font-medium mb-1 block">
-              {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
-            </span>
-          )}
-          <span className="text-xs text-slate-500 block mb-1">Owner: {home.owner}</span>
-          <button
-            onClick={() => setSelectedItem({ data: home, type: 'homestay' })}
-            className="w-full py-1.5 mt-1 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors mb-1"
-          >
-            View Homestay Profile
-          </button>
-          <div className="flex justify-center">
-            <AddToTripButton
-              type="homestay"
-              id={home.id}
-              name={home.name}
-              lat={home.latitude}
-              lng={home.longitude}
-              image={driveThumb(home.photo_homestay)}
-            />
-          </div>
-        </div>
-      </Popup>
-    </Marker>
-  ));
-
-  const buildDriverMarkers = (arr) => arr.map(d => (
-    <Marker
-      key={`driver-${d.id}`}
-      position={[d.lat, d.lng]}
-      ref={(ref) => { markerRefs.current[refKey('driver', d.id)] = ref; }}
-      icon={createMarkerIcon('Taxi & Auto', selectedItem?.type === 'driver' && selectedItem?.data?.id === d.id)}
-    >
-      {renderLabel(d.name, "bg-lime-500/90 text-slate-900")}
-      <Popup>
-        <div className="text-left">
-          <strong className="block text-base mb-1 border-b pb-1">{d.name}</strong>
-          <span className="text-xs text-slate-500 mb-2 block">{d.vehicleType}</span>
-          {userLocation && (
-            <span className="text-xs text-emerald-700 font-medium mb-2 block">
-              {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away from your current location
-            </span>
-          )}
-          <button
-            onClick={() => setSelectedItem({ data: d, type: 'driver' })}
-            className="w-full py-1.5 mt-1 bg-lime-500 text-slate-900 rounded text-xs font-bold hover:bg-lime-600 transition-colors"
-          >
-            View Driver Profile
-          </button>
-          <AddToTripButton type="driver" id={d.id} name={d.name} lat={d.lat} lng={d.lng} />
-        </div>
-      </Popup>
-    </Marker>
-  ));
-
-  const buildBusStopMarkers = (arr) => arr.map(b => (
-    <Marker
-      key={`busstop-${b.id}`}
-      position={[b.lat, b.lng]}
-      ref={(ref) => { markerRefs.current[refKey('busstop', b.id)] = ref; }}
-      icon={createMarkerIcon('Bus Stand', selectedItem?.type === 'busstop' && selectedItem?.data?.id === b.id)}
-    >
-      {renderLabel(b.name, "bg-lime-700/90 text-white")}
-      <Popup>
-        <div className="text-left">
-          {b.photo_url && (
-            <img
-              src={b.photo_url}
-              alt={b.name}
-              className="w-full h-32 rounded-lg object-cover mb-2 border border-slate-200 mx-auto"
-            />
-          )}
-          <strong className="block text-base mb-1 border-b pb-1">🚏 {b.name}</strong>
-          <span className="text-xs text-slate-500 mb-2 block">{b.taluka}</span>
-          {userLocation && (
-            <span className="text-xs text-emerald-700 font-medium mb-2 block">
-              {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away from your current location
-            </span>
-          )}
-          {b.timetableLink ? (
-            <a
-              href={b.timetableLink}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full block text-center py-1.5 mt-1 bg-lime-600 text-white rounded text-xs font-bold hover:bg-lime-700 transition-colors"
-            >
-              ⬇ Download Timetable PDF
-            </a>
-          ) : (
-            <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
-          )}
-          <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
-        </div>
-      </Popup>
-    </Marker>
-  ));
+        </Popup>
+      </Marker>
+    );
+  });
 
   const renderActivePins = () => {
     if (activeTab === 'all') {
+      const typeFilterOn = selectedTourismType !== "All";
+      const places = typeFilterOn
+        ? locations.filter((l) => l.category === selectedTourismType)
+        : locations;
       return [
-        ...buildLocationMarkers(locations),
-        ...buildHomestayMarkers(homestays),
-        // CHANGED: drivers and bus stops are hyper-local, so only show them when zoomed in
-        ...(currentZoom >= 13
-          ? [
-              ...buildDriverMarkers(drivers.filter((d) => d.lat && d.lng)),
-              ...buildBusStopMarkers(busStops.filter((b) => b.lat && b.lng)),
-            ]
+        ...buildLocationMarkers(places),
+        // A category chip means "show me only this kind of place".
+        ...(typeFilterOn ? [] : buildHomestayMarkers(homestays)),
+        // Drivers and bus stops are hyper-local, so only show them when zoomed in.
+        ...(!typeFilterOn && currentZoom >= 13
+          ? [...buildDriverMarkers(drivers), ...buildBusStopMarkers(busStops)]
           : []),
       ];
     }
-    if (activeTab === 'villages') {
-      return buildLocationMarkers(filteredLocations);
-    }
-    if (activeTab === 'homestays') {
-      return buildHomestayMarkers(filteredHomestays);
-    }
-    if (activeTab === 'eco') {
-      return eco.map(e => (
-        <Marker
-          key={`eco-${e.id}`}
-          position={[e.latitude, e.longitude]}
-          ref={(ref) => { markerRefs.current[refKey('eco', e.id)] = ref; }}
-          icon={createMarkerIcon(null, selectedItem?.type === 'eco' && selectedItem?.data?.id === e.id)}
-        >
-          <Tooltip direction="top" offset={[0, -20]} opacity={1} permanent className="font-bold text-xs bg-emerald-600/90 shadow-sm border-0 text-white">{e.name}</Tooltip>
-          <Popup>
-            <div className="text-left">
-              <strong className="block text-base mb-1 border-b pb-1">{e.name}</strong>
-              <div className="mt-2 text-xs mb-3">
-                <strong className="block text-emerald-700">Waste Management:</strong>
-                <a href={e.waste} target="_blank" rel="noreferrer" className="text-blue-600 truncate block w-40">View Doc</a>
-              </div>
-              <button
-                onClick={() => setSelectedItem({ data: e, type: 'eco' })}
-                className="w-full py-1.5 mt-1 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 transition-colors"
-              >
-                View Facility Profile
-              </button>
-            </div>
-          </Popup>
-        </Marker>
-      ));
-    }
+    if (activeTab === 'villages') return buildLocationMarkers(filteredLocations);
+    if (activeTab === 'homestays') return buildHomestayMarkers(filteredHomestays);
     if (activeTab === 'transportation') {
-      return [
-        ...buildDriverMarkers(filteredDrivers.filter(d => d.lat && d.lng)),
-        ...buildBusStopMarkers(filteredBusStops.filter(b => b.lat && b.lng)),
-      ];
+      return [...buildDriverMarkers(filteredDrivers), ...buildBusStopMarkers(filteredBusStops)];
     }
-    // 'trip' tab draws its own preview map inside the sidebar, so the main
-    // map shows no data pins here.
+    // 'plan' and 'trip' tabs show no data pins on the main map.
     return null;
   };
 
+  const showMapChips = activeTab === 'all' || activeTab === 'villages';
+
+  // ---- Render --------------------------------------------------------------
+
   return (
-    // Fixed height (viewport minus the 4rem header) instead of h-full,
-    // so the sidebar, map and profile panel each scroll on their own and the
-    // page itself doesn't scroll. Change 4rem if your header height differs.
+    // Fixed height (viewport minus the 4rem header) so the sidebar, map and profile
+    // panel each scroll on their own. Change 4rem if your header height differs.
     <div className="flex flex-col md:flex-row h-[calc(100dvh-4rem)] bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
 
-      {/* INNER SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
+      {/* SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
       <div
         className={`w-full md:w-96 flex-col border-r border-slate-200 bg-slate-50 z-10 min-h-0
           ${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none`}
@@ -941,7 +1005,7 @@ export default function SustainabilityMap() {
 
         {/* Tab Navigation */}
         <div className="flex overflow-x-auto bg-slate-800 text-slate-400 hide-scrollbar shrink-0">
-          {tabs.map(tab => {
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
@@ -958,15 +1022,14 @@ export default function SustainabilityMap() {
                   </span>
                 )}
               </button>
-            )
+            );
           })}
         </div>
 
-        {/* Tab Content — overscroll-contain so scrolling the list never scrolls the page */}
+        {/* Tab Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6 min-h-0">
 
-          {/* ALL TAB — discovery overview: nearest picks per category, each
-              with a "See all" hand-off into that category's full tab. */}
+          {/* ALL TAB — nearest picks per category with "See all" hand-offs */}
           {activeTab === 'all' && (
             <div className="animate-in slide-in-from-right-4 duration-300 space-y-8">
 
@@ -978,10 +1041,9 @@ export default function SustainabilityMap() {
                   <div className="space-y-3">
                     {favorites.slice(0, 5).map((key) => {
                       const [type, idStr] = key.split(':');
-                      const id = Number(idStr);
                       const item =
-                        type === 'village' ? locations.find((l) => l.id === id) :
-                        type === 'homestay' ? homestays.find((h) => h.id === id) :
+                        type === 'village' ? locations.find((l) => String(l.id) === idStr) :
+                        type === 'homestay' ? homestays.find((h) => String(h.id) === idStr) :
                         null;
                       if (!item) return null;
                       const name = type === 'village' ? item.location_name : item.name;
@@ -1001,127 +1063,84 @@ export default function SustainabilityMap() {
               )}
 
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-orange-500 pl-3">Places to Visit</h2>
-                  <button
-                    onClick={() => setActiveTab('villages')}
-                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 shrink-0"
-                  >
-                    See all <ArrowRight size={13} />
-                  </button>
-                </div>
+                <OverviewHeader
+                  title="Places to Visit"
+                  accent="border-orange-500"
+                  linkClass="text-orange-600 hover:text-orange-700"
+                  onSeeAll={() => setActiveTab('villages')}
+                />
                 <div className="space-y-3">
-                  {overviewLocations.map((loc) => (
-                    <div
-                      key={loc.id}
-                      onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      {loc.photo_location && driveIdToImageUrl(loc.photo_location) ? (
-                        <img src={driveIdToImageUrl(loc.photo_location)} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-100" />
-                      ) : (
-                        <span
-                          className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl"
-                          style={{ backgroundColor: (CATEGORY_ICON_MAP[loc.category] || DEFAULT_ICON).color + "22" }}
-                        >
-                          {(CATEGORY_ICON_MAP[loc.category] || DEFAULT_ICON).emoji}
-                        </span>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-slate-800 truncate">{loc.location_name}</p>
-                        <p className="text-xs text-slate-500 truncate">{loc.category}</p>
-                        {userLocation && (
-                          <p className="text-xs text-emerald-700 font-medium">
-                            {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {overviewLocations.length === 0 && (
-                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No places added yet.</p>
-                  )}
+                  {overviewLocations.map((loc) => {
+                    const cat = CATEGORY_ICON_MAP[loc.category] || DEFAULT_ICON;
+                    return (
+                      <OverviewRow
+                        key={loc.id}
+                        hoverClass="hover:border-orange-500"
+                        onClick={() => { handleFlyTo(loc.latitude, loc.longitude); openVillage(loc); }}
+                        thumb={<Thumb src={driveIdToImageUrl(loc.photo_location)} emoji={cat.emoji} bg={cat.color + "22"} />}
+                        title={loc.location_name}
+                        subtitle={loc.category}
+                        distance={distanceKm(userLocation, loc.latitude, loc.longitude)}
+                      />
+                    );
+                  })}
+                  {overviewLocations.length === 0 && <EmptyNote>No places added yet.</EmptyNote>}
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-amber-500 pl-3">Where to Stay</h2>
-                  <button
-                    onClick={() => setActiveTab('homestays')}
-                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 shrink-0"
-                  >
-                    See all <ArrowRight size={13} />
-                  </button>
-                </div>
+                <OverviewHeader
+                  title="Where to Stay"
+                  accent="border-amber-500"
+                  linkClass="text-amber-600 hover:text-amber-700"
+                  onSeeAll={() => setActiveTab('homestays')}
+                />
                 <div className="space-y-3">
                   {overviewHomestays.map((home) => (
-                    <div
+                    <OverviewRow
                       key={home.id}
+                      hoverClass="hover:border-amber-500"
                       onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
-                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-amber-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) ? (
-                        <img src={driveIdToImageUrl(home.photo_homestay)} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-100" />
-                      ) : (
-                        <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-amber-50">🏡</span>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-slate-800 truncate">{home.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{home.village}, {home.taluka}</p>
-                        {userLocation && (
-                          <p className="text-xs text-emerald-700 font-medium">
-                            {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                      thumb={<Thumb src={driveIdToImageUrl(home.photo_homestay)} emoji="🏡" bgClass="bg-amber-50" />}
+                      title={home.name}
+                      subtitle={[home.village, home.taluka].filter(Boolean).join(', ')}
+                      distance={distanceKm(userLocation, home.latitude, home.longitude)}
+                    />
                   ))}
-                  {overviewHomestays.length === 0 && (
-                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No homestays added yet.</p>
-                  )}
+                  {overviewHomestays.length === 0 && <EmptyNote>No homestays added yet.</EmptyNote>}
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-bold text-slate-800 border-l-4 border-lime-500 pl-3">Getting Around</h2>
-                  <button
-                    onClick={() => setActiveTab('transportation')}
-                    className="text-xs font-semibold text-lime-700 hover:text-lime-800 flex items-center gap-1 shrink-0"
-                  >
-                    See all <ArrowRight size={13} />
-                  </button>
-                </div>
+                <OverviewHeader
+                  title="Getting Around"
+                  accent="border-lime-500"
+                  linkClass="text-lime-700 hover:text-lime-800"
+                  onSeeAll={() => setActiveTab('transportation')}
+                />
                 <div className="space-y-3">
                   {overviewDrivers.map((d) => (
-                    <div
+                    <OverviewRow
                       key={`ov-driver-${d.id}`}
+                      hoverClass="hover:border-lime-500"
                       onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
-                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-lime-50">🛺</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-slate-800 truncate">{d.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{d.vehicleType} · {d.village}</p>
-                      </div>
-                    </div>
+                      thumb={<Thumb emoji="🛺" bgClass="bg-lime-50" />}
+                      title={d.name}
+                      subtitle={[d.vehicleType, d.village].filter(Boolean).join(' · ')}
+                    />
                   ))}
                   {overviewBusStops.map((b) => (
-                    <div
+                    <OverviewRow
                       key={`ov-bus-${b.id}`}
+                      hoverClass="hover:border-lime-700"
                       onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
-                      className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-lime-700 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      <span className="w-14 h-14 rounded-lg shrink-0 flex items-center justify-center text-xl bg-lime-50">🚌</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-slate-800 truncate">{b.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{b.taluka}</p>
-                      </div>
-                    </div>
+                      thumb={<Thumb emoji="🚌" bgClass="bg-lime-50" />}
+                      title={b.name}
+                      subtitle={b.taluka}
+                    />
                   ))}
                   {overviewDrivers.length === 0 && overviewBusStops.length === 0 && (
-                    <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">No transport resources added yet.</p>
+                    <EmptyNote>No transport resources added yet.</EmptyNote>
                   )}
                 </div>
               </div>
@@ -1132,51 +1151,18 @@ export default function SustainabilityMap() {
           {/* VILLAGES TAB */}
           {activeTab === 'villages' && (
             <div className="animate-in slide-in-from-right-4 duration-300">
-
               <div className="mb-6">
-
                 <div className="flex items-center gap-2 mb-2">
-                  <label className="text-sm font-semibold text-slate-700 flex-1">
-                    Choose by Taluka
-                  </label>
-
-                  <button
-                    onClick={() => setShowFavoritesOnly((v) => !v)}
-                    title="Show favorites only"
-                    className={`p-1.5 border rounded-lg shrink-0 transition-colors ${
-                      showFavoritesOnly ? "bg-rose-50 border-rose-300" : "border-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Heart size={14} className={showFavoritesOnly ? "fill-rose-500 text-rose-500" : "text-slate-600"} />
-                  </button>
-
-                  {isSearchOpen ? (
-                    <div className="flex items-center border border-slate-300 rounded-lg px-2 py-1 bg-white">
-                      <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
-                      <input
-                        autoFocus
-                        type="text"
-                        placeholder="Search location..."
-                        value={locationSearch}
-                        onChange={(e) => setLocationSearch(e.target.value)}
-                        className="outline-none text-xs w-24 sm:w-32 bg-transparent"
-                      />
-                      <button
-                        onClick={() => { setIsSearchOpen(false); setLocationSearch(""); }}
-                        className="ml-1 shrink-0"
-                      >
-                        <X className="w-3.5 h-3.5 text-slate-400" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsSearchOpen(true)}
-                      className="p-1.5 border border-slate-300 rounded-lg hover:bg-slate-100 shrink-0"
-                      title="Search by location"
-                    >
-                      <Search className="w-3.5 h-3.5 text-slate-600" />
-                    </button>
-                  )}
+                  <label className="text-sm font-semibold text-slate-700 flex-1">Choose by Taluka</label>
+                  <FavoriteFilterButton active={showFavoritesOnly} onClick={() => setShowFavoritesOnly((v) => !v)} />
+                  <SearchToggle
+                    open={isSearchOpen}
+                    setOpen={setIsSearchOpen}
+                    value={locationSearch}
+                    onChange={setLocationSearch}
+                    placeholder="Search location..."
+                    title="Search by location"
+                  />
                 </div>
 
                 <select
@@ -1185,25 +1171,18 @@ export default function SustainabilityMap() {
                   className="w-full border rounded-lg p-2 text-sm"
                 >
                   {talukas.map((taluka) => (
-                    <option key={taluka} value={taluka}>
-                      {taluka}
-                    </option>
+                    <option key={taluka} value={taluka}>{taluka}</option>
                   ))}
                 </select>
 
-                <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">
-                  Choose Type of Attractions
-                </label>
-
+                <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Choose Type of Attractions</label>
                 <select
                   value={selectedTourismType}
                   onChange={(e) => setSelectedTourismType(e.target.value)}
                   className="w-full border rounded-lg p-2 text-sm"
                 >
-                  {tourismTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
+                  {TOURISM_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
                 </select>
 
@@ -1214,7 +1193,7 @@ export default function SustainabilityMap() {
                     )}
                     {selectedTourismType !== "All" && (
                       <FilterChip
-                        label={tourismTypes.find((t) => t.value === selectedTourismType)?.label || selectedTourismType}
+                        label={TOURISM_TYPES.find((t) => t.value === selectedTourismType)?.label || selectedTourismType}
                         onClear={() => setSelectedTourismType("All")}
                       />
                     )}
@@ -1227,78 +1206,80 @@ export default function SustainabilityMap() {
                 <p className="text-xs text-slate-500 mt-3">
                   {filteredLocations.length} {filteredLocations.length === 1 ? "place" : "places"} found
                 </p>
-
               </div>
 
               <div className="space-y-4">
-                {filteredLocations.map(loc => (
-                  <div
-                    key={loc.id}
-                    onClick={() => { handleFlyTo(loc.latitude, loc.longitude); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-                    className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                  >
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleFavorite('village', loc.id); }}
-                      aria-label={isFavorite('village', loc.id) ? "Remove from favorites" : "Save to favorites"}
-                      className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+                {filteredLocations.map((loc) => {
+                  const img = driveIdToImageUrl(loc.photo_location);
+                  const km = distanceKm(userLocation, loc.latitude, loc.longitude);
+                  return (
+                    <div
+                      key={loc.id}
+                      onClick={() => { handleFlyTo(loc.latitude, loc.longitude); openVillage(loc); }}
+                      className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                     >
-                      <Heart size={16} className={isFavorite('village', loc.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
-                    </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite('village', loc.id); }}
+                        aria-label={isFavorite('village', loc.id) ? "Remove from favorites" : "Save to favorites"}
+                        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+                      >
+                        <Heart size={16} className={isFavorite('village', loc.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
+                      </button>
 
-                    {loc.photo_location && driveIdToImageUrl(loc.photo_location) && (
-                      <img
-                        src={driveIdToImageUrl(loc.photo_location)}
-                        alt={loc.location_name}
-                        className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
-                      />
-                    )}
-
-                    <h3 className="font-bold text-slate-800 mb-2 pr-8">{loc.location_name}</h3>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1"><MapPin size={12}/> {loc.village_name}</span>
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">Taluka: {loc.taluka_name}</span>
-                      {userLocation && (
-                        <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded font-medium">
-                          {calculateDistance(userLocation.lat, userLocation.lng, loc.latitude, loc.longitude)?.toFixed(1)} km away
-                        </span>
+                      {img && (
+                        <img
+                          src={img}
+                          alt={loc.location_name}
+                          className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
+                        />
                       )}
+
+                      <h3 className="font-bold text-slate-800 mb-2 pr-8">{loc.location_name}</h3>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium flex items-center gap-1">
+                          <MapPin size={12} /> {loc.village_name}
+                        </span>
+                        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded font-medium">
+                          Taluka: {loc.taluka_name}
+                        </span>
+                        {km && (
+                          <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded font-medium">
+                            {km} km away
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openVillage(loc); }}
+                          className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <ImageIcon size={14} /> View Profile
+                        </button>
+                        <ShowRouteButton onClick={() => handleShowRoute(loc.latitude, loc.longitude)} />
+                        <AddToTripButton
+                          type="village"
+                          id={loc.id}
+                          name={loc.location_name}
+                          lat={loc.latitude}
+                          lng={loc.longitude}
+                          image={driveThumb(loc.photo_location)}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: loc, type: 'village' }); fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude); }}
-                        className="w-full py-1.5 mt-1 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition-colors"
-                      >
-                        <ImageIcon size={14} /> View Profile
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleShowRoute(loc.latitude, loc.longitude); }}
-                        className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
-                      >
-                        🧭 Show Route
-                      </button>
-                      {/* NEW */}
-                      <AddToTripButton
-                        type="village"
-                        id={loc.id}
-                        name={loc.location_name}
-                        lat={loc.latitude}
-                        lng={loc.longitude}
-                        image={driveThumb(loc.photo_location)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {filteredLocations.length === 0 && (
-                  <div className="text-center py-10">
-                    <Frown className="mx-auto mb-3 text-slate-300" size={32} />
-                    <p className="text-sm text-slate-500 mb-3">No places match your filters.</p>
-                    <button
-                      onClick={() => { setSelectedTaluka("All"); setSelectedTourismType("All"); setLocationSearch(""); setShowFavoritesOnly(false); }}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors"
-                    >
-                      <RotateCcw size={12} /> Clear filters
-                    </button>
-                  </div>
+                  <EmptyState
+                    big
+                    message="No places match your filters."
+                    buttonClass="text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100"
+                    onClear={() => {
+                      setSelectedTaluka("All");
+                      setSelectedTourismType("All");
+                      setLocationSearch("");
+                      setShowFavoritesOnly(false);
+                    }}
+                  />
                 )}
               </div>
             </div>
@@ -1310,49 +1291,17 @@ export default function SustainabilityMap() {
               <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Local Authentic Homestays</h2>
 
               <div className="mb-6">
-
                 <div className="flex items-center gap-2 mb-2">
-                  <label className="text-sm font-semibold text-slate-700 flex-1">
-                    Choose by Taluka
-                  </label>
-
-                  <button
-                    onClick={() => setShowFavoritesOnly((v) => !v)}
-                    title="Show favorites only"
-                    className={`p-1.5 border rounded-lg shrink-0 transition-colors ${
-                      showFavoritesOnly ? "bg-rose-50 border-rose-300" : "border-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Heart size={14} className={showFavoritesOnly ? "fill-rose-500 text-rose-500" : "text-slate-600"} />
-                  </button>
-
-                  {isHomestaySearchOpen ? (
-                    <div className="flex items-center border border-slate-300 rounded-lg px-2 py-1 bg-white">
-                      <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
-                      <input
-                        autoFocus
-                        type="text"
-                        placeholder="Search homestay..."
-                        value={homestaySearch}
-                        onChange={(e) => setHomestaySearch(e.target.value)}
-                        className="outline-none text-xs w-24 sm:w-32 bg-transparent"
-                      />
-                      <button
-                        onClick={() => { setIsHomestaySearchOpen(false); setHomestaySearch(""); }}
-                        className="ml-1 shrink-0"
-                      >
-                        <X className="w-3.5 h-3.5 text-slate-400" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsHomestaySearchOpen(true)}
-                      className="p-1.5 border border-slate-300 rounded-lg hover:bg-slate-100 shrink-0"
-                      title="Search by homestay"
-                    >
-                      <Search className="w-3.5 h-3.5 text-slate-600" />
-                    </button>
-                  )}
+                  <label className="text-sm font-semibold text-slate-700 flex-1">Choose by Taluka</label>
+                  <FavoriteFilterButton active={showFavoritesOnly} onClick={() => setShowFavoritesOnly((v) => !v)} />
+                  <SearchToggle
+                    open={isHomestaySearchOpen}
+                    setOpen={setIsHomestaySearchOpen}
+                    value={homestaySearch}
+                    onChange={setHomestaySearch}
+                    placeholder="Search homestay..."
+                    title="Search by homestay"
+                  />
                 </div>
 
                 <select
@@ -1360,26 +1309,19 @@ export default function SustainabilityMap() {
                   onChange={(e) => setSelectedHomestayTaluka(e.target.value)}
                   className="w-full border rounded-lg p-2 text-sm"
                 >
-                  {talukas.map((taluka) => (
-                    <option key={taluka} value={taluka}>
-                      {taluka}
-                    </option>
+                  {homestayTalukas.map((taluka) => (
+                    <option key={taluka} value={taluka}>{taluka}</option>
                   ))}
                 </select>
 
-                <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">
-                  Choose Type of Homestays
-                </label>
-
+                <label className="block text-sm font-semibold text-slate-700 mb-2 mt-4">Choose Type of Homestays</label>
                 <select
                   value={selectedHomestayType}
                   onChange={(e) => setSelectedHomestayType(e.target.value)}
                   className="w-full border rounded-lg p-2 text-sm"
                 >
                   {homestayTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type === "All" ? "All Types" : type}
-                    </option>
+                    <option key={type} value={type}>{type === "All" ? "All Types" : type}</option>
                   ))}
                 </select>
 
@@ -1400,126 +1342,81 @@ export default function SustainabilityMap() {
                 <p className="text-xs text-slate-500 mt-3">
                   {filteredHomestays.length} {filteredHomestays.length === 1 ? "homestay" : "homestays"} found
                 </p>
-
               </div>
 
               <div className="space-y-4">
-                {filteredHomestays.map(home => (
-                  <div
-                    key={home.id}
-                    onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
-                    className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                  >
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleFavorite('homestay', home.id); }}
-                      aria-label={isFavorite('homestay', home.id) ? "Remove from favorites" : "Save to favorites"}
-                      className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+                {filteredHomestays.map((home) => {
+                  const img = driveIdToImageUrl(home.photo_homestay);
+                  const km = distanceKm(userLocation, home.latitude, home.longitude);
+                  return (
+                    <div
+                      key={home.id}
+                      onClick={() => { handleFlyTo(home.latitude, home.longitude); setSelectedItem({ data: home, type: 'homestay' }); }}
+                      className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
                     >
-                      <Heart size={16} className={isFavorite('homestay', home.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
-                    </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite('homestay', home.id); }}
+                        aria-label={isFavorite('homestay', home.id) ? "Remove from favorites" : "Save to favorites"}
+                        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 shadow-sm hover:scale-110 transition-transform"
+                      >
+                        <Heart size={16} className={isFavorite('homestay', home.id) ? "fill-rose-500 text-rose-500" : "text-slate-300"} />
+                      </button>
 
-                    {home.photo_homestay && driveIdToImageUrl(home.photo_homestay) && (
-                      <img
-                        src={driveIdToImageUrl(home.photo_homestay)}
-                        alt={home.name}
-                        className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
-                      />
-                    )}
-
-                    <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2 pr-8">
-                      {home.name} <ShieldCheck size={14} className="text-emerald-500" />
-                    </h3>
-                    <p className="text-sm text-slate-600 mb-1">
-                      <strong>Location:</strong> {home.village}, {home.taluka}
-                      {userLocation && (
-                        <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
-                          · {calculateDistance(userLocation.lat, userLocation.lng, home.latitude, home.longitude)?.toFixed(1)} km away from your current location
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-slate-600 mb-2">
-                      <strong>Owner:</strong> {home.owner} (
-                      <a href={`tel:${home.phone.split('/')[0].trim()}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline font-medium">
-                        {home.phone}
-                      </a>
-                      )
-                    </p>
-                    <p className="text-xs text-slate-500 mb-3 italic">{home.amenities.substring(0, 60)}...</p>
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
-                      <div className="flex items-center gap-3 flex-wrap">
-
-                        <a
-                          href={`https://wa.me/91${home.phone.split('/')[0].replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700 py-1"
-                          title="Chat on WhatsApp"
-                        >
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                            <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.36.101 11.943c0 2.105.549 4.161 1.595 5.972L0 24l6.238-1.635a11.918 11.918 0 005.804 1.477h.005c6.585 0 11.941-5.362 11.943-11.943a11.86 11.86 0 00-3.47-8.45zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.36-.214-3.735.98.998-3.641-.235-.374a9.86 9.86 0 01-1.51-5.264C2.176 6.463 6.634 2.006 12.05 2.006c2.629 0 5.098 1.024 6.955 2.883a9.788 9.788 0 012.876 6.966c-.003 5.416-4.46 9.93-9.831 9.93z"/>
-                          </svg>
-                          WhatsApp
-                        </a>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleShowRoute(home.latitude, home.longitude); }}
-                          className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
-                        >
-                          🧭 Show Route
-                        </button>
-                        {/* NEW */}
-                        <AddToTripButton
-                          type="homestay"
-                          id={home.id}
-                          name={home.name}
-                          lat={home.latitude}
-                          lng={home.longitude}
-                          image={driveThumb(home.photo_homestay)}
+                      {img && (
+                        <img
+                          src={img}
+                          alt={home.name}
+                          className="w-full h-28 rounded-lg object-cover mb-3 border border-slate-100"
                         />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {filteredHomestays.length === 0 && (
-                  <div className="text-center py-6">
-                    <Frown className="mx-auto mb-2 text-slate-300" size={28} />
-                    <p className="text-sm text-slate-500 mb-3">No homestays match your filters.</p>
-                    <button
-                      onClick={() => { setSelectedHomestayTaluka("All"); setSelectedHomestayType("All"); setHomestaySearch(""); setShowFavoritesOnly(false); }}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-full transition-colors"
-                    >
-                      <RotateCcw size={12} /> Clear filters
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                      )}
 
-          {/* SUSTAINABILITY TAB */}
-          {activeTab === 'eco' && (
-            <div className="animate-in slide-in-from-right-4 duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Environmental Infrastructure</h2>
-              <div className="space-y-4">
-                {eco.map(e => (
-                  <div
-                    key={e.id}
-                    onClick={() => { handleFlyTo(e.latitude, e.longitude); setSelectedItem({ data: e, type: 'eco' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                  >
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-2">{e.name}</h3>
-                    <div className="text-sm text-slate-600 space-y-3 mt-3">
-                      <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                        <strong className="block text-emerald-700 mb-1 text-xs uppercase tracking-wide">Waste Management</strong>
-                        <a href={e.waste} target="_blank" rel="noreferrer" onClick={evt => evt.stopPropagation()} className="text-blue-600 flex items-center gap-1 text-xs hover:underline">
-                          <Link size={12} /> View Official Document
-                        </a>
+                      <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2 pr-8">
+                        {home.name} <ShieldCheck size={14} className="text-emerald-500" />
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-1">
+                        <strong>Location:</strong> {home.village}, {home.taluka}
+                        {km && (
+                          <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
+                            · {km} km away from your current location
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm text-slate-600 mb-2">
+                        <strong>Owner:</strong> {home.owner} (<PhoneLink phone={home.phone} />)
+                      </p>
+                      {home.amenities && (
+                        <p className="text-xs text-slate-500 mb-3 italic">{truncate(home.amenities, 60)}</p>
+                      )}
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <WhatsAppLink phone={home.phone} />
+                          <ShowRouteButton onClick={() => handleShowRoute(home.latitude, home.longitude)} />
+                          <AddToTripButton
+                            type="homestay"
+                            id={home.id}
+                            name={home.name}
+                            lat={home.latitude}
+                            lng={home.longitude}
+                            image={driveThumb(home.photo_homestay)}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+                {filteredHomestays.length === 0 && (
+                  <EmptyState
+                    message="No homestays match your filters."
+                    buttonClass="text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100"
+                    onClear={() => {
+                      setSelectedHomestayTaluka("All");
+                      setSelectedHomestayType("All");
+                      setHomestaySearch("");
+                      setShowFavoritesOnly(false);
+                    }}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -1551,9 +1448,7 @@ export default function SustainabilityMap() {
                 className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
               >
                 {driverTalukas.map((taluka) => (
-                  <option key={taluka} value={taluka}>
-                    {taluka === "All" ? "All Talukas" : taluka}
-                  </option>
+                  <option key={taluka} value={taluka}>{taluka === "All" ? "All Talukas" : taluka}</option>
                 ))}
               </select>
 
@@ -1563,9 +1458,7 @@ export default function SustainabilityMap() {
                 className="w-full mb-4 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
               >
                 {vehicleTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type === "All" ? "All Vehicle Types" : type}
-                  </option>
+                  <option key={type} value={type}>{type === "All" ? "All Vehicle Types" : type}</option>
                 ))}
               </select>
 
@@ -1588,71 +1481,47 @@ export default function SustainabilityMap() {
               </p>
 
               <div className="space-y-4">
-                {filteredDrivers.map(d => (
-                  <div
-                    key={d.id}
-                    onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                  >
-                    <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
-                      {d.name} <ShieldCheck size={14} className="text-emerald-500" />
-                    </h3>
-                    <p className="text-sm text-slate-600 mb-1">
-                      <strong>Base:</strong> {d.village}, {d.taluka}
-                      {userLocation && (
-                        <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
-                          · {calculateDistance(userLocation.lat, userLocation.lng, d.lat, d.lng)?.toFixed(1)} km away
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-slate-600 mb-2">
-                      <strong>Contact:</strong> (
-                      <a href={`tel:${(d.phone || '').split('/')[0].trim()}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline font-medium">
-                        {d.phone}
-                      </a>
-                      )
-                    </p>
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <span className="px-2 py-1 bg-lime-100 text-lime-800 text-xs rounded font-bold">{d.vehicleType}</span>
-                      <div className="flex items-center gap-3 flex-wrap">
-
-                        <a
-                          href={`https://wa.me/91${(d.phone || '').split('/')[0].replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-green-600 text-xs font-medium flex items-center gap-1 hover:text-green-700 py-1"
-                          title="Chat on WhatsApp"
-                        >
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                            <path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.36.101 11.943c0 2.105.549 4.161 1.595 5.972L0 24l6.238-1.635a11.918 11.918 0 005.804 1.477h.005c6.585 0 11.941-5.362 11.943-11.943a11.86 11.86 0 00-3.47-8.45zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.36-.214-3.735.98.998-3.641-.235-.374a9.86 9.86 0 01-1.51-5.264C2.176 6.463 6.634 2.006 12.05 2.006c2.629 0 5.098 1.024 6.955 2.883a9.788 9.788 0 012.876 6.966c-.003 5.416-4.46 9.93-9.831 9.93z"/>
-                          </svg>
-                          WhatsApp
-                        </a>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleShowRoute(d.lat, d.lng); }}
-                          className="text-emerald-600 text-xs font-medium flex items-center gap-1 hover:text-emerald-800 py-1"
-                        >
-                          🧭 Show Route
-                        </button>
-                        {/* NEW */}
-                        <AddToTripButton type="driver" id={d.id} name={d.name} lat={d.lat} lng={d.lng} />
+                {filteredDrivers.map((d) => {
+                  const km = distanceKm(userLocation, d.lat, d.lng);
+                  return (
+                    <div
+                      key={d.id}
+                      onClick={() => { handleFlyTo(d.lat, d.lng); setSelectedItem({ data: d, type: 'driver' }); }}
+                      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                        {d.name} <ShieldCheck size={14} className="text-emerald-500" />
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-1">
+                        <strong>Base:</strong> {d.village}, {d.taluka}
+                        {km && (
+                          <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">· {km} km away</span>
+                        )}
+                      </p>
+                      <p className="text-sm text-slate-600 mb-2">
+                        <strong>Contact:</strong> (<PhoneLink phone={d.phone} />)
+                      </p>
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <span className="px-2 py-1 bg-lime-100 text-lime-800 text-xs rounded font-bold">{d.vehicleType}</span>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <WhatsAppLink phone={d.phone} />
+                          <ShowRouteButton onClick={() => handleShowRoute(d.lat, d.lng)} />
+                          <AddToTripButton type="driver" id={d.id} name={d.name} lat={d.lat} lng={d.lng} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {filteredDrivers.length === 0 && (
-                  <div className="text-center py-6">
-                    <Frown className="mx-auto mb-2 text-slate-300" size={28} />
-                    <p className="text-sm text-slate-500 mb-3">No drivers match your filters.</p>
-                    <button
-                      onClick={() => { setSelectedDriverTaluka("All"); setSelectedVehicleType("All"); setDriverSearch(""); }}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors"
-                    >
-                      <RotateCcw size={12} /> Clear filters
-                    </button>
-                  </div>
+                  <EmptyState
+                    message="No drivers match your filters."
+                    buttonClass="text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100"
+                    onClear={() => {
+                      setSelectedDriverTaluka("All");
+                      setSelectedVehicleType("All");
+                      setDriverSearch("");
+                    }}
+                  />
                 )}
               </div>
 
@@ -1669,9 +1538,7 @@ export default function SustainabilityMap() {
                   className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 >
                   {busStopTalukas.map((taluka) => (
-                    <option key={taluka} value={taluka}>
-                      {taluka === "All" ? "All Talukas" : taluka}
-                    </option>
+                    <option key={taluka} value={taluka}>{taluka === "All" ? "All Talukas" : taluka}</option>
                   ))}
                 </select>
               )}
@@ -1681,67 +1548,61 @@ export default function SustainabilityMap() {
               </p>
 
               <div className="space-y-4">
-                {filteredBusStops.map(b => (
-                  <div
-                    key={b.id}
-                    onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
-                    className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-                  >
-                    <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
-                      🚏 {b.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 mb-2">
-                      <strong>Taluka:</strong> {b.taluka}
-                      {userLocation && (
-                        <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">
-                          · {calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng)?.toFixed(1)} km away
-                        </span>
-                      )}
-                    </p>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {b.timetableLink ? (
-                        <a
-                          href={b.timetableLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-white bg-lime-600 hover:bg-lime-700 px-3 py-1.5 rounded transition-colors"
-                        >
-                          ⬇ Download bus timetable
-                        </a>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
-                      )}
-                      {/* NEW */}
-                      <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
+                {filteredBusStops.map((b) => {
+                  const km = distanceKm(userLocation, b.lat, b.lng);
+                  return (
+                    <div
+                      key={b.id}
+                      onClick={() => { handleFlyTo(b.lat, b.lng); setSelectedItem({ data: b, type: 'busstop' }); }}
+                      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-lime-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">🚏 {b.name}</h3>
+                      <p className="text-sm text-slate-600 mb-2">
+                        <strong>Taluka:</strong> {b.taluka}
+                        {km && (
+                          <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">· {km} km away</span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {b.timetableLink ? (
+                          <a
+                            href={b.timetableLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-lime-600 hover:bg-lime-700 px-3 py-1.5 rounded transition-colors"
+                          >
+                            ⬇ Download bus timetable
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">No timetable uploaded yet.</span>
+                        )}
+                        <AddToTripButton type="busstop" id={b.id} name={b.name} lat={b.lat} lng={b.lng} image={b.photo_url} />
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {filteredBusStops.length === 0 && (
-                  <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">
-                    No bus stands added yet.
-                  </p>
-                )}
+                  );
+                })}
+                {filteredBusStops.length === 0 && <EmptyNote>No bus stands added yet.</EmptyNote>}
               </div>
             </div>
           )}
 
-          {/* NEW: PLAN FOR ME TAB — wizard that builds a trip from days, budget and interests */}
+          {/* PLAN FOR ME TAB — wizard that builds a trip from days, budget and interests */}
           {activeTab === 'plan' && (
             <PlanMyTrip places={allPlaces} onPlanCreated={() => setActiveTab('trip')} />
           )}
 
-          {/* NEW: PLAN TRIP TAB */}
+          {/* PLAN TRIP TAB */}
           {activeTab === 'trip' && <TripPlanner userLocation={userLocation} />}
         </div>
       </div>
 
       {/* MAP AREA — full-screen pane on mobile (toggled), flexible column on desktop */}
-      <div
-        className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}
-        style={{ cursor: pinMode ? 'crosshair' : 'grab' }}
-      >
+      <div className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}>
         <MapLegend />
+        {showMapChips && (
+          <MapCategoryChips value={selectedTourismType} onChange={setSelectedTourismType} />
+        )}
         {activeRoute && (
           <div className="absolute top-14 sm:top-16 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-2 sm:gap-3">
             <span className="text-xs sm:text-sm font-bold text-slate-800">
@@ -1750,6 +1611,7 @@ export default function SustainabilityMap() {
             <button
               onClick={() => setActiveRoute(null)}
               className="text-slate-400 hover:text-slate-600 text-sm"
+              aria-label="Clear route"
             >
               ✕
             </button>
@@ -1758,7 +1620,6 @@ export default function SustainabilityMap() {
         <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
           <ZoomControl position="topright" />
           <LayersControl position="bottomleft">
-            {/* CHANGED: Street Map now uses Stadia Maps (alidade_smooth) with the user's API key */}
             <LayersControl.BaseLayer checked name="Street Map">
               <TileLayer
                 url={`https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_KEY}`}
@@ -1767,45 +1628,42 @@ export default function SustainabilityMap() {
               />
             </LayersControl.BaseLayer>
 
+            {/* Satellite imagery + its place-name labels, grouped so the labels
+                only show on satellite (Street Map already has its own labels). */}
             <LayersControl.BaseLayer name="Satellite">
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-              />
+              <LayerGroup>
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                  attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+                  maxNativeZoom={19}
+                  maxZoom={20}
+                />
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                  maxNativeZoom={19}
+                  maxZoom={20}
+                />
+              </LayerGroup>
             </LayersControl.BaseLayer>
           </LayersControl>
-
-          <TileLayer
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-            attribution=""
-          />
 
           {districtBorder && (
             <GeoJSON
               data={districtBorder}
-              style={{
-                color: "#dc2626",
-                weight: 2.5,
-                fillOpacity: 0,
-                dashArray: "5, 4"
-              }}
+              style={{ color: "#dc2626", weight: 2.5, fillOpacity: 0, dashArray: "5, 4" }}
               interactive={false}
             />
           )}
 
-          {/* On open, fit the map to the whole Ratnagiri district */}
           <InitialView
             border={districtBorder}
-            points={locations
-              .filter((l) => l.latitude && l.longitude)
-              .map((l) => [l.latitude, l.longitude])}
+            points={locations.filter((l) => hasCoords(l)).map((l) => [l.latitude, l.longitude])}
           />
           <MapController position={mapPosition} />
           <NearbyBoundsController origin={nearbyOrigin} nearby={nearbyLocations} />
           <ZoomWatcher onZoomChange={setCurrentZoom} />
-          <MapClickHandler isActive={pinMode} onPinDropped={handlePinDropped} />
 
-          {/* Render Active Data Pins — CHANGED: clustered so the district view stays readable */}
+          {/* Active data pins, clustered so the district view stays readable */}
           <MarkerClusterGroup
             ref={clusterRef}
             chunkedLoading
@@ -1837,7 +1695,7 @@ export default function SustainabilityMap() {
           ))}
 
           {nearbyLocations.map((n, idx) => (
-            <Marker key={`nearby-marker-${idx}`} position={[n.lat, n.lng]} icon={createNearbyIcon(currentZoom)}>
+            <Marker key={`nearby-marker-${idx}`} position={[n.lat, n.lng]} icon={getNearbyIcon(currentZoom)}>
               {currentZoom >= 12 && (
                 <Tooltip
                   direction="top"
@@ -1852,9 +1710,9 @@ export default function SustainabilityMap() {
             </Marker>
           ))}
 
-          {/* User's current location marker */}
+          {/* User's current location */}
           {userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lng]}>
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={USER_ICON} zIndexOffset={1000}>
               <Popup>You are here</Popup>
             </Marker>
           )}
@@ -1867,21 +1725,12 @@ export default function SustainabilityMap() {
               style={{ color: "#2563eb", weight: 5, opacity: 0.8 }}
             />
           )}
-
-          {/* User Custom Pins */}
-          {customPins.map(pin => (
-            <Marker key={pin.id} position={[pin.lat, pin.lng]}>
-              <Popup>
-                <strong>{pin.name}</strong><br />User Contributed Profile Pin.
-              </Popup>
-            </Marker>
-          ))}
         </MapContainer>
       </div>
 
       {/* Floating List/Map toggle — mobile only */}
       <button
-        onClick={() => setMobileView(v => (v === 'list' ? 'map' : 'list'))}
+        onClick={() => setMobileView((v) => (v === 'list' ? 'map' : 'list'))}
         className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[1500] flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-full shadow-xl font-semibold text-sm active:scale-95 transition-transform"
       >
         {mobileView === 'list' ? (
@@ -1901,7 +1750,6 @@ export default function SustainabilityMap() {
           />
         </div>
       )}
-
     </div>
   );
 }
