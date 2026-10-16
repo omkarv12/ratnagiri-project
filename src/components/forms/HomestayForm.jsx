@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 import DraftResumeModal from "./DraftResumeModal";
+import RatnagiriLocationFields from "../RatnagiriLocationFields";
 import { useFormDraft } from "../../hooks/useFormDraft";
 
 const MIN_PHOTO_SIZE = 500 * 1024;
@@ -655,43 +656,17 @@ export default function HomestayForm({ onSuccess }) {
                     </div>
                 </Full>
 
-                <div>
-                    <label className={labelCls}>Village / Town / City Name<Required /></label>
-                    <input
-                        type="text"
-                        name="village_name"
-                        value={formData.village_name}
-                        onChange={handleChange}
-                        className={inputCls}
-                        placeholder="e.g. Kelshi"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className={labelCls}>Taluka Name<Required /></label>
-                    <input
-                        type="text"
-                        name="taluka_name"
-                        value={formData.taluka_name}
-                        onChange={handleChange}
-                        className={inputCls}
-                        placeholder="e.g. Dapoli"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className={labelCls}>District Name<Required /></label>
-                    <input
-                        type="text"
-                        name="district_name"
-                        value={formData.district_name}
-                        onChange={handleChange}
-                        className={inputCls}
-                        required
-                    />
-                </div>
+                {/* District -> Taluka -> Village, from the local Ratnagiri villages list */}
+                <RatnagiriLocationFields
+                    taluka={formData.taluka_name}
+                    village={formData.village_name}
+                    inputClass={inputCls}
+                    labelClass={labelCls}
+                    onChange={(patch) => {
+                        if (formError) setFormError("");
+                        setFormData((prev) => ({ ...prev, ...patch }));
+                    }}
+                />
 
                 <Full>
                     <label className={labelCls}>Location on Map<Required /></label>

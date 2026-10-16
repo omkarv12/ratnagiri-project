@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import API_BASE_URL from "../../config";
 import LocationPicker from "./LocationPicker";
 import DraftResumeModal from "./DraftResumeModal";
+import RatnagiriLocationFields from "../RatnagiriLocationFields";
 import { useFormDraft } from "../../hooks/useFormDraft";
 
 const DRAFT_KEY = "ratnagiri_driver_form_draft";
@@ -489,43 +490,19 @@ export default function DriverForm({ onSuccess }) {
                     />
                 </div>
 
-                <div>
-                    <label className={labelCls}>Base Village / Stand<Required /></label>
-                    <input
-                        type="text"
-                        name="base_village"
-                        value={formData.base_village}
-                        onChange={handleChange}
-                        className={inputCls}
-                        placeholder="e.g. Ganpatipule Stand"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className={labelCls}>Taluka Name<Required /></label>
-                    <input
-                        type="text"
-                        name="taluka_name"
-                        value={formData.taluka_name}
-                        onChange={handleChange}
-                        className={inputCls}
-                        placeholder="e.g. Ratnagiri"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className={labelCls}>District Name<Required /></label>
-                    <input
-                        type="text"
-                        name="district_name"
-                        value={formData.district_name}
-                        onChange={handleChange}
-                        className={inputCls}
-                        required
-                    />
-                </div>
+                {/* District -> Taluka -> Village (base village / stand), from the local
+                    Ratnagiri villages list. "Other" lets the driver type a stand name. */}
+                <RatnagiriLocationFields
+                    taluka={formData.taluka_name}
+                    village={formData.base_village}
+                    villageKey="base_village"
+                    inputClass={inputCls}
+                    labelClass={labelCls}
+                    onChange={(patch) => {
+                        if (formError) setFormError("");
+                        setFormData((prev) => ({ ...prev, ...patch }));
+                    }}
+                />
 
                 <Full>
                     <label className={labelCls}>Location on Map<Required /></label>
