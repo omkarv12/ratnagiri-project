@@ -425,7 +425,11 @@ export default function AdminDashboard() {
                             "latitude",
                             "longitude",
                             "photo_location",
-                            "site_photos"
+                            "site_photos",
+                            "phone_number",
+                            "user_type",
+                            "is_crowded",
+                            "site_activity_details_doc"
                           ].map((field) => (
                             <div key={field} className="mb-2">
                               <label className="block font-semibold capitalize">{field.replace(/_/g, ' ')}:</label>
@@ -522,7 +526,14 @@ export default function AdminDashboard() {
                             "amenities_photos",
                             "google_map_link",
                             "latitude",
-                            "longitude"
+                            "longitude",
+                            "email",
+                            "homestay_location",
+                            "room_type",
+                            "price_range",
+                            "check_in_out_time",
+                            "activity_details_doc",
+                            "suggestions_improvements"
                           ].map((field) => (
                             <div key={field} className="mb-2">
                               <label className="block font-semibold capitalize">{field.replace(/_/g, ' ')}:</label>
