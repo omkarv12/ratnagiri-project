@@ -247,7 +247,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tourism Administration Panel</h1>
         <p className="text-gray-600 mb-8">Manage pending tourist locations, homestays and eco submissions.</p>
 
-        {activeTab === "analytics" && <AnalyticsDashboard />}
+        {activeTab === "analytics" && <AnalyticsDashboard onNavigate={setActiveTab} />}
 
         {activeTab === "pendingSubmissions" && (
           <section>
