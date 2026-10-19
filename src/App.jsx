@@ -109,8 +109,8 @@ export default function App() {
             />
 
             <Route
-              path="/economy"
-              element={<Economy />}
+            path="/about/culture"
+            element={<Culture />}
             />
 
             <Route
