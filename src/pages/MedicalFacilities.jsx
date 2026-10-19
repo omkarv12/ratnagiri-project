@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+import API_BASE_URL from "../config";
 
 /* ---- Scroll reveal (same pattern as other pages) --------------------- */
 function useInView(threshold = 0.15) {
@@ -549,7 +549,7 @@ export default function MedicalFacilities() {
   // Load facilities from the API
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE}/api/medical-facilities`)
+    fetch(`${API_BASE_URL}/api/medical-facilities`)
       .then((res) => {
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         return res.json();
