@@ -10,6 +10,7 @@ import SustainabilityMap from "./pages/SustainabilityMap";
 import AdminDashboard from "./pages/AdminDashboard";
 import Society from "./pages/Society";
 import Economy from "./pages/Economy";
+import Culture from "./pages/Culture";
 import GoodGovernance from "./pages/GoodGovernance";
 import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
@@ -110,6 +111,11 @@ export default function App() {
             <Route
               path="/economy"
               element={<Economy />}
+            />
+
+            <Route
+              path="/culture"
+              element={<Culture />}
             />
 
             <Route
