@@ -57,7 +57,8 @@ function useLocationPhotos(loc, type) {
 
   const name = loc?.location_name || loc?.name || loc?.homestay_name;
   const id = loc?.id;
-  const busPhoto = loc?.photo_url;
+  // Bus stops and ATMs carry a single direct photo URL instead of a Drive folder.
+  const singlePhoto = loc?.photo_url;
 
   useEffect(() => {
     setPhotos([]);
@@ -65,8 +66,8 @@ function useLocationPhotos(loc, type) {
     if (!loc) return;
 
     if (type === "eco" || type === "driver") return;
-    if (type === "busstop") {
-      setPhotos(busPhoto ? [{ url: busPhoto }] : []);
+    if (type === "busstop" || type === "atm") {
+      setPhotos(singlePhoto ? [{ url: singlePhoto }] : []);
       return;
     }
     if (!name) return;
@@ -92,7 +93,7 @@ function useLocationPhotos(loc, type) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, id, name, busPhoto]);
+  }, [type, id, name, singlePhoto]);
 
   return { photos, loading };
 }
@@ -275,22 +276,32 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
     : type === "eco" ? "Eco Unit"
     : type === "driver" ? (loc.vehicleType || "Driver")
     : type === "busstop" ? "Bus Stand"
+    : type === "atm" ? "ATM"
     : loc.category;
+
+  const villageTalukaLine = [
+    loc.village_name || loc.village || loc.village_town_city,
+    loc.taluka_name || loc.taluka,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const placeLine =
     type === "busstop"
       ? loc.taluka_name || loc.taluka
       : type === "eco"
         ? loc.village_name || loc.village
-        : [loc.village_name || loc.village || loc.village_town_city, loc.taluka_name || loc.taluka]
-            .filter(Boolean)
-            .join(", ");
+        : villageTalukaLine; // villages, homestays and ATMs
 
   const galleryTitle =
     type === "homestay" ? "Property Gallery"
     : type === "eco" ? "Facility Gallery"
     : type === "driver" ? "Vehicle Photo Gallery"
     : "Site Photo Gallery";
+
+  // ATM hours / cash deposit may arrive parsed (is24x7) or raw (is_24x7).
+  const atmIs24x7 = (loc.is24x7 ?? loc.is_24x7) !== false;
+  const atmCashDeposit = !!(loc.hasCashDeposit ?? loc.has_cash_deposit);
 
   const heroHeight = compact ? "h-56" : "h-[420px]";
   const nameSize = compact ? "text-2xl" : "text-5xl";
@@ -374,6 +385,9 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
 
               {type === "homestay" && (loc.owner || loc.owner_name) && (
                 <p className="text-white/90 mt-1 text-sm">Hosted by {loc.owner || loc.owner_name}</p>
+              )}
+              {type === "atm" && (loc.bank || loc.bank_name) && (
+                <p className="text-white/90 mt-1 text-sm">{loc.bank || loc.bank_name}</p>
               )}
             </div>
 
@@ -599,10 +613,28 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
             </>
           )}
 
+          {type === "atm" && (
+            <InfoCard title="ATM Information">
+              <InfoRow label="ATM Name" value={loc.name || loc.atm_name} />
+              <InfoRow label="Bank" value={loc.bank || loc.bank_name} />
+              <InfoRow label="Village" value={loc.village || loc.village_name} />
+              <InfoRow label="Taluka" value={loc.taluka || loc.taluka_name} />
+              <InfoRow label="District" value={loc.district || loc.district_name} />
+              <InfoRow label="Address" value={loc.address} />
+              <InfoRow label="Hours" value={atmIs24x7 ? "24x7" : "Limited hours"} />
+              <InfoRow label="Cash Deposit" value={atmCashDeposit ? "Available" : "Not available"} />
+              <LinkRow
+                label="Google Maps"
+                href={loc.googleMapsLink || loc.google_maps_link}
+                text="Open Location"
+              />
+            </InfoCard>
+          )}
+
         </div>
 
-        {/* PHOTO GALLERY */}
-        {type !== "busstop" && (
+        {/* PHOTO GALLERY (bus stops and ATMs only have a single hero photo) */}
+        {type !== "busstop" && type !== "atm" && (
           <div className="mt-10">
             <div className="border-t border-slate-200 pt-8">
               <h2 className={`${compact ? "text-lg" : "text-2xl"} font-bold text-slate-800 mb-6`}>

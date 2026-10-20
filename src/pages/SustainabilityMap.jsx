@@ -45,6 +45,7 @@ const CATEGORY_ICON_MAP = {
   "Homestays": { emoji: "🏡", color: "#e08b01" },
   "Taxi & Auto": { emoji: "🛺", color: "#0006a7" },
   "Bus Stand": { emoji: "🚌", color: "#487c00" },
+  "ATM": { emoji: "🏧", color: "#0f766e" },
 };
 const DEFAULT_ICON = { emoji: "📍", color: "#e08b01" };
 
@@ -518,7 +519,7 @@ function ZoomWatcher({ onZoomChange }) {
 // ---------------------------------------------------------------------------
 
 export default function SustainabilityMap() {
-  const { locations, homestays, drivers, busStops, loading } = useLocations();
+  const { locations, homestays, drivers, busStops, atms, loading } = useLocations();
   // Trip stop count for the badge on the "Plan Trip" tab.
   // (Hooks must stay above the early `if (loading) return` below.)
   const { stops: tripStops } = useTripPlanner();
@@ -538,11 +539,13 @@ export default function SustainabilityMap() {
   const [homestaySearch, setHomestaySearch] = useState("");
   const [isHomestaySearchOpen, setIsHomestaySearchOpen] = useState(false);
 
-  // Driver + bus stop filters
+  // Driver + bus stop + ATM filters
   const [selectedDriverTaluka, setSelectedDriverTaluka] = useState("All");
   const [selectedVehicleType, setSelectedVehicleType] = useState("All");
   const [driverSearch, setDriverSearch] = useState("");
   const [selectedBusStopTaluka, setSelectedBusStopTaluka] = useState("All");
+  const [selectedAtmTaluka, setSelectedAtmTaluka] = useState("All");
+  const [selectedBank, setSelectedBank] = useState("All");
 
   const [selectedItem, setSelectedItem] = useState(null); // { data, type }
   const markerRefs = useRef({});
@@ -705,6 +708,8 @@ export default function SustainabilityMap() {
   const driverTalukas = uniqueSorted(drivers.map((d) => d.taluka));
   const vehicleTypes = uniqueSorted(drivers.map((d) => d.vehicleType));
   const busStopTalukas = uniqueSorted(busStops.map((b) => b.taluka));
+  const atmTalukas = uniqueSorted(atms.map((a) => a.taluka));
+  const banks = uniqueSorted(atms.map((a) => a.bank));
 
   const filteredLocations = locations.filter((loc) => {
     const talukaMatch = selectedTaluka === "All" || loc.taluka_name === selectedTaluka;
@@ -750,6 +755,12 @@ export default function SustainabilityMap() {
     .filter((b) => selectedBusStopTaluka === "All" || b.taluka === selectedBusStopTaluka)
     .sort(byDistance('lat', 'lng'));
 
+  const filteredAtms = atms
+    .filter((a) =>
+      (selectedAtmTaluka === "All" || a.taluka === selectedAtmTaluka) &&
+      (selectedBank === "All" || a.bank === selectedBank))
+    .sort(byDistance('lat', 'lng'));
+
   // Nearest-first previews for the "All" tab. Places respect the map's category chips.
   const sortByDistance = (arr, latKey = 'latitude', lngKey = 'longitude') =>
     userLocation ? [...arr].sort(byDistance(latKey, lngKey)) : arr;
@@ -760,6 +771,7 @@ export default function SustainabilityMap() {
   const overviewHomestays = sortByDistance(homestays).slice(0, 4);
   const overviewDrivers = sortByDistance(drivers.filter((d) => hasCoords(d, 'lat', 'lng')), 'lat', 'lng').slice(0, 3);
   const overviewBusStops = sortByDistance(busStops.filter((b) => hasCoords(b, 'lat', 'lng')), 'lat', 'lng').slice(0, 3);
+  const overviewAtms = sortByDistance(atms.filter((a) => hasCoords(a, 'lat', 'lng')), 'lat', 'lng').slice(0, 3);
 
   // Labels only appear once there's room for them (zoom >= 12).
   const renderLabel = (text, className) =>
@@ -956,6 +968,45 @@ export default function SustainabilityMap() {
     );
   });
 
+  const buildAtmMarkers = (arr) => arr.filter((a) => hasCoords(a, 'lat', 'lng')).map((a) => {
+    const dist = distanceLabel(a.lat, a.lng);
+    return (
+      <Marker
+        key={`atm-${a.id}`}
+        position={[a.lat, a.lng]}
+        ref={(ref) => { markerRefs.current[refKey('atm', a.id)] = ref; }}
+        icon={getMarkerIcon('ATM', false)}
+      >
+        {renderLabel(a.bank, "bg-teal-700/90 text-white")}
+        <Popup>
+          <div className="text-left">
+            {a.photoUrl && (
+              <img
+                src={a.photoUrl}
+                alt={a.name}
+                className="w-full h-28 rounded-lg object-cover mb-2 border border-slate-200"
+              />
+            )}
+            <strong className="block text-base mb-1 border-b pb-1">🏧 {a.name}</strong>
+            <span className="text-xs text-slate-500 block">{a.bank}</span>
+            <span className="text-xs text-slate-500 mb-1 block">{[a.village, a.taluka].filter(Boolean).join(', ')}</span>
+            {a.address && <span className="text-xs text-slate-500 mb-1 block">{a.address}</span>}
+            <span className="text-xs mb-1 block">
+              {a.is24x7 ? "🕒 24x7" : "Limited hours"}{a.hasCashDeposit ? " · 💵 Cash deposit" : ""}
+            </span>
+            {dist && <span className="text-xs text-emerald-700 font-medium mb-1 block">{dist}</span>}
+            <button
+              onClick={() => handleShowRoute(a.lat, a.lng)}
+              className="w-full py-1.5 mt-1 bg-teal-700 text-white rounded text-xs font-bold hover:bg-teal-800 transition-colors"
+            >
+              🧭 Show Route
+            </button>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  });
+
   const renderActivePins = () => {
     if (activeTab === 'all') {
       const typeFilterOn = selectedTourismType !== "All";
@@ -966,16 +1017,20 @@ export default function SustainabilityMap() {
         ...buildLocationMarkers(places),
         // A category chip means "show me only this kind of place".
         ...(typeFilterOn ? [] : buildHomestayMarkers(homestays)),
-        // Drivers and bus stops are hyper-local, so only show them when zoomed in.
+        // Drivers, bus stops and ATMs are hyper-local, so only show them when zoomed in.
         ...(!typeFilterOn && currentZoom >= 13
-          ? [...buildDriverMarkers(drivers), ...buildBusStopMarkers(busStops)]
+          ? [...buildDriverMarkers(drivers), ...buildBusStopMarkers(busStops), ...buildAtmMarkers(atms)]
           : []),
       ];
     }
     if (activeTab === 'villages') return buildLocationMarkers(filteredLocations);
     if (activeTab === 'homestays') return buildHomestayMarkers(filteredHomestays);
     if (activeTab === 'transportation') {
-      return [...buildDriverMarkers(filteredDrivers), ...buildBusStopMarkers(filteredBusStops)];
+      return [
+        ...buildDriverMarkers(filteredDrivers),
+        ...buildBusStopMarkers(filteredBusStops),
+        ...buildAtmMarkers(filteredAtms),
+      ];
     }
     // 'plan' and 'trip' tabs show no data pins on the main map.
     return null;
@@ -1139,7 +1194,18 @@ export default function SustainabilityMap() {
                       subtitle={b.taluka}
                     />
                   ))}
-                  {overviewDrivers.length === 0 && overviewBusStops.length === 0 && (
+                  {overviewAtms.map((a) => (
+                    <OverviewRow
+                      key={`ov-atm-${a.id}`}
+                      hoverClass="hover:border-teal-600"
+                      onClick={() => handleFlyTo(a.lat, a.lng)}
+                      thumb={<Thumb emoji="🏧" bgClass="bg-teal-50" />}
+                      title={a.name}
+                      subtitle={a.bank}
+                      distance={distanceKm(userLocation, a.lat, a.lng)}
+                    />
+                  ))}
+                  {overviewDrivers.length === 0 && overviewBusStops.length === 0 && overviewAtms.length === 0 && (
                     <EmptyNote>No transport resources added yet.</EmptyNote>
                   )}
                 </div>
@@ -1583,6 +1649,67 @@ export default function SustainabilityMap() {
                   );
                 })}
                 {filteredBusStops.length === 0 && <EmptyNote>No bus stands added yet.</EmptyNote>}
+              </div>
+
+              {/* ATM SECTION */}
+              <h2 className="text-lg font-bold text-slate-800 mt-8 mb-1 border-l-4 border-teal-600 pl-3">ATMs</h2>
+              <p className="text-xs text-slate-500 mb-4 pl-3">Tap an ATM to see it on the map.</p>
+
+              <select
+                value={selectedBank}
+                onChange={(e) => setSelectedBank(e.target.value)}
+                className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              >
+                {banks.map((b) => (
+                  <option key={b} value={b}>{b === "All" ? "All Banks" : b}</option>
+                ))}
+              </select>
+
+              {atmTalukas.length > 2 && (
+                <select
+                  value={selectedAtmTaluka}
+                  onChange={(e) => setSelectedAtmTaluka(e.target.value)}
+                  className="w-full mb-2 p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                >
+                  {atmTalukas.map((t) => (
+                    <option key={t} value={t}>{t === "All" ? "All Talukas" : t}</option>
+                  ))}
+                </select>
+              )}
+
+              <p className="text-xs text-slate-500 mb-3">
+                {filteredAtms.length} {filteredAtms.length === 1 ? "ATM" : "ATMs"} found
+              </p>
+
+              <div className="space-y-4">
+                {filteredAtms.map((a) => {
+                  const km = distanceKm(userLocation, a.lat, a.lng);
+                  return (
+                    <div
+                      key={a.id}
+                      onClick={() => handleFlyTo(a.lat, a.lng)}
+                      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-teal-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+                    >
+                      <h3 className="font-bold text-slate-800 mb-1">🏧 {a.name}</h3>
+                      <p className="text-sm text-slate-600 mb-1">
+                        <strong>{a.bank}</strong> · {[a.village, a.taluka].filter(Boolean).join(', ')}
+                        {km && (
+                          <span className="block sm:inline sm:ml-2 text-emerald-700 font-medium">· {km} km away</span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-3 flex-wrap mt-2">
+                        <span className="px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded font-bold">
+                          {a.is24x7 ? "24x7" : "Limited hours"}
+                        </span>
+                        {a.hasCashDeposit && (
+                          <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded font-bold">Cash deposit</span>
+                        )}
+                        <ShowRouteButton onClick={() => handleShowRoute(a.lat, a.lng)} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredAtms.length === 0 && <EmptyNote>No ATMs added yet.</EmptyNote>}
               </div>
             </div>
           )}
