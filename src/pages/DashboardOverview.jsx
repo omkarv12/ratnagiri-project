@@ -12,11 +12,14 @@ import {
   Handshake,
   ExternalLink,
   Calendar,
+  CalendarDays,
+  PlusCircle,
   User,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { blogApi } from "../api/blogApi";
+import API_BASE_URL from "../config";
 import Slider1 from "../assets/Slider1.jpg";
 import Slider2 from "../assets/Slider2.jpg";
 import Slider3 from "../assets/Slider3.jpg";
@@ -48,6 +51,36 @@ const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
 // loader only while data is actually loading.
 const MIN_LOADER_MS = 0;
+
+// Route of the full events calendar page. Both buttons under the mini
+// calendar in the Experiences section send people here. Change this one line
+// if your calendar page lives on a different path.
+const CALENDAR_ROUTE = "/cultural-events";
+
+// ---- Mini calendar helpers (Experiences section) ----
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const CAL_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
+// Same category colours as the full EventsCalendar page
+const CAL_CATEGORY_COLORS = {
+  beaches: "#f7a072",
+  forts: "#64b5f6",
+  temples: "#ba68c8",
+  waterfalls: "#4dd0e1",
+  mangoes: "#ffd54f",
+};
+
+const toDateKey = (y, m, d) =>
+  `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+const formatShortDate = (iso) =>
+  new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
 
 // Full playlist link kept for "Open full playlist" — individual videos below
 // are rendered from videosData so two can be shown per page.
@@ -235,7 +268,8 @@ export default function DashboardOverview() {
     },
   ];
 
-  // "Upcoming Events" scrolling list — replaces the single Upcoming Event tile
+  // Still used by the site-wide search index below (the Upcoming Events
+  // panel itself has been replaced by the mini calendar).
   const whatsNewData = [
     {
       title: "Ganeshotsav",
@@ -264,6 +298,56 @@ export default function DashboardOverview() {
       route: "/traditional-food",
     },
   ];
+
+  // ---- Mini calendar (right-hand panel of the Experiences section) ---------
+  // Reads the same /api/events endpoint as the full EventsCalendar page.
+  const calNow = new Date();
+  const calTodayKey = toDateKey(calNow.getFullYear(), calNow.getMonth(), calNow.getDate());
+  const [calYear, setCalYear] = useState(calNow.getFullYear());
+  const [calMonth, setCalMonth] = useState(calNow.getMonth());
+  const [calEvents, setCalEvents] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE_URL}/api/events?year=${calYear}&month=${calMonth + 1}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => !cancelled && setCalEvents(Array.isArray(data) ? data : []))
+      .catch(() => !cancelled && setCalEvents([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [calYear, calMonth]);
+
+  const shiftCalMonth = (delta) => {
+    const d = new Date(calYear, calMonth + delta, 1);
+    setCalYear(d.getFullYear());
+    setCalMonth(d.getMonth());
+  };
+
+  // events grouped by YYYY-MM-DD
+  const calEventsByDate = {};
+  calEvents.forEach((e) => {
+    const key = String(e.event_date).slice(0, 10);
+    (calEventsByDate[key] = calEventsByDate[key] || []).push(e);
+  });
+
+  // blank cells before the 1st, then each day of the month
+  const calFirstDay = new Date(calYear, calMonth, 1).getDay();
+  const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const calCells = [
+    ...Array.from({ length: calFirstDay }, () => null),
+    ...Array.from({ length: calDaysInMonth }, (_, i) => i + 1),
+  ];
+
+  // next event to highlight under the grid: first on/after today, else the
+  // first event of the visible month
+  const calSorted = [...calEvents].sort((a, b) =>
+    String(a.event_date).localeCompare(String(b.event_date))
+  );
+  const calFeatured =
+    calSorted.find((e) => String(e.event_date).slice(0, 10) >= calTodayKey) ||
+    calSorted[0] ||
+    null;
 
   // ---- Panel 3: Stories & Videos --------------------------------------------
   // Stories are the real, published posts from the Stories section (same
@@ -691,45 +775,127 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* Upcoming Events — static list panel, scrollable, no auto-scroll */}
+            {/* Mini calendar — replaces the old Upcoming Events list. Dots
+                mark days with events; the buttons below open the full
+                calendar page (CALENDAR_ROUTE) or its contribute form. */}
             <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
-              <div className="flex items-center justify-between px-4 py-3 bg-[#B4532A] text-white shrink-0">
-                <p className="text-sm font-semibold">Upcoming Events</p>
+              {/* month header + prev/next */}
+              <div className="flex items-center justify-between px-3 py-3 bg-[#B4532A] text-white shrink-0">
                 <button
-                  onClick={() => navigate("/whats-new")}
-                  className="text-xs font-medium text-white/85 hover:text-white transition"
+                  onClick={() => shiftCalMonth(-1)}
+                  aria-label="Previous month"
+                  className="w-7 h-7 rounded-full hover:bg-white/15 flex items-center justify-center transition"
                 >
-                  More
+                  <ChevronLeft size={16} />
+                </button>
+                <p className="text-sm font-semibold">
+                  {MONTH_NAMES[calMonth]} {calYear}
+                </p>
+                <button
+                  onClick={() => shiftCalMonth(1)}
+                  aria-label="Next month"
+                  className="w-7 h-7 rounded-full hover:bg-white/15 flex items-center justify-center transition"
+                >
+                  <ChevronRight size={16} />
                 </button>
               </div>
-              <div className="rt-feed flex-1 overflow-y-auto relative">
-                <div className="divide-y divide-slate-100">
-                  {whatsNewData.map(({ title, description, image, badge, route }, idx) => (
+
+              {/* weekday initials */}
+              <div className="grid grid-cols-7 px-3 pt-2 text-center text-[10px] font-bold tracking-wider text-slate-400 shrink-0">
+                {CAL_WEEKDAYS.map((d, i) => (
+                  <div key={i}>{d}</div>
+                ))}
+              </div>
+
+              {/* day grid */}
+              <div className="grid grid-cols-7 gap-y-0.5 px-3 pt-1 shrink-0">
+                {calCells.map((day, i) => {
+                  if (day === null) return <div key={`blank-${i}`} className="h-8" />;
+
+                  const key = toDateKey(calYear, calMonth, day);
+                  const dayEvents = calEventsByDate[key] || [];
+                  const isToday = key === calTodayKey;
+                  const hasEvents = dayEvents.length > 0;
+
+                  const inner = (
+                    <>
+                      <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
+                          isToday ? "bg-[#173b45] text-white" : "text-slate-600"
+                        }`}
+                      >
+                        {day}
+                      </span>
+                      <span className="mt-0.5 flex h-1.5 gap-0.5">
+                        {dayEvents.slice(0, 3).map((ev) => (
+                          <span
+                            key={ev.id}
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{
+                              background:
+                                CAL_CATEGORY_COLORS[ev.category] || CAL_CATEGORY_COLORS.beaches,
+                            }}
+                          />
+                        ))}
+                      </span>
+                    </>
+                  );
+
+                  return hasEvents ? (
                     <button
-                      key={`${title}-${idx}`}
-                      onClick={() => navigate(route)}
-                      className="w-full flex items-start gap-3 text-left px-4 py-3 hover:bg-slate-50 transition bg-white"
+                      key={key}
+                      onClick={() => navigate(CALENDAR_ROUTE)}
+                      title={dayEvents.map((e) => e.title).join(", ")}
+                      className="h-8 flex flex-col items-center justify-start rounded-md hover:bg-amber-50 transition"
                     >
-                      <div
-                        className="w-10 h-10 rounded-md bg-cover bg-center shrink-0"
-                        style={{ backgroundImage: `url(${image})` }}
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-semibold text-slate-800 truncate">{title}</p>
-                          {badge && (
-                            <span className="shrink-0 text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                              {badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-2">
-                          {description}
-                        </p>
-                      </div>
+                      {inner}
                     </button>
-                  ))}
+                  ) : (
+                    <div key={key} className="h-8 flex flex-col items-center justify-start">
+                      {inner}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* next event / empty state */}
+              <div className="flex-1 min-h-0 px-3 pt-2 overflow-hidden">
+                <div className="border-t border-slate-100 pt-2">
+                  {calFeatured ? (
+                    <button onClick={() => navigate(CALENDAR_ROUTE)} className="w-full text-left">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                        {calEvents.length} event{calEvents.length === 1 ? "" : "s"} in{" "}
+                        {MONTH_NAMES[calMonth]}
+                      </p>
+                      <p className="mt-0.5 text-xs font-semibold text-slate-800 truncate">
+                        {calFeatured.title}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {formatShortDate(calFeatured.event_date)}
+                      </p>
+                    </button>
+                  ) : (
+                    <p className="text-[11px] text-slate-400">
+                      No events listed for {MONTH_NAMES[calMonth]}.
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              {/* buttons */}
+              <div className="flex gap-2 px-3 pb-3 pt-2 shrink-0">
+                <button
+                  onClick={() => navigate(`${CALENDAR_ROUTE}#contribute`)}
+                  className="flex-1 flex items-center justify-center gap-1 rounded-full border border-[#B4532A] text-[#B4532A] hover:bg-amber-50 text-xs font-semibold py-1.5 transition"
+                >
+                  <PlusCircle size={13} /> Contribute
+                </button>
+                <button
+                  onClick={() => navigate(CALENDAR_ROUTE)}
+                  className="flex-1 flex items-center justify-center gap-1 rounded-full bg-[#B4532A] hover:bg-[#9c4522] text-white text-xs font-semibold py-1.5 transition"
+                >
+                  <CalendarDays size={13} /> View Calendar
+                </button>
               </div>
             </div>
           </div>
