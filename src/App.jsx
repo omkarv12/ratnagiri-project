@@ -21,10 +21,11 @@ import CulturalEvents from "./pages/CulturalEvents";
 import CommunityExperience from "./pages/CommunityExperience";
 import Stories from "./pages/Stories";
 import StoryDetail from "./pages/StoryDetail";
-import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // NEW: pictorial calendar page
+import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calendar page
+import DiscoverYourStay from "./pages/DiscoverYourStay"; // NEW: Experiences → Discover Your Stay
 
 import ProtectedRoute from "./components/ProtectedRoute";
-import RulesForTourists from "./pages/RulesForTourists"; // adjust path to wherever you save the file
+import RulesForTourists from "./pages/RulesForTourists";
 
 import { LocationsProvider } from "./context/LocationsContext";
 import Registration from "./pages/Registration";
@@ -46,98 +47,58 @@ export default function App() {
           <Route path="/login" element={<Login />} />
 
           <Route path="/" element={<DashboardLayout />}>
-            <Route
-              path="/registration"
-              element={<Registration />}
-            />
+            <Route path="/registration" element={<Registration />} />
 
-            <Route
-              path="/dashboard"
-              element={<DashboardOverview />}
-            />
+            <Route path="/dashboard" element={<DashboardOverview />} />
 
-            {/* NEW: menu bar → Experiences → Upcoming Events */}
+            {/* Menu bar → Experiences → Upcoming Events */}
             <Route
               path="/experiences/upcoming-events"
               element={<UpcomingEventsPage />}
             />
-            
-             <Route 
-              path="/rules" 
-              element={<RulesForTourists />} 
-              />
-             <Route 
-  path="/resources/dos-and-donts" 
-  element={<RulesForTourists />} 
-/>
+
+            {/* NEW: Menu bar → Experiences → Discover Your Stay
+                (also opened by the "Discover Your Stay" banner on the map) */}
             <Route
-              path="/profile/:type/:id"
-              element={<LocationProfile />}
+              path="/experiences/discover-your-stay"
+              element={<DiscoverYourStay />}
             />
+
+            <Route path="/rules" element={<RulesForTourists />} />
+            <Route path="/resources/dos-and-donts" element={<RulesForTourists />} />
+
+            <Route path="/profile/:type/:id" element={<LocationProfile />} />
+
             <Route path="/villages" element={<VillagesTaluka />} />
-<Route path="/villages/:taluka" element={<VillageList />} />
-<Route path="/villages/:taluka/:village" element={<VillageDetail />} />
+            <Route path="/villages/:taluka" element={<VillageList />} />
+            <Route path="/villages/:taluka/:village" element={<VillageDetail />} />
 
-            <Route
-              path="/map"
-              element={<SustainabilityMap />}
-            />
+            <Route path="/map" element={<SustainabilityMap />} />
 
-            <Route
-              path="/nature-walks"
-              element={<NatureWalks />}
-            />
+            <Route path="/nature-walks" element={<NatureWalks />} />
 
-            <Route
-              path="/traditional-food"
-              element={<TraditionalFood />}
-            />
+            <Route path="/traditional-food" element={<TraditionalFood />} />
 
-            <Route
-              path="/cultural-events"
-              element={<CulturalEvents />}
-            />
+            <Route path="/cultural-events" element={<CulturalEvents />} />
 
-                        <Route
-              path="/community-experience"
-              element={<CommunityExperience />}
-            />
+            <Route path="/community-experience" element={<CommunityExperience />} />
 
-            <Route
-              path="/society"
-              element={<Society />}
-            />
+            <Route path="/society" element={<Society />} />
 
-            <Route
-            path="/about/culture"
-            element={<Culture />}
-            />
+            <Route path="/about/culture" element={<Culture />} />
 
-            <Route
-              path="/culture"
-              element={<Culture />}
-            />
+            <Route path="/culture" element={<Culture />} />
 
-            <Route
-              path="/good-governance"
-              element={<GoodGovernance />}
-            />
-            <Route
-  path="/medical-facilities"
-  element={<MedicalFacilities />}
-/>
-<Route
-  path="/police-stations"
-  element={<PoliceStations />}
-/>
-            <Route
-  path="/stories"
-  element={<Stories />}
-/>
-<Route
-  path="/stories/:slug"
-  element={<StoryDetail />}
-/>
+            <Route path="/good-governance" element={<GoodGovernance />} />
+
+            <Route path="/medical-facilities" element={<MedicalFacilities />} />
+
+            <Route path="/police-stations" element={<PoliceStations />} />
+
+            <Route path="/stories" element={<Stories />} />
+
+            <Route path="/stories/:slug" element={<StoryDetail />} />
+
             <Route
               path="/admin"
               element={
@@ -147,11 +108,7 @@ export default function App() {
               }
             />
 
-            <Route
-  path="/videos"
-  element={<Videos />}
-/>
-
+            <Route path="/videos" element={<Videos />} />
           </Route>
 
         </Routes>
