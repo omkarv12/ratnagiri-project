@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as ReactLeaflet from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -48,6 +49,10 @@ const CATEGORY_ICON_MAP = {
   "ATM": { emoji: "🏧", color: "#0f766e" },
 };
 const DEFAULT_ICON = { emoji: "📍", color: "#e08b01" };
+
+// Page behind "Discover Your Stay" under the Experiences menu (config/navMenus).
+// The Homestays section of the map links here.
+const STAY_ROUTE = "/experiences/discover-your-stay";
 
 // Links tourism categories to the interests in the "Plan for me" wizard.
 const CATEGORY_TAGS = {
@@ -422,6 +427,28 @@ function OverviewRow({ onClick, hoverClass, thumb, title, subtitle, distance }) 
   );
 }
 
+// Banner that sends people from the map's Homestays section to the
+// "Discover Your Stay" page.
+function DiscoverStayLink({ onClick, className = '' }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-3 text-left shadow-sm hover:shadow-md hover:from-amber-600 hover:to-orange-700 transition-all active:scale-[0.99] ${className}`}
+    >
+      <span className="flex items-center gap-2.5 min-w-0">
+        <BedDouble size={18} className="shrink-0" />
+        <span className="min-w-0">
+          <span className="block text-sm font-bold leading-tight">Discover Your Stay</span>
+          <span className="block text-[11px] text-white/85 leading-tight truncate">
+            Browse all homestays, details and booking info
+          </span>
+        </span>
+      </span>
+      <ArrowRight size={16} className="shrink-0" />
+    </button>
+  );
+}
+
 function EmptyNote({ children }) {
   return <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded text-center">{children}</p>;
 }
@@ -523,6 +550,7 @@ export default function SustainabilityMap() {
   // Trip stop count for the badge on the "Plan Trip" tab.
   // (Hooks must stay above the early `if (loading) return` below.)
   const { stops: tripStops } = useTripPlanner();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('all');
   const [mapPosition, setMapPosition] = useState(null);
@@ -1163,6 +1191,7 @@ export default function SustainabilityMap() {
                     />
                   ))}
                   {overviewHomestays.length === 0 && <EmptyNote>No homestays added yet.</EmptyNote>}
+                  <DiscoverStayLink onClick={() => navigate(STAY_ROUTE)} />
                 </div>
               </div>
 
@@ -1355,6 +1384,8 @@ export default function SustainabilityMap() {
           {activeTab === 'homestays' && (
             <div className="animate-in slide-in-from-right-4 duration-300">
               <h2 className="text-lg font-bold text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">Local Authentic Homestays</h2>
+
+              <DiscoverStayLink onClick={() => navigate(STAY_ROUTE)} className="mb-5" />
 
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">

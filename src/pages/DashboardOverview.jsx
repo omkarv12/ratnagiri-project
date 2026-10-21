@@ -52,10 +52,11 @@ const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 // loader only while data is actually loading.
 const MIN_LOADER_MS = 0;
 
-// Route of the full events calendar page. Both buttons under the mini
-// calendar in the Experiences section send people here. Change this one line
-// if your calendar page lives on a different path.
-const CALENDAR_ROUTE = "/cultural-events";
+// Route of the Upcoming Events page (UpcomingEventsPage — full calendar +
+// contribute form + "Coming up" list). Matches "Upcoming Events" under the
+// Experiences menu in config/navMenus. Both buttons under the mini calendar
+// in the Experiences section send people here.
+const CALENDAR_ROUTE = "/experiences/upcoming-events";
 
 // ---- Mini calendar helpers (Experiences section) ----
 const MONTH_NAMES = [
