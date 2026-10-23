@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import LocationForm from "./LocationForm";
 import HomestayForm from "./HomestayForm";
 import DriverForm from "./DriverForm";
+import HiddenPathForm from "./HiddenPathForm";
 
 export default function RegistrationForm({ onSuccess }) {
 
@@ -36,6 +37,10 @@ export default function RegistrationForm({ onSuccess }) {
                         Autorickshaw / Taxi Driver
                     </option>
 
+                    <option value="hidden_path">
+                        Hidden Path
+                    </option>
+
                 </select>
 
             </div>
@@ -58,7 +63,11 @@ export default function RegistrationForm({ onSuccess }) {
 
             )}
 
-            
+            {formType === "hidden_path" && (
+
+                <HiddenPathForm onSuccess={onSuccess} />
+
+            )}
 
         </div>
 

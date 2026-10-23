@@ -25,6 +25,8 @@ import ReelAwards from "./pages/ReelAwards"; // Stories → Reels (playlist + re
 import StoryDetail from "./pages/StoryDetail";
 import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calendar page
 import DiscoverYourStay from "./pages/DiscoverYourStay"; // NEW: Experiences → Discover Your Stay
+import HiddenPaths from "./pages/HiddenPaths"; // NEW: Experiences → Hidden Paths (listing)
+import SubmitHiddenPath from "./pages/SubmitHiddenPath"; // NEW: Hidden Paths → Submit a path
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists";
@@ -64,6 +66,18 @@ export default function App() {
             <Route
               path="/experiences/discover-your-stay"
               element={<DiscoverYourStay />}
+            />
+
+            {/* NEW: Menu bar → Experiences → Hidden Paths (listing) */}
+            <Route
+              path="/experiences/hidden-paths"
+              element={<HiddenPaths />}
+            />
+
+            {/* NEW: Hidden Paths → "Submit a path" button */}
+            <Route
+              path="/experiences/hidden-paths/submit"
+              element={<SubmitHiddenPath />}
             />
 
             {/* NEW: Menu bar → Plan Your Trip → Plan Your Trip
