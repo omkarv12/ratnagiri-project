@@ -215,28 +215,10 @@ const USER_ICON = L.divIcon({
 // Small presentational components
 // ---------------------------------------------------------------------------
 
-function MapLegend() {
-  return (
-    <div className="hidden md:flex absolute top-4 left-4 z-20 bg-white/95 backdrop-blur rounded-xl shadow-lg border border-slate-200 p-3 flex-col gap-1.5 max-w-[190px]">
-      {Object.entries(CATEGORY_ICON_MAP).map(([category, { emoji, color }]) => (
-        <div key={category} className="flex items-center gap-2">
-          <span
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: color }}
-          >
-            <span style={{ fontSize: '10px', lineHeight: 1 }}>{emoji}</span>
-          </span>
-          <span className="text-[10px] font-medium text-slate-700 leading-tight">{category}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // Floating category chips on the map — filter pins without leaving the map.
 function MapCategoryChips({ value, onChange }) {
   return (
-    <div className="absolute top-3 left-3 right-16 md:left-52 z-[1000] flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+    <div className="absolute top-3 left-3 right-16 z-[1000] flex gap-2 overflow-x-auto hide-scrollbar pb-1">
       {TOURISM_TYPES.map((t) => {
         const active = value === t.value;
         return (
@@ -1484,6 +1466,12 @@ export default function SustainabilityMap() {
                       {home.amenities && (
                         <p className="text-xs text-slate-500 mb-3 italic">{truncate(home.amenities, 60)}</p>
                       )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedItem({ data: home, type: 'homestay' }); }}
+                        className="w-full py-1.5 mb-3 bg-amber-500 text-slate-900 rounded text-xs font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <ImageIcon size={14} /> View Profile
+                      </button>
                       <div className="flex flex-wrap justify-between items-center gap-2">
                         <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded font-bold">{home.type}</span>
                         <div className="flex items-center gap-3 flex-wrap">
@@ -1757,7 +1745,6 @@ export default function SustainabilityMap() {
 
       {/* MAP AREA — full-screen pane on mobile (toggled), flexible column on desktop */}
       <div className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}>
-        <MapLegend />
         {showMapChips && (
           <MapCategoryChips value={selectedTourismType} onChange={setSelectedTourismType} />
         )}
