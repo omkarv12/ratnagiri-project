@@ -8,14 +8,13 @@ import {
   TreePine, BedDouble, MapPin, Image as ImageIcon,
   ShieldCheck, Search, X, Bus, List, Map as MapIcon,
   Heart, LayoutGrid, RotateCcw, ArrowRight, Frown, Route as RouteIcon,
-  Wand2,
 } from 'lucide-react';
 import { useLocations } from '../context/LocationsContext';
 import ProfileDetails from './ProfileDetails';
 import API_BASE_URL from '../config';
 import RatnagiriCinematic from '../components/RatnagiriCinematic';
-import TripPlanner, { AddToTripButton, useTripPlanner } from '../components/TripPlanner';
-import PlanMyTrip from '../components/PlanMyTrip';
+import { AddToTripButton, useTripPlanner } from '../components/TripPlanner';
+import PlanYourTripPanel from '../components/PlanYourTripPanel';
 
 const {
   MapContainer,
@@ -675,12 +674,12 @@ export default function SustainabilityMap() {
     fetchNearbyLocations(loc.location_name, loc.latitude, loc.longitude);
   };
 
+  // "Plan for me" and the trip planner now share one tab ("Plan Trip").
   const tabs = [
     { id: "all", label: "All", icon: LayoutGrid },
     { id: "villages", label: "Places to Visit", icon: TreePine },
     { id: "homestays", label: "Homestays", icon: BedDouble },
     { id: "transportation", label: "Local Resources", icon: Bus },
-    { id: "plan", label: "Plan for me", icon: Wand2 },
     { id: "trip", label: "Plan Trip", icon: RouteIcon },
   ];
 
@@ -1042,7 +1041,7 @@ export default function SustainabilityMap() {
         ...buildAtmMarkers(filteredAtms),
       ];
     }
-    // 'plan' and 'trip' tabs show no data pins on the main map.
+    // The 'trip' tab shows no data pins on the main map.
     return null;
   };
 
@@ -1733,13 +1732,10 @@ export default function SustainabilityMap() {
             </div>
           )}
 
-          {/* PLAN FOR ME TAB — wizard that builds a trip from days, budget and interests */}
-          {activeTab === 'plan' && (
-            <PlanMyTrip places={allPlaces} onPlanCreated={() => setActiveTab('trip')} />
+          {/* PLAN TRIP TAB — "Plan for me" wizard + trip planner together */}
+          {activeTab === 'trip' && (
+            <PlanYourTripPanel places={allPlaces} userLocation={userLocation} />
           )}
-
-          {/* PLAN TRIP TAB */}
-          {activeTab === 'trip' && <TripPlanner userLocation={userLocation} />}
         </div>
       </div>
 

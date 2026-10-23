@@ -1,10 +1,12 @@
 // src/config/navMenus.js
+
 export const PLAN_MENU = {
   label: "Plan Your Trip",
   route: "/plan-your-trip",
   children: [
     { label: "Plan Your Trip", route: "/plan-your-trip" },
-    { label: "Plan Your Trip – Interactive Map", route: "/interactive-map" },
+    // The interactive map page lives at /map (see App.jsx).
+    { label: "Plan Your Trip – Interactive Map", route: "/map" },
   ],
 };
 

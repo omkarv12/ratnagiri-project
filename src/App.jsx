@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 
 import DashboardLayout from "./layouts/DashboardLayout";
 
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import DashboardOverview from "./pages/DashboardOverview";
 import LocationProfile from "./pages/LocationProfile";
@@ -14,6 +13,7 @@ import Culture from "./pages/Culture";
 import GoodGovernance from "./pages/GoodGovernance";
 import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
+import PlanYourTrip from "./pages/PlanYourTrip"; // Plan Your Trip (Plan for me + trip planner)
 
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
@@ -64,6 +64,10 @@ export default function App() {
               element={<DiscoverYourStay />}
             />
 
+            {/* NEW: Menu bar → Plan Your Trip → Plan Your Trip
+                (Interactive Map sub-item points to /map) */}
+            <Route path="/plan-your-trip" element={<PlanYourTrip />} />
+
             <Route path="/rules" element={<RulesForTourists />} />
             <Route path="/resources/dos-and-donts" element={<RulesForTourists />} />
 
@@ -84,6 +88,9 @@ export default function App() {
             <Route path="/community-experience" element={<CommunityExperience />} />
 
             <Route path="/society" element={<Society />} />
+
+            {/* Menu bar → About → About → Economy (this route was missing) */}
+            <Route path="/economy" element={<Economy />} />
 
             <Route path="/about/culture" element={<Culture />} />
 
