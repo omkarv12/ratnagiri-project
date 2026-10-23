@@ -20,6 +20,7 @@ import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
 import CommunityExperience from "./pages/CommunityExperience";
 import Stories from "./pages/Stories";
+import ReelAwards from "./pages/ReelAwards"; // Stories → Reels (playlist + reel awards)
 import StoryDetail from "./pages/StoryDetail";
 import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calendar page
 import DiscoverYourStay from "./pages/DiscoverYourStay"; // NEW: Experiences → Discover Your Stay
@@ -103,6 +104,9 @@ export default function App() {
             <Route path="/police-stations" element={<PoliceStations />} />
 
             <Route path="/stories" element={<Stories />} />
+
+            {/* Menu bar → Stories → Reels */}
+            <Route path="/stories/reels" element={<ReelAwards />} />
 
             <Route path="/stories/:slug" element={<StoryDetail />} />
 
