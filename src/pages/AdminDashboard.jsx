@@ -9,6 +9,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Database,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
@@ -16,6 +17,7 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import AdminBlogForm from "../components/forms/AdminBlogForm";
 import AdminVillageProfileForm from "../components/forms/AdminVillageProfileForm";
 import AdminEventsPanel from "../components/AdminEventsPanel";
+import AdminDataManager from "../components/AdminDataManager";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -234,6 +236,10 @@ export default function AdminDashboard() {
       items: [
         { key: "pendingSubmissions", label: "Pending Submissions", icon: Inbox, badge: pendingCount },
       ],
+    },
+    {
+      label: "Manage",
+      items: [{ key: "manageData", label: "Manage Data", icon: Database }],
     },
     {
       label: "Content",
@@ -736,6 +742,8 @@ export default function AdminDashboard() {
             )}
           </section>
         )}
+
+        {activeTab === "manageData" && <AdminDataManager canEdit={user?.role === "admin"} />}
 
         {activeTab === "events" && <AdminEventsPanel />}
       </main>
