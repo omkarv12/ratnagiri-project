@@ -10,6 +10,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Database,
+  Route as RouteIcon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
@@ -18,6 +19,7 @@ import AdminBlogForm from "../components/forms/AdminBlogForm";
 import AdminVillageProfileForm from "../components/forms/AdminVillageProfileForm";
 import AdminEventsPanel from "../components/AdminEventsPanel";
 import AdminDataManager from "../components/Admindatamanager";
+import AdminHiddenPathsPanel from "../components/AdminHiddenPathsPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("pendingSubmissions");
   const [pendingLocations, setPendingLocations] = useState([]);
   const [pendingHomestays, setPendingHomestays] = useState([]);
+  const [pendingPathsCount, setPendingPathsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -52,9 +55,16 @@ export default function AdminDashboard() {
         setPendingHomestays(hsData);
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
       }
+
+      // Pending hidden paths count (badge only; a failure here must not break the page)
+      try {
+        const r = await fetch(`${API_BASE_URL}/api/admin/hidden-paths?status=pending`);
+        const d = await r.json();
+        setPendingPathsCount(d.counts?.pending || 0);
+      } catch { /* badge optional */ }
+
+      setLoading(false);
     }
     loadPending();
   }, []);
@@ -235,6 +245,7 @@ export default function AdminDashboard() {
       label: "Review",
       items: [
         { key: "pendingSubmissions", label: "Pending Submissions", icon: Inbox, badge: pendingCount },
+        { key: "hiddenPaths", label: "Hidden Paths", icon: RouteIcon, badge: pendingPathsCount },
       ],
     },
     {
@@ -598,6 +609,13 @@ export default function AdminDashboard() {
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "hiddenPaths" && (
+          <AdminHiddenPathsPanel
+            canEdit={user?.role === "admin"}
+            onPendingCountChange={setPendingPathsCount}
+          />
         )}
 
         {activeTab === "addEditItineraries" && (
