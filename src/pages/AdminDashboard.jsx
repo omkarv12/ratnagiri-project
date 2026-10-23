@@ -17,7 +17,7 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import AdminBlogForm from "../components/forms/AdminBlogForm";
 import AdminVillageProfileForm from "../components/forms/AdminVillageProfileForm";
 import AdminEventsPanel from "../components/AdminEventsPanel";
-import AdminDataManager from "../components/AdminDataManager";
+import AdminDataManager from "../components/Admindatamanager";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
