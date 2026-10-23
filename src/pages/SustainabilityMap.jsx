@@ -1054,9 +1054,10 @@ export default function SustainabilityMap() {
     // panel each scroll on their own. Change 4rem if your header height differs.
     <div className="flex flex-col md:flex-row h-[calc(100dvh-4rem)] bg-white md:rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500 relative">
 
-      {/* SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop */}
+      {/* SIDEBAR — full-screen pane on mobile (toggled), fixed column on desktop.
+          (No z-index here: it must not compete with the site navbar dropdowns.) */}
       <div
-        className={`w-full md:w-96 flex-col border-r border-slate-200 bg-slate-50 z-10 min-h-0
+        className={`w-full md:w-96 flex-col border-r border-slate-200 bg-slate-50 min-h-0
           ${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none`}
       >
         <div className="p-4 md:p-6 bg-gradient-to-br from-orange-600 to-amber-600 text-white shadow-md relative overflow-hidden shrink-0">
@@ -1739,8 +1740,11 @@ export default function SustainabilityMap() {
         </div>
       </div>
 
-      {/* MAP AREA — full-screen pane on mobile (toggled), flexible column on desktop */}
-      <div className={`relative bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}>
+      {/* MAP AREA — full-screen pane on mobile (toggled), flexible column on desktop.
+          `isolate` gives the map its own stacking context, so Leaflet's high z-indexes
+          (panes, controls, chips, route badge) stay inside the map and never appear
+          above the site navbar's dropdown menus. */}
+      <div className={`relative isolate bg-slate-200 min-h-0 ${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-1`}>
         {showMapChips && (
           <MapCategoryChips value={selectedTourismType} onChange={setSelectedTourismType} />
         )}

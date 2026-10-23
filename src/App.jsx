@@ -20,6 +20,7 @@ import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
 import CommunityExperience from "./pages/CommunityExperience";
 import Stories from "./pages/Stories";
+import TransportFacilities from "./pages/TransportFacilities"; // Resources → Transport Facilities
 import ReelAwards from "./pages/ReelAwards"; // Stories → Reels (playlist + reel awards)
 import StoryDetail from "./pages/StoryDetail";
 import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calendar page
@@ -102,6 +103,12 @@ export default function App() {
             <Route path="/medical-facilities" element={<MedicalFacilities />} />
 
             <Route path="/police-stations" element={<PoliceStations />} />
+
+            {/* Menu bar → Resources → Transport Facilities */}
+            <Route
+              path="/resources/transport-facilities"
+              element={<TransportFacilities />}
+            />
 
             <Route path="/stories" element={<Stories />} />
 
