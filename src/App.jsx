@@ -27,6 +27,7 @@ import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calend
 import DiscoverYourStay from "./pages/DiscoverYourStay"; // NEW: Experiences → Discover Your Stay
 import HiddenPaths from "./pages/HiddenPaths"; // NEW: Experiences → Hidden Paths (listing)
 import SubmitHiddenPath from "./pages/SubmitHiddenPath"; // NEW: Hidden Paths → Submit a path
+import ExperiencePage from "./pages/ExperiencePage"; // NEW: Guided Walks / Konkani Food / Community Interaction (admin-managed)
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists";
@@ -78,6 +79,22 @@ export default function App() {
             <Route
               path="/experiences/hidden-paths/submit"
               element={<SubmitHiddenPath />}
+            />
+
+            {/* NEW: Local Experiences cards on the home page. One page
+                component serves all three; content comes from the admin
+                dashboard → Local Experiences. */}
+            <Route
+              path="/experiences/guided-walks"
+              element={<ExperiencePage category="guided-walks" />}
+            />
+            <Route
+              path="/experiences/konkani-food"
+              element={<ExperiencePage category="konkani-food" />}
+            />
+            <Route
+              path="/experiences/community-interaction"
+              element={<ExperiencePage category="community-interaction" />}
             />
 
             {/* NEW: Menu bar → Plan Your Trip → Plan Your Trip

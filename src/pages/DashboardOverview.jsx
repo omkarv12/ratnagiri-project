@@ -248,24 +248,26 @@ export default function DashboardOverview() {
   };
 
   // ---- Panel 2: Experiences -------------------------------------------------
+  // Each card opens its own page (ExperiencePage), whose content is managed in
+  // Admin → Local Experiences.
   const experiencesData = [
     {
       title: "Guided Walks",
       description: "Local guides lead you through forts, markets and coastal trails.",
       image: GuidedWalksImg,
-      route: "/guided-walks",
+      route: "/experiences/guided-walks",
     },
     {
       title: "Konkani Food",
       description: "Taste solkadhi, fish curry-rice and other Malvani classics.",
       image: KokaniFoodImg,
-      route: "/traditional-food",
+      route: "/experiences/konkani-food",
     },
     {
       title: "Community Interaction",
       description: "Meet fisherfolk, farmers and artisans in their own villages.",
       image: CommunityInteractionImg,
-      route: "/village-life",
+      route: "/experiences/community-interaction",
     },
   ];
 
@@ -284,7 +286,7 @@ export default function DashboardOverview() {
       description: "A 3 km coastal walk with a local guide, launching this season.",
       image: Slider3,
       badge: "NEW",
-      route: "/guided-walks",
+      route: "/experiences/guided-walks",
     },
     {
       title: "Monsoon Travel Advisory",
@@ -296,7 +298,7 @@ export default function DashboardOverview() {
       title: "Alphonso Season Calendar",
       description: "Orchard visits and tasting trails run from March to May.",
       image: Slider2,
-      route: "/traditional-food",
+      route: "/experiences/konkani-food",
     },
   ];
 
@@ -473,14 +475,14 @@ export default function DashboardOverview() {
         { label: "Videos", route: "/videos" },
         { label: "Resources", route: "/resources" },
         { label: "Rules for Tourists", route: "/rules" },
-        { label: "Guided Walks", route: "/guided-walks" },
+        { label: "Guided Walks", route: "/experiences/guided-walks" },
       ],
     },
     {
       heading: "About",
       links: [
         { label: "Our Story", route: "/about" },
-        { label: "Konkani Food", route: "/konkani-food" },
+        { label: "Konkani Food", route: "/experiences/konkani-food" },
         { label: "Tourism Fund", route: "/tourism-fund" },
         { label: "Register a Homestay", route: "/registration" },
         { label: "Enquiries & FAQ", route: "/faq" },
