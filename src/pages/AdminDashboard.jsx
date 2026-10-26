@@ -24,6 +24,7 @@ import AdminExperiencesPanel from "../components/AdminExperiencesPanel";
 import AdminDataManager from "../components/Admindatamanager";
 import AdminHiddenPathsPanel from "../components/AdminHiddenPathsPanel";
 import AdminExploreVillagesPanel from "../components/AdminExploreVillagesPanel";
+import AdminItinerariesPanel from "../components/AdminItinerariesPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -628,6 +629,12 @@ export default function AdminDashboard() {
           <section>
             <h2 className="text-xl font-semibold mb-4">Add / Edit Itineraries</h2>
             <p className="text-gray-500 mb-8">This section will allow you to add or edit itineraries.</p>
+
+            {/* --- Itinerary management --- */}
+            <div className="mb-10">
+              <h2 className="text-xl font-semibold mb-4">Manage Itineraries</h2>
+              <AdminItinerariesPanel />
+            </div>
 
             {/* --- Stories / Blog management --- */}
             <div className="border-t pt-8">
