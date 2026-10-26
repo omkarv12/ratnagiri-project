@@ -14,7 +14,7 @@ import GoodGovernance from "./pages/GoodGovernance";
 import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
 import PlanYourTrip from "./pages/PlanYourTrip"; // Plan Your Trip (Plan for me + trip planner)
-
+import Places from './pages/Places';
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
@@ -50,7 +50,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/login" element={<Login />} />
-
+          <Route path="/about/geography/places" element={<Places />} />,
           <Route path="/" element={<DashboardLayout />}>
             <Route path="/registration" element={<Registration />} />
 
