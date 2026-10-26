@@ -3,7 +3,7 @@ import { Plus, Trash2, Pencil, ImagePlus, X, ExternalLink } from "lucide-react";
 import API_BASE_URL from "../config";
 // Taluka -> list of villages. Point this at the same JSON your contribution
 // forms use for their Taluka / Village dropdowns.
-import villagesByTaluka from "../data/villages.json";
+import villagesByTaluka from "../data/ratnagiriVillages.json";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500";
