@@ -14,7 +14,7 @@ import GoodGovernance from "./pages/GoodGovernance";
 import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
 import PlanYourTrip from "./pages/PlanYourTrip"; // Plan Your Trip (Plan for me + trip planner)
-import Places from './pages/Places';
+import Places from "./pages/Places";
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
@@ -24,10 +24,10 @@ import TransportFacilities from "./pages/TransportFacilities"; // Resources → 
 import ReelAwards from "./pages/ReelAwards"; // Stories → Reels (playlist + reel awards)
 import StoryDetail from "./pages/StoryDetail";
 import UpcomingEventsPage from "./pages/UpcomingEventsPage"; // pictorial calendar page
-import DiscoverYourStay from "./pages/DiscoverYourStay"; // NEW: Experiences → Discover Your Stay
-import HiddenPaths from "./pages/HiddenPaths"; // NEW: Experiences → Hidden Paths (listing)
-import SubmitHiddenPath from "./pages/SubmitHiddenPath"; // NEW: Hidden Paths → Submit a path
-import ExperiencePage from "./pages/ExperiencePage"; // NEW: Guided Walks / Konkani Food / Community Interaction (admin-managed)
+import DiscoverYourStay from "./pages/DiscoverYourStay"; // Experiences → Discover Your Stay
+import HiddenPaths from "./pages/HiddenPaths"; // Experiences → Hidden Paths (listing)
+import SubmitHiddenPath from "./pages/SubmitHiddenPath"; // Hidden Paths → Submit a path
+import ExperiencePage from "./pages/ExperiencePage"; // Guided Walks / Konkani Food / Community Interaction (admin-managed)
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists";
@@ -46,15 +46,21 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
+          {/* Only the login page sits outside the layout */}
           <Route path="/login" element={<Login />} />
-          <Route path="/about/geography/places" element={<Places />} />,
-          <Route path="/" element={<DashboardLayout />}>
+
+          {/* Everything below renders inside DashboardLayout,
+              so it gets the header, menu bar and breadcrumb. */}
+          <Route element={<DashboardLayout />}>
             <Route path="/registration" element={<Registration />} />
 
             <Route path="/dashboard" element={<DashboardOverview />} />
+
+            {/* Menu bar → About → Geography → Places
+                (moved inside the layout so the menu bar + breadcrumb show) */}
+            <Route path="/about/geography/places" element={<Places />} />
 
             {/* Menu bar → Experiences → Upcoming Events */}
             <Route
@@ -62,26 +68,26 @@ export default function App() {
               element={<UpcomingEventsPage />}
             />
 
-            {/* NEW: Menu bar → Experiences → Discover Your Stay
+            {/* Menu bar → Experiences → Discover Your Stay
                 (also opened by the "Discover Your Stay" banner on the map) */}
             <Route
               path="/experiences/discover-your-stay"
               element={<DiscoverYourStay />}
             />
 
-            {/* NEW: Menu bar → Experiences → Hidden Paths (listing) */}
+            {/* Menu bar → Experiences → Hidden Paths (listing) */}
             <Route
               path="/experiences/hidden-paths"
               element={<HiddenPaths />}
             />
 
-            {/* NEW: Hidden Paths → "Submit a path" button */}
+            {/* Hidden Paths → "Submit a path" button */}
             <Route
               path="/experiences/hidden-paths/submit"
               element={<SubmitHiddenPath />}
             />
 
-            {/* NEW: Local Experiences cards on the home page. One page
+            {/* Local Experiences cards on the home page. One page
                 component serves all three; content comes from the admin
                 dashboard → Local Experiences. */}
             <Route
@@ -97,7 +103,7 @@ export default function App() {
               element={<ExperiencePage category="community-interaction" />}
             />
 
-            {/* NEW: Menu bar → Plan Your Trip → Plan Your Trip
+            {/* Menu bar → Plan Your Trip → Plan Your Trip
                 (Interactive Map sub-item points to /map) */}
             <Route path="/plan-your-trip" element={<PlanYourTrip />} />
 
@@ -122,7 +128,7 @@ export default function App() {
 
             <Route path="/society" element={<Society />} />
 
-            {/* Menu bar → About → About → Economy (this route was missing) */}
+            {/* Menu bar → About → About → Economy */}
             <Route path="/economy" element={<Economy />} />
 
             <Route path="/about/culture" element={<Culture />} />
@@ -159,7 +165,6 @@ export default function App() {
 
             <Route path="/videos" element={<Videos />} />
           </Route>
-
         </Routes>
       </Router>
     </LocationsProvider>
