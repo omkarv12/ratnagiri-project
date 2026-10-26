@@ -28,6 +28,8 @@ import DiscoverYourStay from "./pages/DiscoverYourStay"; // Experiences → Disc
 import HiddenPaths from "./pages/HiddenPaths"; // Experiences → Hidden Paths (listing)
 import SubmitHiddenPath from "./pages/SubmitHiddenPath"; // Hidden Paths → Submit a path
 import ExperiencePage from "./pages/ExperiencePage"; // Guided Walks / Konkani Food / Community Interaction (admin-managed)
+import ExploreVillages from "./pages/ExploreVillages"; // About → Geography → Explore Villages (listing)
+import ExploreVillageDetail from "./pages/ExploreVillageDetail"; // one village: history, food, flowers, birds, places, stays
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists";
@@ -85,6 +87,13 @@ export default function App() {
             <Route
               path="/experiences/hidden-paths/submit"
               element={<SubmitHiddenPath />}
+            />
+
+            {/* Menu bar → About → Geography → Explore Villages */}
+            <Route path="/experiences/explore-villages" element={<ExploreVillages />} />
+            <Route
+              path="/experiences/explore-villages/:taluka/:village"
+              element={<ExploreVillageDetail />}
             />
 
             {/* Local Experiences cards on the home page. One page

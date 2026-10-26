@@ -11,6 +11,7 @@ import {
   PanelLeftOpen,
   Database,
   Drama,
+  Trees,
   Route as RouteIcon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -22,6 +23,7 @@ import AdminEventsPanel from "../components/AdminEventsPanel";
 import AdminExperiencesPanel from "../components/AdminExperiencesPanel";
 import AdminDataManager from "../components/Admindatamanager";
 import AdminHiddenPathsPanel from "../components/AdminHiddenPathsPanel";
+import AdminExploreVillagesPanel from "../components/AdminExploreVillagesPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -259,6 +261,7 @@ export default function AdminDashboard() {
       items: [
         { key: "addEditItineraries", label: "Itineraries & Stories", icon: BookOpen },
         { key: "villageProfiles", label: "Village Profiles", icon: Landmark },
+        { key: "exploreVillages", label: "Explore Villages", icon: Trees },
         { key: "localExperiences", label: "Local Experiences", icon: Drama },
         { key: "events", label: "Events", icon: CalendarDays },
       ],
@@ -762,6 +765,10 @@ export default function AdminDashboard() {
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "exploreVillages" && (
+          <AdminExploreVillagesPanel canEdit={user?.role === "admin"} />
         )}
 
         {activeTab === "manageData" && <AdminDataManager canEdit={user?.role === "admin"} />}
