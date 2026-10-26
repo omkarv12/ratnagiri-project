@@ -262,7 +262,7 @@ function ClusterHint({ onDismiss }) {
           100% { box-shadow: 0 0 0 0 rgba(180, 83, 42, 0); }
         }
       `}</style>
-      <div className="absolute bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-max max-w-[92%] bg-slate-900 text-white rounded-xl shadow-xl px-3 py-2.5 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[1000] w-max max-w-[92%] bg-slate-900 text-white rounded-xl shadow-xl px-3 py-2.5 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
         <span className="w-8 h-8 rounded-full bg-[#B4532A] border-2 border-white flex items-center justify-center text-xs font-bold shrink-0 animate-bounce">
           14
         </span>
@@ -1819,7 +1819,7 @@ export default function SustainabilityMap() {
         )}
 
         {/* One-time hint: explains that the numbered circles can be tapped. */}
-        {showClusterHint && activeTab !== 'trip' && (
+        {showClusterHint && activeTab !== 'trip' && !activeRoute && (
           <ClusterHint onDismiss={dismissClusterHint} />
         )}
 
