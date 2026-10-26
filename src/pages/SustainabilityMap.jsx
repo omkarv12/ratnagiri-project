@@ -263,17 +263,18 @@ function ClusterHint({ onDismiss }) {
         }
       `}</style>
       <div className="absolute bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-max max-w-[92%] bg-slate-900 text-white rounded-xl shadow-xl px-3 py-2.5 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <span className="w-8 h-8 rounded-full bg-[#B4532A] border-2 border-white flex items-center justify-center text-xs font-bold shrink-0">
+        <span className="w-8 h-8 rounded-full bg-[#B4532A] border-2 border-white flex items-center justify-center text-xs font-bold shrink-0 animate-bounce">
           14
         </span>
         <p className="text-xs leading-snug">
-          <strong>Tap a numbered circle</strong> to zoom in and see the places grouped inside it.
+          <strong>🎁 Psst! Those numbered circles are treasure chests.</strong>{' '}
+          Tap one to unwrap the hidden gems inside — go on, explore! 🗺️✨
         </p>
         <button
           onClick={onDismiss}
           className="text-xs font-semibold text-orange-300 hover:text-orange-200 shrink-0"
         >
-          Got it
+          Let's go!
         </button>
       </div>
     </>
@@ -1879,7 +1880,7 @@ export default function SustainabilityMap() {
             iconCreateFunction={(cluster) => {
               const count = cluster.getChildCount();
               return L.divIcon({
-                html: `<div class="cluster-pulse" title="${count} places – tap to zoom in" style="
+                html: `<div class="cluster-pulse" title="🎁 ${count} hidden gems inside – tap to unwrap!" style="
                   background:#B4532A;color:#fff;width:38px;height:38px;
                   border-radius:50%;display:flex;align-items:center;justify-content:center;
                   font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.35);
