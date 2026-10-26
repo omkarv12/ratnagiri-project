@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -35,6 +34,9 @@ import ExploreVillageDetail from "./pages/ExploreVillageDetail";
 // Itineraries
 import Itineraries from "./pages/Itineraries";
 import ItineraryDetail from "./pages/ItineraryDetail";
+
+// Circuits
+import CircuitsPage from "./pages/CircuitsPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import RulesForTourists from "./pages/RulesForTourists";
@@ -125,6 +127,17 @@ export default function App() {
             <Route
               path="/experiences/itineraries/:slug"
               element={<ItineraryDetail />}
+            />
+
+            {/* Experiences → Circuits (list, then one circuit by slug) */}
+            <Route
+              path="/experiences/circuits"
+              element={<CircuitsPage />}
+            />
+
+            <Route
+              path="/experiences/circuits/:slug"
+              element={<CircuitsPage />}
             />
 
             {/* Local Experiences */}

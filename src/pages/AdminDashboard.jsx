@@ -12,6 +12,7 @@ import {
   Database,
   Drama,
   Trees,
+  Map as MapIcon,
   Route as RouteIcon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,7 @@ import AdminDataManager from "../components/Admindatamanager";
 import AdminHiddenPathsPanel from "../components/AdminHiddenPathsPanel";
 import AdminExploreVillagesPanel from "../components/AdminExploreVillagesPanel";
 import AdminItinerariesPanel from "../components/AdminItinerariesPanel";
+import AdminCircuitsPanel from "../components/AdminCircuitsPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -40,7 +42,7 @@ export default function AdminDashboard() {
   // --- Stories (blog) state ---
   const [blogPosts, setBlogPosts] = useState([]);
   const [blogsLoading, setBlogsLoading] = useState(true);
-  const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" |k blog object being edited
+  const [blogFormMode, setBlogFormMode] = useState(null); // null | "new" | blog object being edited
   const [blogActionError, setBlogActionError] = useState(null);
 
   // --- Village profiles state ---
@@ -261,6 +263,7 @@ export default function AdminDashboard() {
       label: "Content",
       items: [
         { key: "addEditItineraries", label: "Itineraries & Stories", icon: BookOpen },
+        { key: "circuits", label: "Circuits", icon: MapIcon },
         { key: "villageProfiles", label: "Village Profiles", icon: Landmark },
         { key: "exploreVillages", label: "Explore Villages", icon: Trees },
         { key: "localExperiences", label: "Local Experiences", icon: Drama },
@@ -712,6 +715,8 @@ export default function AdminDashboard() {
             </div>
           </section>
          )}
+
+        {activeTab === "circuits" && <AdminCircuitsPanel />}
 
         {activeTab === "villageProfiles" && (
           <section>
