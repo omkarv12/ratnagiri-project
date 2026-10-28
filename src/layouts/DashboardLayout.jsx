@@ -124,8 +124,9 @@ const THEME_CSS = `
 /* ------------------------------------------------------------------ */
 
 // Shared classes for every top-level nav item: white, base size, semibold, single line.
+// Slightly roomier padding so the menu bar reads broader.
 const NAV_ITEM_CLASS =
-  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-2.5 xl:px-3 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
+  "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3 xl:px-4 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
 
 // Every top-level nav entry, in order. Home is first, then the configured menus.
 const NAV_ITEMS = [{ label: "Home", route: "/dashboard", exact: true }, ...MENUS];
@@ -299,7 +300,7 @@ function PrimaryNav({ items, navigate, isItemActive }) {
   return (
     <div
       ref={wrapRef}
-      className="relative flex min-w-0 items-center justify-start gap-1 pl-2 xl:pl-6"
+      className="relative flex min-w-0 items-center justify-start gap-1 pl-2 xl:pl-4"
     >
       {shown.map((item, i) => (
         <NavDropdown
@@ -369,10 +370,11 @@ export default function DashboardLayout() {
         {/* ============ Single sticky bar: title · pages · CTAs · Admin ============ */}
         <header className="rt-header-in sticky top-0 z-40 bg-[#7b1e2b] shadow-md">
           {/* The middle column takes all leftover space; PrimaryNav fits as many
-              links as it can there and tucks the rest under "More". */}
-          <div className="grid h-20 w-full grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:gap-4 sm:px-6 lg:px-8">
+              links as it can there and tucks the rest under "More". CTAs stay
+              icon-only until very wide screens so the menu bar gets the room. */}
+          <div className="grid h-20 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:px-4 lg:px-5">
             {/* Left: mobile toggle + title */}
-            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle menu"
@@ -399,12 +401,12 @@ export default function DashboardLayout() {
             <div className="lg:hidden" aria-hidden="true" />
 
             {/* Right: CTAs + Admin */}
-            <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
+            <div className="flex shrink-0 items-center justify-end gap-2">
               <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-white px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-white px-3 text-[0.9375rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <Compass size={18} className="rt-compass relative text-[#B4532A]" />
@@ -418,23 +420,22 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/registration")}
                 aria-label="Add location and services"
                 title="Add location and services"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <MapPlus size={18} className="rt-mapplus relative" />
                 <span className="relative hidden min-[1700px]:inline">Add location and services</span>
-                <span className="relative hidden xl:inline min-[1700px]:hidden">Add location</span>
               </button>
 
               <button
                 onClick={() => navigate(user ? "/admin" : "/login")}
                 aria-label="Admin"
                 title="Admin"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-3.5 lg:px-4 text-[0.9375rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-3 text-[0.9375rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <ShieldCheck size={18} className="rt-shield relative" />
-                <span className="relative hidden sm:inline">Admin login</span>
+                <span className="relative hidden 2xl:inline">Admin login</span>
               </button>
             </div>
           </div>
