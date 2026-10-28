@@ -364,7 +364,7 @@ export default function DashboardLayout() {
 
       <main
         className={`flex-1 min-w-0 transition-all duration-300 ${
-          sidebarOpen ? "ml-64" : "ml-0"
+          sidebarOpen ? "lg:ml-64" : "ml-0"
         }`}
       >
         {/* ============ Single sticky bar: title · pages · CTAs · Admin ============ */}
@@ -372,9 +372,9 @@ export default function DashboardLayout() {
           {/* The middle column takes all leftover space; PrimaryNav fits as many
               links as it can there and tucks the rest under "More". CTAs stay
               icon-only until very wide screens so the menu bar gets the room. */}
-          <div className="grid h-20 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 sm:px-4 lg:px-5">
+          <div className="grid h-20 w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5">
             {/* Left: mobile toggle + title */}
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-3 lg:shrink-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 aria-label="Toggle menu"
@@ -388,7 +388,7 @@ export default function DashboardLayout() {
                 aria-label="Ratnagiri Tourism — home"
                 className="flex min-w-0 items-center"
               >
-                <span className="rt-display truncate text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
+                <span className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
                   Ratnagiri Tourism
                 </span>
               </button>
@@ -398,10 +398,9 @@ export default function DashboardLayout() {
             <div className="hidden lg:block min-w-0">
               <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
             </div>
-            <div className="lg:hidden" aria-hidden="true" />
 
             {/* Right: CTAs + Admin */}
-            <div className="flex shrink-0 items-center justify-end gap-2">
+            <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
               <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
