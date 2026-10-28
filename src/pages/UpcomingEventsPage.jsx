@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronDown, PlusCircle, Sparkles } from "lucide-react";
 import EventsCalendar from "../components/EventsCalendar";
 import API_BASE_URL from "../config";
@@ -11,31 +11,83 @@ const monthOf = (iso) => parse(iso).toLocaleDateString("en-IN", { month: "short"
 const fullDate = (iso) =>
   parse(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-// One column of the notice board. It scrolls upward by itself, loops back to
-// the top, pauses while the visitor hovers / touches / focuses it, and stays
-// still for people who prefer reduced motion. The scroll bar on the right
-// stays usable the whole time.
+function EventRow({ e }) {
+  return (
+    <li className="group flex gap-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-b from-[#B4532A] to-[#8f3f1f] text-white shadow-sm">
+        <span className="text-xl font-bold leading-none">{dayOf(e.event_date)}</span>
+        <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-amber-200">
+          {monthOf(e.event_date)}
+        </span>
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-bold leading-snug text-[#0b3149]">{e.title}</p>
+        <p className="mt-0.5 text-xs font-medium text-teal-700">
+          {fullDate(e.event_date)}
+          {e.organizer_name && (
+            <span className="font-normal text-slate-500"> · by {e.organizer_name}</span>
+          )}
+        </p>
+        {e.description && (
+          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-600">
+            {e.description}
+          </p>
+        )}
+      </div>
+    </li>
+  );
+}
+
+// One column of the notice board: an endless loop. When the list is taller
+// than the box, it is rendered twice back to back; the column scrolls up
+// slowly and, the moment the first copy has gone past, jumps back by exactly
+// one copy — so the join is invisible and it never snaps to the top. Hover,
+// touch or keyboard focus pauses it; the scroll bar still works (scrolling
+// by hand also wraps around). Reduced-motion users get a normal, still list.
 function RollingColumn({ items }) {
   const ref = useRef(null);
+  const listRef = useRef(null);
   const [paused, setPaused] = useState(false);
+  const [loop, setLoop] = useState(false);
+
+  // Loop only when the list actually overflows the box.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const list = listRef.current;
+    if (!el || !list) return;
+    setLoop(list.offsetHeight > el.clientHeight + 2);
+  }, [items]);
+
+  // Start in the middle (second copy looks identical) so scrolling up wraps too.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && loop) el.scrollTop = el.scrollHeight / 2;
+  }, [loop]);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || paused || items.length < 2) return undefined;
+    if (!el || !loop || paused) return undefined;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
-
     const id = setInterval(() => {
-      if (el.scrollHeight <= el.clientHeight + 2) return;
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) el.scrollTop = 0;
-      else el.scrollTop += 1;
-    }, 40);
+      el.scrollTop += 1;
+    }, 30);
     return () => clearInterval(id);
-  }, [paused, items.length]);
+  }, [loop, paused]);
+
+  // Wrap in both directions, for the auto-scroll and for manual scrolling.
+  const handleScroll = () => {
+    const el = ref.current;
+    if (!el || !loop) return;
+    const half = el.scrollHeight / 2;
+    if (el.scrollTop >= half) el.scrollTop -= half;
+    else if (el.scrollTop <= 0) el.scrollTop += half;
+  };
 
   return (
     <div className="relative overflow-hidden rounded-xl bg-[#F4F8F9] ring-1 ring-slate-200/80">
       <div
         ref={ref}
+        onScroll={handleScroll}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
@@ -44,39 +96,23 @@ function RollingColumn({ items }) {
         onBlur={() => setPaused(false)}
         tabIndex={0}
         aria-label="Upcoming events, scrollable list"
-        className="rt-roll h-80 overflow-y-scroll p-2.5 pr-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+        className="rt-roll h-80 overflow-y-scroll focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
       >
-        <ul className="space-y-2.5">
+        <ul ref={listRef} className="space-y-2.5 p-2.5 pr-1.5">
           {items.map((e) => (
-            <li
-              key={e.id}
-              className="group flex gap-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-gradient-to-b from-[#B4532A] to-[#8f3f1f] text-white shadow-sm">
-                <span className="text-xl font-bold leading-none">{dayOf(e.event_date)}</span>
-                <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-amber-200">
-                  {monthOf(e.event_date)}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold leading-snug text-[#0b3149]">{e.title}</p>
-                <p className="mt-0.5 text-xs font-medium text-teal-700">
-                  {fullDate(e.event_date)}
-                  {e.organizer_name && (
-                    <span className="font-normal text-slate-500"> · by {e.organizer_name}</span>
-                  )}
-                </p>
-                {e.description && (
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-slate-600">
-                    {e.description}
-                  </p>
-                )}
-              </div>
-            </li>
+            <EventRow key={e.id} e={e} />
           ))}
         </ul>
+        {loop && (
+          <ul aria-hidden="true" className="space-y-2.5 p-2.5 pr-1.5">
+            {items.map((e) => (
+              <EventRow key={`copy-${e.id}`} e={e} />
+            ))}
+          </ul>
+        )}
       </div>
-      {/* soft fade so rows glide out instead of being cut off */}
+      {/* soft fade so rows glide in and out instead of being cut off */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#F4F8F9] to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#F4F8F9] to-transparent" />
     </div>
   );
