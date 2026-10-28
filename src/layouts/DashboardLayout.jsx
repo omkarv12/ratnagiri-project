@@ -406,7 +406,7 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-white px-3 text-[0.9375rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 w-11 2xl:w-44 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-0 text-[0.9375rem] font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <Compass size={18} className="rt-compass relative text-[#B4532A]" />
@@ -420,18 +420,18 @@ export default function DashboardLayout() {
                 onClick={() => navigate("/registration")}
                 aria-label="Add location and services"
                 title="Add location and services"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-3 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 w-11 2xl:w-44 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-0 text-[0.9375rem] font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <MapPlus size={18} className="rt-mapplus relative" />
-                <span className="relative hidden min-[1700px]:inline">Add location and services</span>
+                <span className="relative hidden 2xl:inline">Add location</span>
               </button>
 
               <button
                 onClick={() => navigate(user ? "/admin" : "/login")}
                 aria-label="Admin"
                 title="Admin"
-                className="rt-cta relative flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-3 text-[0.9375rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-cta relative flex h-11 w-11 2xl:w-44 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-0 text-[0.9375rem] font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <ShieldCheck size={18} className="rt-shield relative" />
