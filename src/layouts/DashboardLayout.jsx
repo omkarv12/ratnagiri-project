@@ -449,5 +449,5 @@ export default function DashboardLayout() {
       </main>
       <BackToTop />
     </div>
-  );.
+  );
 }
