@@ -13,7 +13,7 @@ import TripPlanner, { useTripPlanner } from "./TripPlanner";
    layout="split"    full page: wizard on the left, planner on the right
                      (stacks on small screens).
 ================================================================== */
-export default function PlanYourTripPanel({ places = [], atms = [], userLocation, layout = "stacked" }) {
+export default function PlanYourTripPanel({ places = [], dataset = {}, userLocation, layout = "stacked" }) {
   const { stops } = useTripPlanner();
   const split = layout === "split";
   const [wizardOpen, setWizardOpen] = useState(stops.length === 0);
@@ -43,7 +43,7 @@ export default function PlanYourTripPanel({ places = [], atms = [], userLocation
         name: planStillValid ? lastPlan.name : "My Ratnagiri Trip",
         stops,
         places,
-        atms,
+        dataset,
         people,
         days: planStillValid ? lastPlan.numDays : 1,
         startDate,
@@ -83,7 +83,7 @@ export default function PlanYourTripPanel({ places = [], atms = [], userLocation
       )}
       {/* hidden (not unmounted) so answers are kept when the card is collapsed */}
       <div className={wizardVisible ? (split ? "" : "mt-4") : "hidden"}>
-        <PlanMyTrip places={places} atms={atms} onPlanCreated={handlePlanCreated} />
+        <PlanMyTrip places={places} dataset={dataset} onPlanCreated={handlePlanCreated} showDownload={false} />
       </div>
     </section>
   );
@@ -102,10 +102,28 @@ export default function PlanYourTripPanel({ places = [], atms = [], userLocation
         )}
       </h2>
 
-      {stops.length > 0 && (
-        <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-3">
-          <p className="text-xs font-bold text-orange-800 mb-2">Take your trip with you</p>
-          <div className="grid grid-cols-2 gap-2 mb-2">
+      <TripPlanner userLocation={userLocation} />
+
+    </section>
+  );
+
+  const downloadCard =
+    stops.length > 0 ? (
+        <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
+          <p className="text-sm font-bold text-slate-800">Take your trip with you</p>
+          <p className="text-xs text-slate-600 mt-0.5 mb-3">
+            One PDF for your phone: readiness check, budget, places and stays, ATMs, hospitals and emergency help. Works offline.
+          </p>
+
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {["Trip brief and risks", "Day-by-day maps", "Places and stays", "Homestay and driver contacts", "ATMs and cash plan", "Hospitals and police", "Budget", "Emergency numbers"].map((t) => (
+              <span key={t} className="text-[10px] font-semibold text-orange-800 bg-white/80 border border-orange-200 rounded-full px-2 py-0.5">
+                {t}
+              </span>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
             <label className="text-[11px] font-semibold text-slate-600">
               Start date
               <input
@@ -127,27 +145,25 @@ export default function PlanYourTripPanel({ places = [], atms = [], userLocation
               />
             </label>
           </div>
+
           <button
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white text-xs font-bold py-2.5 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white text-sm font-bold py-3 rounded-xl shadow-sm transition-colors"
           >
-            <Download size={14} /> {downloading ? "Preparing PDF..." : "Download PDF itinerary (with maps)"}
+            <Download size={16} /> {downloading ? "Preparing your guide..." : "Download trip guide (PDF)"}
           </button>
           {pdfError && <p className="text-xs text-red-600 mt-2">{pdfError}</p>}
         </div>
-      )}
-
-      <TripPlanner userLocation={userLocation} />
-    </section>
-  );
+    ) : null;
 
   if (split) {
     return (
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         {wizard}
         {planner}
+        {downloadCard && <div className="lg:col-span-2">{downloadCard}</div>}
       </div>
     );
   }
@@ -155,6 +171,7 @@ export default function PlanYourTripPanel({ places = [], atms = [], userLocation
     <div>
       {wizard}
       {planner}
+      {downloadCard && <div className="mt-6">{downloadCard}</div>}
     </div>
   );
 }

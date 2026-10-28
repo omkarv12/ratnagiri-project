@@ -77,7 +77,7 @@ function ChoiceRow({ options, value, onChange }) {
   );
 }
 
-export default function PlanMyTrip({ places = [], atms = [], onPlanCreated }) {
+export default function PlanMyTrip({ places = [], dataset = {}, onPlanCreated, showDownload = true }) {
   const { loadPlan } = useTripPlanner();
 
   const [days, setDays] = useState(2);
@@ -127,7 +127,7 @@ export default function PlanMyTrip({ places = [], atms = [], onPlanCreated }) {
         name: plan.name,
         stops: plan.stops,
         places,
-        atms,
+        dataset,
         people,
         days: plan.numDays,
         startDate,
@@ -227,14 +227,16 @@ export default function PlanMyTrip({ places = [], atms = [], onPlanCreated }) {
 
         {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
 
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="w-full mb-2 flex items-center justify-center gap-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 disabled:opacity-60 border border-orange-200 py-2.5 rounded-lg"
-        >
-          <Download size={14} /> {downloading ? "Preparing PDF..." : "Download detailed PDF itinerary"}
-        </button>
+        {showDownload && (
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="w-full mb-2 flex items-center justify-center gap-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 disabled:opacity-60 border border-orange-200 py-2.5 rounded-lg"
+          >
+            <Download size={14} /> {downloading ? "Preparing PDF..." : "Download trip guide (PDF)"}
+          </button>
+        )}
 
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button
