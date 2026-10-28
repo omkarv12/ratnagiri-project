@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, Wand2, AlertTriangle } from "lucide-react";
+import { Minus, Plus, Wand2, AlertTriangle, Download } from "lucide-react";
 import { useTripPlanner } from "./TripPlanner"; // same folder as TripPlanner.jsx - adjust if different
 import { INTERESTS, PACES, TRANSPORT, buildPlan } from "../utils/planTrip";
 
@@ -9,8 +9,8 @@ import { INTERESTS, PACES, TRANSPORT, buildPlan } from "../utils/planTrip";
      places        array of every place the planner can use:
                    { type, id, name, lat, lng, tags?, fee?, mins?, openTime?,
                      closeTime?, popularity?, pricePerNight? (homestays) }
-     onPlanCreated optional - called after the plan is loaded, e.g. to switch
-                   to the Trip Planner tab
+     onPlanCreated optional - called as onPlanCreated(plan, { startDate })
+                   after the plan is loaded
 ================================================================== */
 
 const inr = (n) => `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -87,9 +87,11 @@ export default function PlanMyTrip({ places = [], onPlanCreated }) {
   const [pace, setPace] = useState("normal");
   const [transport, setTransport] = useState("own");
   const [includeStay, setIncludeStay] = useState(true);
+  const [startDate, setStartDate] = useState("");
 
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   const toggleInterest = (id) =>
     setInterests((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
@@ -114,7 +116,30 @@ export default function PlanMyTrip({ places = [], onPlanCreated }) {
 
   const handleUse = () => {
     loadPlan(plan);
-    if (onPlanCreated) onPlanCreated();
+    if (onPlanCreated) onPlanCreated(plan, { startDate, people });
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const { downloadTripPdf } = await import("../utils/tripPdf");
+      await downloadTripPdf({
+        name: plan.name,
+        stops: plan.stops,
+        places,
+        people,
+        days: plan.numDays,
+        startDate,
+        cost: plan.cost,
+        budget: plan.budget,
+        notes: plan.notes,
+      });
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      setError("Could not create the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   /* ---------------- result view ---------------- */
@@ -190,6 +215,25 @@ export default function PlanMyTrip({ places = [], onPlanCreated }) {
             </div>
           ))}
         </div>
+
+        <label className="block text-xs font-semibold text-slate-600 mb-1">Trip start date (optional)</label>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="w-full mb-3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+        />
+
+        {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
+
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="w-full mb-2 flex items-center justify-center gap-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 disabled:opacity-60 border border-orange-200 py-2.5 rounded-lg"
+        >
+          <Download size={14} /> {downloading ? "Preparing PDF..." : "Download detailed PDF itinerary"}
+        </button>
 
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button

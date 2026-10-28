@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { Wand2, ChevronDown, ChevronUp, Route as RouteIcon } from "lucide-react";
+import { Wand2, ChevronDown, ChevronUp, Route as RouteIcon, Download } from "lucide-react";
 import PlanMyTrip from "./PlanMyTrip";
 import TripPlanner, { useTripPlanner } from "./TripPlanner";
 
 /* ==================================================================
    PlanYourTripPanel
-   "Plan for me" (the wizard) and "Plan Trip" (the planner) on ONE screen.
+   "Plan for me" (the wizard) and "Plan Trip" (the planner) on ONE screen,
+   plus a "Download PDF itinerary" card (with maps) for the current trip.
 
    layout="stacked"  narrow places such as the map sidebar: the wizard is a
                      collapsible card above the planner.
@@ -16,11 +17,45 @@ export default function PlanYourTripPanel({ places = [], userLocation, layout = 
   const { stops } = useTripPlanner();
   const split = layout === "split";
   const [wizardOpen, setWizardOpen] = useState(stops.length === 0);
+  const [lastPlan, setLastPlan] = useState(null); // plan from the wizard (has cost, notes, etc.)
+  const [startDate, setStartDate] = useState("");
+  const [people, setPeople] = useState(2);
+  const [downloading, setDownloading] = useState(false);
+  const [pdfError, setPdfError] = useState("");
   const tripRef = useRef(null);
 
-  const handlePlanCreated = () => {
+  const handlePlanCreated = (plan, meta = {}) => {
+    setLastPlan(plan);
+    if (meta.startDate) setStartDate(meta.startDate);
+    if (meta.people) setPeople(meta.people);
     setWizardOpen(false);
     setTimeout(() => tripRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    setPdfError("");
+    try {
+      const { downloadTripPdf } = await import("../utils/tripPdf");
+      // Wizard cost is only valid while the stop list is unchanged.
+      const planStillValid = lastPlan && lastPlan.stops.length === stops.length;
+      await downloadTripPdf({
+        name: planStillValid ? lastPlan.name : "My Ratnagiri Trip",
+        stops,
+        places,
+        people,
+        days: planStillValid ? lastPlan.numDays : 1,
+        startDate,
+        cost: planStillValid ? lastPlan.cost : null,
+        budget: planStillValid ? lastPlan.budget : 0,
+        notes: planStillValid ? lastPlan.notes : [],
+      });
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      setPdfError("Could not create the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const wizardVisible = split || wizardOpen;
@@ -65,6 +100,44 @@ export default function PlanYourTripPanel({ places = [], userLocation, layout = 
           </span>
         )}
       </h2>
+
+      {stops.length > 0 && (
+        <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-3">
+          <p className="text-xs font-bold text-orange-800 mb-2">Take your trip with you</p>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <label className="text-[11px] font-semibold text-slate-600">
+              Start date
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
+              />
+            </label>
+            <label className="text-[11px] font-semibold text-slate-600">
+              Travellers
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={people}
+                onChange={(e) => setPeople(Math.max(1, Number(e.target.value) || 1))}
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 text-white text-xs font-bold py-2.5 rounded-lg transition-colors"
+          >
+            <Download size={14} /> {downloading ? "Preparing PDF..." : "Download PDF itinerary (with maps)"}
+          </button>
+          {pdfError && <p className="text-xs text-red-600 mt-2">{pdfError}</p>}
+        </div>
+      )}
+
       <TripPlanner userLocation={userLocation} />
     </section>
   );
