@@ -1,37 +1,36 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import EventsCalendar from "../components/EventsCalendar";
 import API_BASE_URL from "../config";
 
-const formatDate = (iso) =>
+const COLUMNS = 3;
+
+const dayOf = (iso) =>
+  new Date(`${String(iso).slice(0, 10)}T00:00:00`).getDate();
+
+const monthOf = (iso) =>
+  new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
+    month: "short",
+  });
+
+const fullDate = (iso) =>
   new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 
-export default function UpcomingEventsPage() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+// One column of the notice board. It scrolls upward by itself, loops back to
+// the top, pauses while the visitor hovers / touches / focuses it, and stays
+// still for people who prefer reduced motion. The scroll bar on the right
+// stays usable the whole time.
+function RollingColumn({ items }) {
+  const ref = useRef(null);
   const [paused, setPaused] = useState(false);
-  const listRef = useRef(null);
 
-  // Approved upcoming events from the Flask / Postgres backend
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/events/upcoming?limit=12`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Rolling display: the list drifts upward slowly and loops back to the top.
-  // It pauses while the visitor hovers, touches or focuses it, and is skipped
-  // entirely for people who prefer reduced motion. The scroll bar stays
-  // usable the whole time.
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el || paused || events.length < 2) return undefined;
+    const el = ref.current;
+    if (!el || paused || items.length < 2) return undefined;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
 
     const id = setInterval(() => {
@@ -43,7 +42,67 @@ export default function UpcomingEventsPage() {
       }
     }, 40);
     return () => clearInterval(id);
-  }, [paused, events.length]);
+  }, [paused, items.length]);
+
+  return (
+    <div
+      ref={ref}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+      tabIndex={0}
+      aria-label="Upcoming events, scrollable list"
+      className="rt-roll h-72 overflow-y-scroll rounded-xl bg-white shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+    >
+      <ul className="divide-y divide-slate-100">
+        {items.map((e) => (
+          <li key={e.id} className="flex gap-3 p-3">
+            <div className="w-12 shrink-0 rounded-lg bg-[#B4532A] py-1.5 text-center text-white">
+              <p className="text-lg font-bold leading-none">{dayOf(e.event_date)}</p>
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                {monthOf(e.event_date)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold leading-snug text-slate-800">{e.title}</p>
+              <p className="mt-0.5 text-[11px] text-slate-400">
+                {fullDate(e.event_date)}
+                {e.organizer_name ? ` · by ${e.organizer_name}` : ""}
+              </p>
+              {e.description && (
+                <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
+                  {e.description}
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default function UpcomingEventsPage() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Approved upcoming events from the Flask / Postgres backend
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/events/upcoming?limit=12`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setEvents(Array.isArray(data) ? data : []))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Deal events out across the columns (1st, 2nd, 3rd, 1st, ...) so the
+  // soonest events sit at the top of each column.
+  const columns = Array.from({ length: COLUMNS }, (_, c) =>
+    events.filter((_, i) => i % COLUMNS === c)
+  ).filter((col) => col.length > 0);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -70,7 +129,7 @@ export default function UpcomingEventsPage() {
         </div>
       </header>
 
-      {/* 1. Coming up — rolling list with a scroll bar on the right */}
+      {/* 1. Coming up — three scrolling columns above the calendar */}
       <section
         id="events-list"
         className="px-5 sm:px-10 lg:px-16 pt-6 pb-4 scroll-mt-24"
@@ -87,51 +146,10 @@ export default function UpcomingEventsPage() {
             </p>
           )}
 
-          {events.length > 0 && (
-            <div
-              ref={listRef}
-              onMouseEnter={() => setPaused(true)}
-              onMouseLeave={() => setPaused(false)}
-              onTouchStart={() => setPaused(true)}
-              onTouchEnd={() => setPaused(false)}
-              onFocus={() => setPaused(true)}
-              onBlur={() => setPaused(false)}
-              tabIndex={0}
-              aria-label="Upcoming events, scrollable list"
-              className="rt-roll max-h-[19rem] overflow-y-scroll pr-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 content-start rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-            >
-              {events.map((e) => (
-                <div
-                  key={e.id}
-                  className="flex flex-col overflow-hidden rounded-xl bg-white shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
-                >
-                  {e.photo_url && (
-                    <img
-                      src={e.photo_url}
-                      alt={e.title}
-                      loading="lazy"
-                      className="h-24 w-full shrink-0 object-cover"
-                    />
-                  )}
-                  <div className="p-3 min-w-0">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-[#B4532A] mb-1">
-                      <MapPin size={12} /> {formatDate(e.event_date)}
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800 line-clamp-1">
-                      {e.title}
-                    </p>
-                    {e.organizer_name && (
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        by {e.organizer_name}
-                      </p>
-                    )}
-                    {e.description && (
-                      <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
-                        {e.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
+          {columns.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {columns.map((items, i) => (
+                <RollingColumn key={i} items={items} />
               ))}
             </div>
           )}
