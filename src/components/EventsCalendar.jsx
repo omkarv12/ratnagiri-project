@@ -204,17 +204,17 @@ export default function EventsCalendar() {
   const todayKey = toKey(now.getFullYear(), now.getMonth(), now.getDate());
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border-4 border-white">
+    <div className="w-full bg-white rounded-2xl shadow-[0_30px_60px_-30px_rgba(11,49,73,0.35)] overflow-hidden ring-1 ring-slate-200">
       {/* ---------- Header ---------- */}
       <header
         ref={calendarRef}
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5"
         style={{
           background:
-            "linear-gradient(135deg, #a3c9c7 0%, #76abae 60%, #173b45 100%)",
+            "linear-gradient(135deg, #0b3149 0%, #0d4150 55%, #0f766e 100%)",
         }}
       >
-        <h1 className="text-xl md:text-2xl font-extrabold uppercase tracking-widest text-[#173b45]">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
           Ratnagiri Tourism Calendar
         </h1>
 
@@ -222,7 +222,7 @@ export default function EventsCalendar() {
           <button
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition"
           >
             <ChevronLeft size={18} />
           </button>
@@ -230,7 +230,7 @@ export default function EventsCalendar() {
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold"
+            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-[#0b3149] focus:outline-none focus:ring-2 focus:ring-[#FBBF24]"
           >
             {MONTHS.map((m, i) => (
               <option key={m} value={i}>{m}</option>
@@ -240,7 +240,7 @@ export default function EventsCalendar() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold"
+            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-[#0b3149] focus:outline-none focus:ring-2 focus:ring-[#FBBF24]"
           >
             {[0, 1, 2].map((o) => {
               const y = now.getFullYear() + o;
@@ -251,18 +251,18 @@ export default function EventsCalendar() {
           <button
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition"
           >
             <ChevronRight size={18} />
           </button>
 
-          <span className="rounded-md bg-[#fed166] px-4 py-2 text-sm font-extrabold uppercase tracking-wide text-[#2b2d42] shadow">
+          <span className="rounded-full bg-[#FBBF24] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#0b3149] shadow">
             {MONTHS[month]} {year}
           </span>
 
           <button
             onClick={() => scrollTo(formRef)}
-            className="flex items-center gap-1.5 rounded-lg bg-[#173b45] hover:bg-[#0f272e] text-white px-4 py-2 text-sm font-semibold transition"
+            className="flex items-center gap-1.5 rounded-full bg-[#B4532A] hover:bg-[#9c4522] text-white px-4 py-2 text-sm font-semibold transition"
           >
             <PlusCircle size={16} /> Contribute Event
           </button>
@@ -270,14 +270,14 @@ export default function EventsCalendar() {
       </header>
 
       {/* ---------- Weekday labels ---------- */}
-      <div className="grid grid-cols-7 bg-[#c5dedc] border-b-2 border-[#b2d2d0] py-2 text-center text-[11px] md:text-[13px] font-bold tracking-wider text-[#1b4965]">
+      <div className="grid grid-cols-7 bg-teal-50 border-b border-teal-100 py-2.5 text-center text-[11px] md:text-[13px] font-bold tracking-wider text-teal-800">
         {WEEKDAYS.map((d) => (
           <div key={d}>{d}</div>
         ))}
       </div>
 
       {/* ---------- Grid ---------- */}
-      <div className="grid grid-cols-7 bg-[#fdfaf4] border-2 border-slate-200">
+      <div className="grid grid-cols-7 bg-white border-b border-slate-200">
         {cells.map((c, i) => {
           const key = c.muted ? null : toKey(year, month, c.day);
           const dayEvents = key ? eventsByDate[key] || [] : [];
@@ -286,12 +286,12 @@ export default function EventsCalendar() {
             <div
               key={i}
               className={`min-h-[75px] md:min-h-[120px] p-1.5 border-r border-b border-slate-100 flex flex-col ${
-                c.muted ? "bg-[#f8f6f0] text-slate-300" : "bg-white"
+                c.muted ? "bg-slate-50 text-slate-300" : "bg-white"
               }`}
             >
               <span
                 className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
-                  isToday ? "bg-[#173b45] text-white" : "text-slate-500"
+                  isToday ? "bg-[#B4532A] text-white" : "text-slate-600"
                 }`}
               >
                 {String(c.day).padStart(2, "0")}
@@ -327,7 +327,7 @@ export default function EventsCalendar() {
       </div>
 
       {/* ---------- Legend ---------- */}
-      <footer className="flex flex-wrap justify-center gap-3 bg-[#f6eedb] border-t-2 border-[#ebd9b8] px-5 py-3.5">
+      <footer className="flex flex-wrap justify-center gap-3 bg-slate-50 border-t border-slate-200 px-5 py-3.5">
         {Object.entries(CATEGORIES).map(([k, c]) => (
           <span
             key={k}
@@ -340,11 +340,11 @@ export default function EventsCalendar() {
       </footer>
 
       {/* ---------- Contribute form ---------- */}
-      <section ref={formRef} className="p-6 md:p-8 border-t border-slate-200">
-        <h2 className="text-xl font-bold text-[#173b45] mb-1">
+      <section ref={formRef} id="contribute" className="scroll-mt-24 p-6 md:p-8 bg-[#F4F8F9] border-t border-slate-200">
+        <h2 className="text-xl font-bold text-[#0b3149] mb-1">
           Contribute Tourism Event
         </h2>
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-sm text-slate-600 mb-6">
           Submit your festival, tour, or cultural gathering to feature on the
           Ratnagiri Tourism schedule.
         </p>
@@ -457,7 +457,7 @@ export default function EventsCalendar() {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 hover:border-[#76abae] hover:bg-slate-50 px-5 py-4 text-sm font-semibold text-slate-600 transition"
+                className="flex items-center gap-2 rounded-lg border-2 border-dashed border-slate-300 hover:border-teal-600 hover:bg-white px-5 py-4 bg-white text-sm font-semibold text-slate-600 transition"
               >
                 <ImagePlus size={18} /> Choose a photo (max {MAX_PHOTO_MB} MB)
               </button>
@@ -478,14 +478,14 @@ export default function EventsCalendar() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-[#173b45] hover:bg-[#0d252c] disabled:opacity-60 text-white px-7 py-3 text-sm font-bold transition"
+              className="rounded-full bg-[#B4532A] hover:bg-[#9c4522] disabled:opacity-60 text-white px-7 py-3 text-sm font-bold shadow-md transition"
             >
               {submitting ? "Submitting..." : "Submit & Add to Calendar"}
             </button>
             <button
               type="button"
               onClick={() => scrollTo(calendarRef)}
-              className="flex items-center gap-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[#173b45] px-5 py-3 text-sm font-semibold transition"
+              className="flex items-center gap-1.5 rounded-full bg-white hover:bg-slate-100 ring-1 ring-slate-200 text-[#0b3149] px-5 py-3 text-sm font-semibold transition"
             >
               <ArrowUp size={15} /> View Calendar
             </button>
@@ -534,7 +534,7 @@ export default function EventsCalendar() {
                   </span>
                 );
               })()}
-              <h3 className="mt-2 text-xl font-bold text-[#173b45]">
+              <h3 className="mt-2 text-xl font-bold text-[#0b3149]">
                 {activeEvent.title}
               </h3>
               <p className="text-sm font-semibold text-[#B4532A] mt-1">
@@ -565,7 +565,7 @@ export default function EventsCalendar() {
           font-size: 14px;
           background: #fff;
         }
-        .input:focus { outline: 2px solid #76abae; border-color: #76abae; }
+        .input:focus { outline: 2px solid #0f766e; border-color: #0f766e; }
       `}</style>
     </div>
   );
