@@ -13,7 +13,7 @@ import TripPlanner, { useTripPlanner } from "./TripPlanner";
    layout="split"    full page: wizard on the left, planner on the right
                      (stacks on small screens).
 ================================================================== */
-export default function PlanYourTripPanel({ places = [], userLocation, layout = "stacked" }) {
+export default function PlanYourTripPanel({ places = [], atms = [], userLocation, layout = "stacked" }) {
   const { stops } = useTripPlanner();
   const split = layout === "split";
   const [wizardOpen, setWizardOpen] = useState(stops.length === 0);
@@ -43,6 +43,7 @@ export default function PlanYourTripPanel({ places = [], userLocation, layout = 
         name: planStillValid ? lastPlan.name : "My Ratnagiri Trip",
         stops,
         places,
+        atms,
         people,
         days: planStillValid ? lastPlan.numDays : 1,
         startDate,
@@ -82,7 +83,7 @@ export default function PlanYourTripPanel({ places = [], userLocation, layout = 
       )}
       {/* hidden (not unmounted) so answers are kept when the card is collapsed */}
       <div className={wizardVisible ? (split ? "" : "mt-4") : "hidden"}>
-        <PlanMyTrip places={places} onPlanCreated={handlePlanCreated} />
+        <PlanMyTrip places={places} atms={atms} onPlanCreated={handlePlanCreated} />
       </div>
     </section>
   );

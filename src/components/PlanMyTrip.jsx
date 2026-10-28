@@ -77,7 +77,7 @@ function ChoiceRow({ options, value, onChange }) {
   );
 }
 
-export default function PlanMyTrip({ places = [], onPlanCreated }) {
+export default function PlanMyTrip({ places = [], atms = [], onPlanCreated }) {
   const { loadPlan } = useTripPlanner();
 
   const [days, setDays] = useState(2);
@@ -127,6 +127,7 @@ export default function PlanMyTrip({ places = [], onPlanCreated }) {
         name: plan.name,
         stops: plan.stops,
         places,
+        atms,
         people,
         days: plan.numDays,
         startDate,

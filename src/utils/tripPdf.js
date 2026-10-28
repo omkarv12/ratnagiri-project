@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { NATIONAL_CONTACTS, DISTRICT_CONTACTS, FACILITIES, EMERGENCY_STEPS } from "../data/emergencyContacts";
 
 /* ------------------------------------------------------------------
    Trip PDF generator (with vector maps)
@@ -231,13 +232,14 @@ function fillPoly(doc, pts) {
 /* pins:  [{ lat, lng, n, color, name?, url? }]
    lines: [{ pts: [{lat,lng}], color }]
    Returns the y coordinate of the map's bottom edge. */
-function drawTripMap(doc, { x, y, w, h, pins, lines = [], rings = [], showNames = false }) {
+function drawTripMap(doc, { x, y, w, h, pins, lines = [], rings = [], showNames = false, extras = [] }) {
   const r = { x, y, w, h };
   doc.setFillColor(238, 242, 247).rect(x, y, w, h, "F");
 
   // projection fitted to the pins (equirectangular, corrected for latitude)
-  const lats = pins.map((p) => p.lat);
-  const lngs = pins.map((p) => p.lng);
+  const fitPts = [...pins, ...extras];
+  const lats = fitPts.map((p) => p.lat);
+  const lngs = fitPts.map((p) => p.lng);
   const minLat = Math.min(...lats), maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
   const cLat = (minLat + maxLat) / 2;
@@ -299,6 +301,16 @@ function drawTripMap(doc, { x, y, w, h, pins, lines = [], rings = [], showNames 
     }
   });
   doc.setLineDashPattern([], 0);
+
+  // help markers: ATM (A), hospital (H), police (P) - drawn under the stop pins
+  extras.forEach((e) => {
+    const [ex, ey] = proj(e.lat, e.lng);
+    doc.setFillColor(...e.color).setDrawColor(255).setLineWidth(0.5);
+    doc.roundedRect(ex - 2.4, ey - 2.4, 4.8, 4.8, 0.9, 0.9, "FD");
+    doc.setTextColor(255).setFont("helvetica", "bold").setFontSize(6.5);
+    doc.text(e.letter, ex, ey + 0.9, { align: "center" });
+    if (e.url) doc.link(ex - 2.4, ey - 2.4, 4.8, 4.8, { url: e.url });
+  });
 
   // pins
   const pos = pins.map((p) => ({ ...p, xy: proj(p.lat, p.lng) }));
@@ -377,6 +389,48 @@ function dayLegend(doc, y, numDays) {
 }
 
 /* ------------------------------------------------------------------
+   HELP NEAR THE ROUTE: nearest ATMs / hospitals / police
+------------------------------------------------------------------- */
+
+const HELP_STYLE = {
+  atm: { letter: "A", color: [37, 99, 235], label: "ATM" },
+  hospital: { letter: "H", color: [220, 38, 38], label: "Hospital" },
+  police: { letter: "P", color: [30, 41, 59], label: "Police" },
+};
+
+const mapsDir = (o) => `https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lng}`;
+const hasXY = (o) => o && Number(o.lat) && Number(o.lng);
+
+// Nearest items to any of the given stop points: [{ item, km, near }]
+function nearestOf(items, pts, limit, maxKm) {
+  if (!pts.length) return [];
+  const scored = items.filter(hasXY).map((item) => {
+    let best = null;
+    pts.forEach((p) => {
+      const km = haversine({ lat: Number(item.lat), lng: Number(item.lng) }, p);
+      if (km != null && (!best || km < best.km)) best = { km, near: p };
+    });
+    return best ? { item, km: best.km, near: best.near } : null;
+  }).filter(Boolean).sort((a, b) => a.km - b.km);
+  const close = scored.filter((x) => x.km <= maxKm);
+  return (close.length ? close : scored.slice(0, 2)).slice(0, limit);
+}
+
+function helpLegend(doc, y) {
+  let x = M;
+  doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(...C.dark);
+  Object.values(HELP_STYLE).forEach((st) => {
+    doc.setFillColor(...st.color).roundedRect(x, y, 4.4, 4.4, 0.8, 0.8, "F");
+    doc.setTextColor(255).setFont("helvetica", "bold").setFontSize(6.5).text(st.letter, x + 2.2, y + 3.2, { align: "center" });
+    doc.setTextColor(...C.dark).setFont("helvetica", "normal").setFontSize(8).text(st.label, x + 6.5, y + 3.4);
+    x += 28;
+  });
+  doc.setFillColor(...C.brand).circle(x + 2.2, y + 2.2, 2.2, "F");
+  doc.text("Your stops", x + 6.5, y + 3.4);
+  return y + 9;
+}
+
+/* ------------------------------------------------------------------
    Layout helpers
 ------------------------------------------------------------------- */
 
@@ -426,6 +480,9 @@ export async function downloadTripPdf(opts) {
     startDate = "",
     budget = 0,
     notes = [],
+    atms = [],
+    facilities = FACILITIES,
+    tripUrl = "",
   } = opts;
 
   const details = {};
@@ -503,6 +560,10 @@ export async function downloadTripPdf(opts) {
     "Keep this PDF offline on your phone; mobile signal can drop in rural areas.",
   ];
   howTo.forEach((t, i) => doc.text(`-  ${t}`, M, 214 + i * 6));
+  if (tripUrl) {
+    doc.setFont("helvetica", "bold").setFontSize(9).setTextColor(37, 99, 235);
+    doc.textWithLink("Open this trip online  >", M, 214 + howTo.length * 6 + 4, { url: tripUrl });
+  }
 
   /* ---------------- AT A GLANCE ---------------- */
   doc.addPage();
@@ -716,6 +777,145 @@ export async function downloadTripPdf(opts) {
     y = doc.lastAutoTable.finalY + 10;
   }
 
+  /* ---------------- HELP NEAR YOUR ROUTE ---------------- */
+  doc.addPage();
+  y = sectionTitle(doc, "Help near your route", 22, "Nearest ATMs, hospitals and police for each day. Distances are straight-line, so allow more on the road.");
+  y = helpLegend(doc, y);
+
+  const helpTable = (title, head, rows, urls, accent) => {
+    y = ensureSpace(doc, y, 34);
+    doc.setFont("helvetica", "bold").setFontSize(9.5).setTextColor(...accent);
+    doc.text(title, M, y + 3);
+    autoTable(doc, {
+      ...tableDefaults,
+      startY: y + 5,
+      head: [head],
+      body: rows,
+      headStyles: { ...tableDefaults.headStyles, fillColor: accent },
+      styles: { ...tableDefaults.styles, fontSize: 8.5 },
+      columnStyles: { 0: { fontStyle: "bold" } },
+      didDrawCell: (d) => {
+        if (d.section === "body" && d.column.index === 0 && urls[d.row.index]) {
+          doc.link(d.cell.x, d.cell.y, d.cell.width, d.cell.height, { url: urls[d.row.index] });
+        }
+      },
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  };
+
+  dayPlans.forEach((dp) => {
+    const pts = dp.rows
+      .map((r, i) => ({ ...r.stop, n: i + 1 }))
+      .filter((s) => hasXY(s))
+      .map((s) => ({ ...s, lat: Number(s.lat), lng: Number(s.lng) }));
+    const talukas = new Set(
+      dp.stops.map((s) => String(s.taluka || s.taluka_name || "").toLowerCase()).filter(Boolean)
+    );
+    const color = DAY_COLORS[(dp.day - 1) % DAY_COLORS.length];
+
+    const nearAtms = nearestOf(atms, pts, 3, 15);
+    const nearHosp = nearestOf(facilities.filter((f) => f.kind === "hospital"), pts, 3, 30);
+    const nearPol = nearestOf(facilities.filter((f) => f.kind === "police"), pts, 3, 30);
+    const talukaOnly = (kind) =>
+      facilities.filter((f) => f.kind === kind && !hasXY(f) && talukas.has(String(f.taluka || "").toLowerCase()));
+
+    y = ensureSpace(doc, y, pts.length ? 125 : 60);
+    doc.setFillColor(...C.dark).roundedRect(M, y, W - 2 * M, 10, 2, 2, "F");
+    doc.setTextColor(255).setFont("helvetica", "bold").setFontSize(11);
+    doc.text(`Day ${dp.day}${start ? "  -  " + dayDate(dp.day) : ""}  |  help nearby`, M + 4, y + 6.8);
+    y += 13;
+
+    if (pts.length) {
+      const extras = [
+        ...nearAtms.map((x) => ({ ...HELP_STYLE.atm, lat: Number(x.item.lat), lng: Number(x.item.lng), url: mapsDir(x.item) })),
+        ...nearHosp.map((x) => ({ ...HELP_STYLE.hospital, lat: Number(x.item.lat), lng: Number(x.item.lng), url: mapsDir(x.item) })),
+        ...nearPol.map((x) => ({ ...HELP_STYLE.police, lat: Number(x.item.lat), lng: Number(x.item.lng), url: mapsDir(x.item) })),
+      ];
+      const bottom = drawTripMap(doc, {
+        x: M, y, w: W - 2 * M, h: 75,
+        pins: pts.map((p) => ({ lat: p.lat, lng: p.lng, n: p.n, color, name: p.name, url: mapsPin(p) })),
+        lines: [{ color, pts }],
+        rings,
+        extras,
+        showNames: true,
+      });
+      y = mapCaption(doc, bottom + 1, "Tap an A, H or P marker for Google Maps directions. Stop numbers match the itinerary.");
+    }
+
+    // ATMs
+    if (nearAtms.length) {
+      helpTable(
+        "Nearest ATMs",
+        ["Bank", "ATM and area", "Hours", "Cash deposit", "Distance"],
+        nearAtms.map((x) => {
+          const a = x.item;
+          return [
+            clean(a.bank || "ATM"),
+            clean([a.name, a.village || a.taluka].filter(Boolean).join(" - ") || "-"),
+            a.is24x7 ? "24x7" : "Limited hours",
+            a.hasCashDeposit ? "Yes" : "-",
+            `~${x.km.toFixed(1)} km from stop ${x.near.n}`,
+          ];
+        }),
+        nearAtms.map((x) => mapsDir(x.item)),
+        HELP_STYLE.atm.color
+      );
+    } else {
+      doc.setFont("helvetica", "italic").setFontSize(8.5).setTextColor(...C.mid);
+      doc.text("No ATM data near this day's stops. Withdraw cash before heading to rural areas.", M, y + 3);
+      y += 9;
+    }
+
+    // Hospitals
+    const hospRows = [
+      ...nearHosp.map((x) => ({ f: x.item, dist: `~${x.km.toFixed(1)} km from stop ${x.near.n}`, url: mapsDir(x.item) })),
+      ...talukaOnly("hospital").map((f) => ({ f, dist: `In ${f.taluka}`, url: null })),
+    ];
+    if (hospRows.length) {
+      helpTable(
+        "Nearest hospitals and medical help",
+        ["Hospital", "Area", "Phone", "Distance"],
+        hospRows.map(({ f, dist }) => [
+          clean(f.name),
+          clean([f.village, f.taluka].filter(Boolean).join(", ") || "-"),
+          clean(f.phone || "Not listed - call 108"),
+          dist,
+        ]),
+        hospRows.map((r) => r.url),
+        HELP_STYLE.hospital.color
+      );
+    } else {
+      doc.setFont("helvetica", "italic").setFontSize(8.5).setTextColor(...C.red);
+      doc.text("No hospital listed near this day. For any medical emergency call 108 or 112.", M, y + 3);
+      y += 9;
+    }
+
+    // Police
+    const polRows = [
+      ...nearPol.map((x) => ({ f: x.item, dist: `~${x.km.toFixed(1)} km from stop ${x.near.n}`, url: mapsDir(x.item) })),
+      ...talukaOnly("police").map((f) => ({ f, dist: `In ${f.taluka}`, url: null })),
+    ];
+    if (polRows.length) {
+      helpTable(
+        "Nearest police stations",
+        ["Police station", "Area", "Phone", "Distance"],
+        polRows.map(({ f, dist }) => [
+          clean(f.name),
+          clean([f.village, f.taluka].filter(Boolean).join(", ") || "-"),
+          clean(f.phone || "Not listed - dial 100 / 112"),
+          dist,
+        ]),
+        polRows.map((r) => r.url),
+        HELP_STYLE.police.color
+      );
+    } else {
+      doc.setFont("helvetica", "italic").setFontSize(8.5).setTextColor(...C.mid);
+      doc.text("No police station listed near this day. Dial 100 or 112, or the Ratnagiri Police HQ control room: 02352-222222.", M, y + 3);
+      y += 9;
+    }
+    y += 6;
+  });
+
   /* ---------------- ESSENTIALS ---------------- */
   doc.addPage();
   y = sectionTitle(doc, "Travel essentials", 22, "Keep these handy");
@@ -723,18 +923,37 @@ export async function downloadTripPdf(opts) {
   autoTable(doc, {
     ...tableDefaults,
     startY: y,
-    head: [["Emergency", "Number"]],
-    body: [
-      ["All emergencies (police, fire, medical)", "112"],
-      ["Police", "100"],
-      ["Ambulance", "108"],
-      ["Fire", "101"],
-    ],
-    columnStyles: { 1: { fontStyle: "bold", halign: "right", textColor: C.red } },
-    tableWidth: 110,
+    head: [["Emergency helplines (India)", "Number"]],
+    body: NATIONAL_CONTACTS,
+    columnStyles: { 1: { fontStyle: "bold", halign: "right", textColor: C.red, cellWidth: 40 } },
+  });
+  y = doc.lastAutoTable.finalY + 8;
+
+  y = ensureSpace(doc, y, 50);
+  autoTable(doc, {
+    ...tableDefaults,
+    startY: y,
+    head: [["Ratnagiri district control rooms", "Number"]],
+    body: DISTRICT_CONTACTS,
+    columnStyles: { 1: { fontStyle: "bold", halign: "right", textColor: C.red, cellWidth: 40 } },
+  });
+  y = doc.lastAutoTable.finalY + 4;
+  doc.setFont("helvetica", "italic").setFontSize(7.5).setTextColor(...C.mid);
+  doc.text("District numbers are from the official Ratnagiri district website. Numbers can change, so save 112 first.", M, y + 3);
+  y += 10;
+
+  y = ensureSpace(doc, y, 60);
+  autoTable(doc, {
+    ...tableDefaults,
+    startY: y,
+    head: [["If something goes wrong", "What to do"]],
+    body: EMERGENCY_STEPS,
+    columnStyles: { 0: { cellWidth: 42, fontStyle: "bold", textColor: C.red } },
+    headStyles: { ...tableDefaults.headStyles, halign: "left" },
   });
   y = doc.lastAutoTable.finalY + 10;
 
+  y = ensureSpace(doc, y, 60);
   const tips = [
     ["Best time to visit", "October to March is the most comfortable. Monsoon (June to September) brings heavy rain, slippery ghat roads and rough seas."],
     ["Sea safety", "Swim only where locals do, and stay clear of the water when flags or locals warn of rough conditions. Never swim alone."],
