@@ -215,7 +215,7 @@ export default function EventsCalendar() {
         }}
       >
         <h1 className="text-xl md:text-2xl font-extrabold uppercase tracking-widest text-[#173b45]">
-          Ratnagiri Tourism Calendar 🌴⭐
+          Ratnagiri Tourism Calendar
         </h1>
 
         <div className="flex flex-wrap items-center gap-2">

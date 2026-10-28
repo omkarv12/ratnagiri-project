@@ -98,26 +98,26 @@ export default function UpcomingEventsPage() {
               onBlur={() => setPaused(false)}
               tabIndex={0}
               aria-label="Upcoming events, scrollable list"
-              className="rt-roll max-h-[26rem] overflow-y-scroll pr-3 space-y-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              className="rt-roll max-h-[19rem] overflow-y-scroll pr-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 content-start rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
               {events.map((e) => (
                 <div
                   key={e.id}
-                  className="flex overflow-hidden rounded-xl bg-white shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
+                  className="flex flex-col overflow-hidden rounded-xl bg-white shadow-[0_10px_28px_-14px_rgba(15,23,42,0.22)]"
                 >
                   {e.photo_url && (
                     <img
                       src={e.photo_url}
                       alt={e.title}
                       loading="lazy"
-                      className="h-auto w-28 sm:w-44 shrink-0 object-cover"
+                      className="h-24 w-full shrink-0 object-cover"
                     />
                   )}
-                  <div className="p-4 min-w-0">
+                  <div className="p-3 min-w-0">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-[#B4532A] mb-1">
                       <MapPin size={12} /> {formatDate(e.event_date)}
                     </p>
-                    <p className="text-base font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-slate-800 line-clamp-1">
                       {e.title}
                     </p>
                     {e.organizer_name && (
@@ -126,7 +126,7 @@ export default function UpcomingEventsPage() {
                       </p>
                     )}
                     {e.description && (
-                      <p className="text-sm text-slate-500 mt-1 leading-snug line-clamp-3">
+                      <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
                         {e.description}
                       </p>
                     )}
