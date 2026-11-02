@@ -39,6 +39,7 @@ export const STORIES_MENU = {
   ],
 };
 
+// Own top-level menu (no longer nested under "About").
 export const RESOURCES_MENU = {
   label: "Resources",
   route: "/resources",
@@ -50,31 +51,26 @@ export const RESOURCES_MENU = {
   ],
 };
 
-// The last menu: only Geography and its sub-pages.
-export const ABOUT_MENU = {
-  label: "About",
-  route: "/dashboard#about",
+// Own top-level menu: Geography with its sub-pages directly underneath.
+export const GEOGRAPHY_MENU = {
+  label: "Geography",
+  route: "/about/geography/places",
   children: [
-    {
-      label: "Geography",
-      children: [
-        { label: "Places", route: "/about/geography/places" },
-        { label: "Hidden Paths", route: "/experiences/hidden-paths" },
-        { label: "Explore Villages", route: "/experiences/explore-villages" },
-        { label: "Itineraries", route: "/experiences/itineraries" },
-        { label: "Circuits", route: "/experiences/circuits" },
-      ],
-    },
+    { label: "Places", route: "/about/geography/places" },
+    { label: "Hidden Paths", route: "/experiences/hidden-paths" },
+    { label: "Explore Villages", route: "/experiences/explore-villages" },
+    { label: "Itineraries", route: "/experiences/itineraries" },
+    { label: "Circuits", route: "/experiences/circuits" },
   ],
 };
 
 // DashboardLayout puts "Home" first, then these in order:
-// Home → About Us → Plan Your Trip → Experiences → Stories → Resources → About
+// Home → About Us → Plan Your Trip → Experiences → Stories → Resources → Geography
 export const MENUS = [
   ABOUT_US_MENU,
   PLAN_MENU,
   EXPERIENCES_MENU,
   STORIES_MENU,
   RESOURCES_MENU,
-  ABOUT_MENU,
+  GEOGRAPHY_MENU,
 ];
