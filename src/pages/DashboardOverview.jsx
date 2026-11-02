@@ -1168,10 +1168,7 @@ export default function DashboardOverview() {
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <div className="flex items-center gap-2 text-slate-800 text-xs font-extrabold uppercase tracking-[0.15em] mb-3">
-              <Landmark size={16} />
-              About the District
-            </div>
+            
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Society, Economy &amp; Governance
             </h2>
