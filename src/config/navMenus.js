@@ -1,5 +1,12 @@
 // src/config/navMenus.js
 
+// Top-level pages that used to sit under About. They now appear directly
+// after Home in the header, in this order.
+export const SOCIETY_MENU = { label: "Society", route: "/society" };
+export const ECONOMY_MENU = { label: "Economy", route: "/economy" };
+export const CULTURE_MENU = { label: "Culture", route: "/about/culture" };
+export const GOVERNANCE_MENU = { label: "Governance", route: "/good-governance" };
+
 export const PLAN_MENU = {
   label: "Plan Your Trip",
   route: "/plan-your-trip",
@@ -39,19 +46,11 @@ export const RESOURCES_MENU = {
   ],
 };
 
+// About now only holds Geography and its sub-pages.
 export const ABOUT_MENU = {
   label: "About",
   route: "/dashboard#about",
   children: [
-    {
-      label: "About",
-      children: [
-        { label: "Society", route: "/society" },
-        { label: "Economy", route: "/economy" },
-        { label: "Culture", route: "/about/culture" },
-        { label: "Governance", route: "/good-governance" },
-      ],
-    },
     {
       label: "Geography",
       children: [
@@ -65,4 +64,17 @@ export const ABOUT_MENU = {
   ],
 };
 
-export const MENUS = [PLAN_MENU, EXPERIENCES_MENU, STORIES_MENU, RESOURCES_MENU, ABOUT_MENU];
+// DashboardLayout puts "Home" first, then these in order:
+// Home → Society → Economy → Culture → Governance → Plan Your Trip →
+// Experiences → Stories → Resources → About (Geography only, last).
+export const MENUS = [
+  SOCIETY_MENU,
+  ECONOMY_MENU,
+  CULTURE_MENU,
+  GOVERNANCE_MENU,
+  PLAN_MENU,
+  EXPERIENCES_MENU,
+  STORIES_MENU,
+  RESOURCES_MENU,
+  ABOUT_MENU,
+];

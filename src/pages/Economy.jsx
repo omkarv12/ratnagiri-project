@@ -118,9 +118,6 @@ export default function Economy() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40" />
         <div className="relative h-full flex flex-col justify-end px-5 sm:px-10 lg:px-16 pb-10 max-w-[1680px] mx-auto">
-          <p className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-white/80 mb-3 font-body">
-            About the District &middot; Economy
-          </p>
           <h1 className="font-display text-white text-4xl sm:text-5xl lg:text-6xl mb-3">
             Economy of Ratnagiri
           </h1>

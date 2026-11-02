@@ -3,8 +3,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Landmark,
-  Drama,
-  Users,
   PlayCircle,
   ShieldCheck,
   Search,
@@ -745,10 +743,6 @@ export default function DashboardOverview() {
         <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-              <Drama size={16} />
-              Experiences
-            </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Local Experiences
             </h2>
@@ -914,10 +908,6 @@ export default function DashboardOverview() {
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <Reveal>
-              <div className="flex items-center gap-2 text-teal-700 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-                <Users size={16} />
-                Stories
-              </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
                 Stories from Ratnagiri
               </h2>
@@ -1056,10 +1046,6 @@ export default function DashboardOverview() {
           {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
             <Reveal>
-              <div className="flex items-center gap-2 text-rose-600 text-xs font-bold uppercase tracking-[0.15em] mb-3">
-                <PlayCircle size={16} />
-                Videos
-              </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
                 Videos
               </h2>
