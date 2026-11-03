@@ -3,7 +3,8 @@ import { X, Check } from "lucide-react";
 import API_BASE_URL from "../config";
 
 // Shown once, on a visitor's first visit. The answer (or "skipped") is
-// remembered in localStorage so it never appears again on that browser.
+// remembered in localStorage so it never appears again on that browser, and
+// is also saved to the database via POST /api/survey/how-found.
 const STORAGE_KEY = "rt_source_survey_v1";
 const SHOW_DELAY_MS = 1200;
 
@@ -32,6 +33,15 @@ const SOURCES = [
   { id: "other", label: "Other", mark: "…", bg: "#64748B" },
 ];
 
+// Fire-and-forget: a failed request must never bother the visitor.
+function sendAnswer(source, other = null) {
+  fetch(`${API_BASE_URL}/api/survey/how-found`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source, other }),
+  }).catch(() => {});
+}
+
 export default function HowDidYouHearModal() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -58,32 +68,25 @@ export default function HowDidYouHearModal() {
     }
   };
 
-  const close = (value = "skipped") => {
-    remember(value);
+  // Skip / X / Escape / click outside. Counted as "skipped" in the database.
+  const close = () => {
+    remember("skipped");
+    sendAnswer("skipped");
     setOpen(false);
   };
 
   // Close on Escape
   useEffect(() => {
-    if (!open) return;
+    if (!open || done) return;
     const onKey = (e) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, done]);
 
   const submit = () => {
     if (!selected) return;
     remember(selected);
-    // TODO: create POST /api/survey/how-found on the backend. Until it
-    // exists this fails silently and the answer stays in localStorage only.
-    fetch(`${API_BASE_URL}/api/survey/how-found`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        source: selected,
-        other: selected === "other" ? otherText.trim() : null,
-      }),
-    }).catch(() => {});
+    sendAnswer(selected, selected === "other" ? otherText.trim() : null);
     setDone(true);
     setTimeout(() => setOpen(false), 1400);
   };
@@ -96,13 +99,13 @@ export default function HowDidYouHearModal() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="rt-survey-title"
-      onMouseDown={(e) => e.target === e.currentTarget && close()}
+      onMouseDown={(e) => e.target === e.currentTarget && !done && close()}
     >
       <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
         <div className="h-1 w-full bg-gradient-to-r from-[#B4532A] via-[#FBBF24] to-[#0f766e] shrink-0" />
 
         <button
-          onClick={() => close()}
+          onClick={() => (done ? setOpen(false) : close())}
           aria-label="Close"
           className="absolute right-3 top-4 w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition"
         >
@@ -172,7 +175,7 @@ export default function HowDidYouHearModal() {
 
             <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
               <button
-                onClick={() => close()}
+                onClick={close}
                 className="text-xs font-medium text-slate-500 hover:text-slate-700 transition"
               >
                 Skip
