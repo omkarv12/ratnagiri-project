@@ -6,7 +6,10 @@ import API_BASE_URL from "../config";
 // remembered in localStorage so it never appears again on that browser, and
 // is also saved to the database via POST /api/survey/how-found.
 const STORAGE_KEY = "rt_source_survey_v1";
-const SHOW_DELAY_MS = 1200;
+
+// 0 = open immediately when the website starts. Use 400 if you want a short
+// pause so it doesn't flash over the loading animation.
+const SHOW_DELAY_MS = 0;
 
 // Popular places people discover websites. `mark` is the short badge text,
 // `bg` its brand colour.
@@ -56,6 +59,11 @@ export default function HowDidYouHearModal() {
       /* storage blocked — just show it */
     }
     if (seen) return;
+
+    if (SHOW_DELAY_MS <= 0) {
+      setOpen(true);
+      return;
+    }
     const t = setTimeout(() => setOpen(true), SHOW_DELAY_MS);
     return () => clearTimeout(t);
   }, []);

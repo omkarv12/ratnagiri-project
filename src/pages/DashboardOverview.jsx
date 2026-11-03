@@ -38,15 +38,16 @@ import {
   WaveLayer,
   Palm,
 } from "../components/AmbientBackdrops";
-// NEW: cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
+// Cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
 import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
-import HowDidYouHearModal from "../components/HowDidYouHearModal";
+// NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
+// App.jsx so it opens as soon as the website starts, even during loading.
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
-// NEW: the loading scene always plays at least this long (ms), even when the
+// The loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
 // loader only while data is actually loading.
 const MIN_LOADER_MS = 0;
@@ -207,9 +208,7 @@ export default function DashboardOverview() {
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // NEW: keeps the cinematic loader on screen for a minimum time.
-  // (The old loadingMessages / msgIndex code is gone — the loader now
-  // runs its own station messages.)
+  // Keeps the cinematic loader on screen for a minimum time.
   const [minTimeDone, setMinTimeDone] = useState(MIN_LOADER_MS === 0);
   useEffect(() => {
     if (MIN_LOADER_MS === 0) return;
@@ -533,14 +532,11 @@ export default function DashboardOverview() {
         .slice(0, 6)
     : [];
 
-  // NEW: cinematic loading screen replaces the old 🚂 loader.
+  // Cinematic loading screen replaces the old 🚂 loader.
   if (loading || !minTimeDone) return <RatnagiriCinematic />;
 
   return (
     <div className="animate-in fade-in duration-500">
-      {/* First-visit "How did you get to know about this website?" popup */}
-      <HowDidYouHearModal />
-
       {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
           config, move this @import into index.html <head> as <link> tags. */}
       <style>{`
@@ -658,8 +654,8 @@ export default function DashboardOverview() {
                   Explore &middot; Experience &middot; Support Local
                 </p>
                 <h1 className="rt-hero-text font-display text-white leading-[1.05] whitespace-nowrap text-2xl sm:text-3xl lg:text-4xl mb-4">
-  Discover <span className="text-[#FBBF24]">Ratnagiri</span>
-</h1>
+                  Discover <span className="text-[#FBBF24]">Ratnagiri</span>
+                </h1>
                 <p className="text-white/90 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
                   Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
                   homestays and Konkan flavours, all in one place.
@@ -1175,7 +1171,6 @@ export default function DashboardOverview() {
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
               Society, Economy &amp; Governance
             </h2>
