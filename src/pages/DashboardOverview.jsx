@@ -290,7 +290,7 @@ export default function DashboardOverview() {
       title: "Monsoon Travel Advisory",
       description: "Some beach and fort routes have seasonal restrictions.",
       image: Slider6,
-      route: "/transport",
+      route: "/resources/transport-facilities",
     },
     {
       title: "Alphonso Season Calendar",
@@ -455,35 +455,37 @@ export default function DashboardOverview() {
     },
   ];
 
+  // Footer links — every route here matches an entry in config/navMenus.js
+  // (or the Experiences cards above).
   const footerColumns = [
     {
-      heading: "Destinations",
+      heading: "Plan & Explore",
       links: [
+        { label: "Plan Your Trip", route: "/plan-your-trip" },
         { label: "Interactive Map", route: "/map" },
-        { label: "Itineraries", route: "/itineraries" },
-        { label: "How to Reach", route: "/how-to-reach" },
-        { label: "Village Life", route: "/village-life" },
-        { label: "Cultural Events", route: "/cultural-events" },
+        { label: "Itineraries", route: "/experiences/itineraries" },
+        { label: "Circuits", route: "/experiences/circuits" },
+        { label: "Places", route: "/about/geography/places" },
       ],
     },
     {
-      heading: "Explore and Learn",
+      heading: "Experiences & Stories",
       links: [
-        { label: "Stories", route: "/stories" },
-        { label: "Videos", route: "/videos" },
-        { label: "Resources", route: "/resources" },
-        { label: "Rules for Tourists", route: "/rules" },
+        { label: "Upcoming Events", route: "/experiences/upcoming-events" },
         { label: "Guided Walks", route: "/experiences/guided-walks" },
+        { label: "Konkani Food", route: "/experiences/konkani-food" },
+        { label: "Stories & Videos", route: "/dashboard#stories" },
+        { label: "Reels", route: "/stories/reels" },
       ],
     },
     {
-      heading: "About",
+      heading: "About & Resources",
       links: [
-        { label: "Our Story", route: "/about" },
-        { label: "Konkani Food", route: "/experiences/konkani-food" },
-        { label: "Tourism Fund", route: "/tourism-fund" },
-        { label: "Register a Homestay", route: "/registration" },
-        { label: "Enquiries & FAQ", route: "/faq" },
+        { label: "Society", route: "/society" },
+        { label: "Economy", route: "/economy" },
+        { label: "Culture", route: "/about/culture" },
+        { label: "Governance", route: "/good-governance" },
+        { label: "Do's / Don'ts", route: "/resources/dos-and-donts" },
       ],
     },
   ];
