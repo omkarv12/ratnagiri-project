@@ -42,6 +42,7 @@ import {
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
 import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
+import HowDidYouHearModal from "../components/HowDidYouHearModal";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
@@ -486,6 +487,7 @@ export default function DashboardOverview() {
         { label: "Culture", route: "/about/culture" },
         { label: "Governance", route: "/good-governance" },
         { label: "Do's / Don'ts", route: "/resources/dos-and-donts" },
+        { label: "FAQ", route: "/faq" },
       ],
     },
   ];
@@ -536,6 +538,9 @@ export default function DashboardOverview() {
 
   return (
     <div className="animate-in fade-in duration-500">
+      {/* First-visit "How did you get to know about this website?" popup */}
+      <HowDidYouHearModal />
+
       {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
           config, move this @import into index.html <head> as <link> tags. */}
       <style>{`

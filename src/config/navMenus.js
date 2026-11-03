@@ -11,6 +11,12 @@ export const ABOUT_US_MENU = {
   ],
 };
 
+// NEW: sits right after "About Us". Single link, no dropdown.
+export const FAQ_MENU = {
+  label: "Frequently Asked Questions",
+  route: "/faq",
+};
+
 export const PLAN_MENU = {
   label: "Plan Your Trip",
   route: "/plan-your-trip",
@@ -65,9 +71,10 @@ export const GEOGRAPHY_MENU = {
 };
 
 // DashboardLayout puts "Home" first, then these in order:
-// Home → About Us → Plan Your Trip → Experiences → Stories → Resources → Geography
+// Home → About Us → FAQ → Plan Your Trip → Experiences → Stories → Resources → Geography
 export const MENUS = [
   ABOUT_US_MENU,
+  FAQ_MENU,
   PLAN_MENU,
   EXPERIENCES_MENU,
   STORIES_MENU,
