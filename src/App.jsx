@@ -15,6 +15,7 @@ import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
 import PlanYourTrip from "./pages/PlanYourTrip";
 import Places from "./pages/Places";
+import HowDidYouHearModal from "./components/HowDidYouHearModal";
 import NatureWalks from "./pages/NatureWalks";
 import TraditionalFood from "./pages/TraditionalFood";
 import CulturalEvents from "./pages/CulturalEvents";
@@ -76,7 +77,7 @@ export default function App() {
               path="/dashboard"
               element={<DashboardOverview />}
             />
-
+            <HowDidYouHearModal />
             {/* About → Geography → Places */}
             <Route
               path="/about/geography/places"
