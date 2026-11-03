@@ -1,287 +1,160 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
+// Context
+import { LocationsProvider } from "./context/LocationsContext";
+
+// Layout
 import DashboardLayout from "./layouts/DashboardLayout";
 
+// Shared components
+import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
+import HowDidYouHearModal from "./components/HowDidYouHearModal";
+
+// Auth & core pages
 import Login from "./pages/Login";
+import Registration from "./pages/Registration";
 import DashboardOverview from "./pages/DashboardOverview";
-import LocationProfile from "./pages/LocationProfile";
-import SustainabilityMap from "./pages/SustainabilityMap";
 import AdminDashboard from "./pages/AdminDashboard";
+
+// About
+import Places from "./pages/Places";
+import Culture from "./pages/Culture";
 import Society from "./pages/Society";
 import Economy from "./pages/Economy";
-import Culture from "./pages/Culture";
 import GoodGovernance from "./pages/GoodGovernance";
-import MedicalFacilities from "./pages/MedicalFacilities";
-import PoliceStations from "./pages/PoliceStations";
-import PlanYourTrip from "./pages/PlanYourTrip";
-import Places from "./pages/Places";
-import HowDidYouHearModal from "./components/HowDidYouHearModal";
-import NatureWalks from "./pages/NatureWalks";
-import TraditionalFood from "./pages/TraditionalFood";
-import CulturalEvents from "./pages/CulturalEvents";
-import CommunityExperience from "./pages/CommunityExperience";
-import Stories from "./pages/Stories";
-import TransportFacilities from "./pages/TransportFacilities";
-import ReelAwards from "./pages/ReelAwards";
-import StoryDetail from "./pages/StoryDetail";
+
+// Experiences
 import UpcomingEventsPage from "./pages/UpcomingEventsPage";
 import DiscoverYourStay from "./pages/DiscoverYourStay";
 import HiddenPaths from "./pages/HiddenPaths";
 import SubmitHiddenPath from "./pages/SubmitHiddenPath";
-import ExperiencePage from "./pages/ExperiencePage";
 import ExploreVillages from "./pages/ExploreVillages";
 import ExploreVillageDetail from "./pages/ExploreVillageDetail";
-
-// Itineraries
 import Itineraries from "./pages/Itineraries";
 import ItineraryDetail from "./pages/ItineraryDetail";
-
-// Circuits
 import CircuitsPage from "./pages/CircuitsPage";
+import ExperiencePage from "./pages/ExperiencePage";
 
-import ProtectedRoute from "./components/ProtectedRoute";
-import RulesForTourists from "./pages/RulesForTourists";
+// Nature & culture
+import NatureWalks from "./pages/NatureWalks";
+import TraditionalFood from "./pages/TraditionalFood";
+import CulturalEvents from "./pages/CulturalEvents";
+import CommunityExperience from "./pages/CommunityExperience";
 
-import { LocationsProvider } from "./context/LocationsContext";
-import Registration from "./pages/Registration";
-import Videos from "./pages/Videos";
+// Villages
 import VillagesTaluka from "./pages/VillagesTaluka";
 import VillageList from "./pages/VillageList";
 import VillageDetail from "./pages/VillageDetail";
-import ScrollToTop from "./components/ScrollToTop";
+
+// Locations & map
+import LocationProfile from "./pages/LocationProfile";
+import SustainabilityMap from "./pages/SustainabilityMap";
+
+// Plan & resources
+import PlanYourTrip from "./pages/PlanYourTrip";
+import RulesForTourists from "./pages/RulesForTourists";
+import TransportFacilities from "./pages/TransportFacilities";
+import MedicalFacilities from "./pages/MedicalFacilities";
+import PoliceStations from "./pages/PoliceStations";
+
+// Stories & media
+import Stories from "./pages/Stories";
+import StoryDetail from "./pages/StoryDetail";
+import ReelAwards from "./pages/ReelAwards";
+import Videos from "./pages/Videos";
 
 export default function App() {
   return (
     <LocationsProvider>
       <Router>
         <ScrollToTop />
+        <HowDidYouHearModal />
 
         <Routes>
           {/* Default redirect */}
-          <Route
-            path="/"
-            element={<Navigate to="/dashboard" replace />}
-          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Login */}
+          {/* Login (outside layout) */}
           <Route path="/login" element={<Login />} />
 
-          {/* Application pages */}
+          {/* Application pages (inside layout) */}
           <Route element={<DashboardLayout />}>
-            <Route
-              path="/registration"
-              element={<Registration />}
-            />
+            {/* Core */}
+            <Route path="/dashboard" element={<DashboardOverview />} />
+            <Route path="/registration" element={<Registration />} />
 
-            <Route
-              path="/dashboard"
-              element={<DashboardOverview />}
-            />
-            <HowDidYouHearModal />
-            {/* About → Geography → Places */}
-            <Route
-              path="/about/geography/places"
-              element={<Places />}
-            />
+            {/* About */}
+            <Route path="/about/geography/places" element={<Places />} />
+            <Route path="/about/culture" element={<Culture />} />
+            <Route path="/culture" element={<Culture />} />
+            <Route path="/society" element={<Society />} />
+            <Route path="/economy" element={<Economy />} />
+            <Route path="/good-governance" element={<GoodGovernance />} />
 
-            {/* Experiences → Upcoming Events */}
-            <Route
-              path="/experiences/upcoming-events"
-              element={<UpcomingEventsPage />}
-            />
-
-            {/* Experiences → Discover Your Stay */}
-            <Route
-              path="/experiences/discover-your-stay"
-              element={<DiscoverYourStay />}
-            />
-
-            {/* Experiences → Hidden Paths */}
-            <Route
-              path="/experiences/hidden-paths"
-              element={<HiddenPaths />}
-            />
-
-            <Route
-              path="/experiences/hidden-paths/submit"
-              element={<SubmitHiddenPath />}
-            />
-
-            {/* Experiences → Explore Villages */}
-            <Route
-              path="/experiences/explore-villages"
-              element={<ExploreVillages />}
-            />
-
+            {/* Experiences */}
+            <Route path="/experiences/upcoming-events" element={<UpcomingEventsPage />} />
+            <Route path="/experiences/discover-your-stay" element={<DiscoverYourStay />} />
+            <Route path="/experiences/hidden-paths" element={<HiddenPaths />} />
+            <Route path="/experiences/hidden-paths/submit" element={<SubmitHiddenPath />} />
+            <Route path="/experiences/explore-villages" element={<ExploreVillages />} />
             <Route
               path="/experiences/explore-villages/:taluka/:village"
               element={<ExploreVillageDetail />}
             />
 
             {/* Experiences → Itineraries */}
-            <Route
-              path="/experiences/itineraries"
-              element={<Itineraries />}
-            />
+            <Route path="/experiences/itineraries" element={<Itineraries />} />
+            <Route path="/experiences/itineraries/:slug" element={<ItineraryDetail />} />
 
-            {/* Individual itinerary with day-by-day details */}
-            <Route
-              path="/experiences/itineraries/:slug"
-              element={<ItineraryDetail />}
-            />
+            {/* Experiences → Circuits */}
+            <Route path="/experiences/circuits" element={<CircuitsPage />} />
+            <Route path="/experiences/circuits/:slug" element={<CircuitsPage />} />
 
-            {/* Experiences → Circuits (list, then one circuit by slug) */}
-            <Route
-              path="/experiences/circuits"
-              element={<CircuitsPage />}
-            />
-
-            <Route
-              path="/experiences/circuits/:slug"
-              element={<CircuitsPage />}
-            />
-
-            {/* Local Experiences */}
+            {/* Experiences → Local experiences */}
             <Route
               path="/experiences/guided-walks"
               element={<ExperiencePage category="guided-walks" />}
             />
-
             <Route
               path="/experiences/konkani-food"
               element={<ExperiencePage category="konkani-food" />}
             />
-
             <Route
               path="/experiences/community-interaction"
               element={<ExperiencePage category="community-interaction" />}
             />
 
-            {/* Plan Your Trip */}
-            <Route
-              path="/plan-your-trip"
-              element={<PlanYourTrip />}
-            />
-
-            {/* Tourist Rules */}
-            <Route
-              path="/rules"
-              element={<RulesForTourists />}
-            />
-
-            <Route
-              path="/resources/dos-and-donts"
-              element={<RulesForTourists />}
-            />
-
-            {/* Location Profiles */}
-            <Route
-              path="/profile/:type/:id"
-              element={<LocationProfile />}
-            />
+            {/* Nature & culture */}
+            <Route path="/nature-walks" element={<NatureWalks />} />
+            <Route path="/traditional-food" element={<TraditionalFood />} />
+            <Route path="/cultural-events" element={<CulturalEvents />} />
+            <Route path="/community-experience" element={<CommunityExperience />} />
 
             {/* Villages */}
-            <Route
-              path="/villages"
-              element={<VillagesTaluka />}
-            />
+            <Route path="/villages" element={<VillagesTaluka />} />
+            <Route path="/villages/:taluka" element={<VillageList />} />
+            <Route path="/villages/:taluka/:village" element={<VillageDetail />} />
 
-            <Route
-              path="/villages/:taluka"
-              element={<VillageList />}
-            />
+            {/* Location profiles & map */}
+            <Route path="/profile/:type/:id" element={<LocationProfile />} />
+            <Route path="/map" element={<SustainabilityMap />} />
 
-            <Route
-              path="/villages/:taluka/:village"
-              element={<VillageDetail />}
-            />
+            {/* Plan your trip & resources */}
+            <Route path="/plan-your-trip" element={<PlanYourTrip />} />
+            <Route path="/rules" element={<RulesForTourists />} />
+            <Route path="/resources/dos-and-donts" element={<RulesForTourists />} />
+            <Route path="/resources/transport-facilities" element={<TransportFacilities />} />
+            <Route path="/medical-facilities" element={<MedicalFacilities />} />
+            <Route path="/police-stations" element={<PoliceStations />} />
 
-            {/* Sustainability Map */}
-            <Route
-              path="/map"
-              element={<SustainabilityMap />}
-            />
+            {/* Stories & media */}
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/stories/reels" element={<ReelAwards />} />
+            <Route path="/stories/:slug" element={<StoryDetail />} />
+            <Route path="/videos" element={<Videos />} />
 
-            {/* Nature and Culture */}
-            <Route
-              path="/nature-walks"
-              element={<NatureWalks />}
-            />
-
-            <Route
-              path="/traditional-food"
-              element={<TraditionalFood />}
-            />
-
-            <Route
-              path="/cultural-events"
-              element={<CulturalEvents />}
-            />
-
-            <Route
-              path="/community-experience"
-              element={<CommunityExperience />}
-            />
-
-            <Route
-              path="/society"
-              element={<Society />}
-            />
-
-            <Route
-              path="/economy"
-              element={<Economy />}
-            />
-
-            <Route
-              path="/about/culture"
-              element={<Culture />}
-            />
-
-            <Route
-              path="/culture"
-              element={<Culture />}
-            />
-
-            <Route
-              path="/good-governance"
-              element={<GoodGovernance />}
-            />
-
-            {/* Medical and Police Facilities */}
-            <Route
-              path="/medical-facilities"
-              element={<MedicalFacilities />}
-            />
-
-            <Route
-              path="/police-stations"
-              element={<PoliceStations />}
-            />
-
-            {/* Resources → Transport Facilities */}
-            <Route
-              path="/resources/transport-facilities"
-              element={<TransportFacilities />}
-            />
-
-            {/* Stories */}
-            <Route
-              path="/stories"
-              element={<Stories />}
-            />
-
-            <Route
-              path="/stories/reels"
-              element={<ReelAwards />}
-            />
-
-            <Route
-              path="/stories/:slug"
-              element={<StoryDetail />}
-            />
-
-            {/* Admin Dashboard */}
+            {/* Admin (protected) */}
             <Route
               path="/admin"
               element={
@@ -289,12 +162,6 @@ export default function App() {
                   <AdminDashboard />
                 </ProtectedRoute>
               }
-            />
-
-            {/* Videos */}
-            <Route
-              path="/videos"
-              element={<Videos />}
             />
           </Route>
         </Routes>
