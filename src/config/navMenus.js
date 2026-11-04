@@ -11,15 +11,18 @@ export const ABOUT_US_MENU = {
   ],
 };
 
-// The whole Geography section. It now lives inside "Plan Your Trip".
-// Routes are unchanged, so existing pages and links keep working.
-const GEOGRAPHY_ITEMS = [
-  { label: "Places", route: "/about/geography/places" },
-  { label: "Hidden Paths", route: "/experiences/hidden-paths" },
-  { label: "Explore Villages", route: "/experiences/explore-villages" },
-  { label: "Itineraries", route: "/experiences/itineraries" },
-  { label: "Circuits", route: "/experiences/circuits" },
-];
+// "Geography" is a sub-menu inside Plan Your Trip. Hovering it opens a
+// flyout with these pages. Routes are unchanged, so existing links keep working.
+const GEOGRAPHY_SUBMENU = {
+  label: "Geography",
+  children: [
+    { label: "Places", route: "/about/geography/places" },
+    { label: "Hidden Paths", route: "/experiences/hidden-paths" },
+    { label: "Explore Villages", route: "/experiences/explore-villages" },
+    { label: "Itineraries", route: "/experiences/itineraries" },
+    { label: "Circuits", route: "/experiences/circuits" },
+  ],
+};
 
 export const PLAN_MENU = {
   label: "Plan Your Trip",
@@ -28,7 +31,7 @@ export const PLAN_MENU = {
     { label: "Plan Your Trip", route: "/plan-your-trip" },
     // The interactive map page lives at /map (see App.jsx).
     { label: "Plan Your Trip – Interactive Map", route: "/map" },
-    ...GEOGRAPHY_ITEMS,
+    GEOGRAPHY_SUBMENU,
   ],
 };
 
@@ -67,7 +70,7 @@ export const RESOURCES_MENU = {
 export const GEOGRAPHY_MENU = {
   label: "Geography",
   route: "/about/geography/places",
-  children: GEOGRAPHY_ITEMS,
+  children: GEOGRAPHY_SUBMENU.children,
 };
 
 // DashboardLayout puts "Home" first, then these in order:
