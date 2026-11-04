@@ -416,15 +416,15 @@ export default function DashboardLayout() {
                 </span>
               </button>
               <button
-                onClick={() => navigate("/registration")}
-                aria-label="Add location and services"
-                title="Add location and services"
-                className="rt-cta relative flex h-9 w-9 2xl:w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-teal-700 to-teal-800 px-0 text-sm font-semibold text-white ring-1 ring-teal-400/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
-              >
-                <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={16} className="rt-mapplus relative" />
-                <span className="relative hidden 2xl:inline">Add location</span>
-              </button>
+  onClick={() => navigate("/registration")}
+  aria-label="Add location and services"
+  title="Add location and services"
+  className="rt-cta rt-highlight relative flex h-9 w-9 2xl:w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] px-0 text-sm font-bold text-[#0b3149] ring-2 ring-amber-200/80 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+>
+  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
+  <MapPlus size={16} className="rt-mapplus relative text-[#7b1e2b]" />
+  <span className="relative hidden 2xl:inline">Add location</span>
+</button>
 
               <button
                 onClick={() => navigate(user ? "/admin" : "/login")}

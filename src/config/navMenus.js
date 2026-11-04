@@ -11,6 +11,16 @@ export const ABOUT_US_MENU = {
   ],
 };
 
+// The whole Geography section. It now lives inside "Plan Your Trip".
+// Routes are unchanged, so existing pages and links keep working.
+const GEOGRAPHY_ITEMS = [
+  { label: "Places", route: "/about/geography/places" },
+  { label: "Hidden Paths", route: "/experiences/hidden-paths" },
+  { label: "Explore Villages", route: "/experiences/explore-villages" },
+  { label: "Itineraries", route: "/experiences/itineraries" },
+  { label: "Circuits", route: "/experiences/circuits" },
+];
+
 export const PLAN_MENU = {
   label: "Plan Your Trip",
   route: "/plan-your-trip",
@@ -18,6 +28,7 @@ export const PLAN_MENU = {
     { label: "Plan Your Trip", route: "/plan-your-trip" },
     // The interactive map page lives at /map (see App.jsx).
     { label: "Plan Your Trip – Interactive Map", route: "/map" },
+    ...GEOGRAPHY_ITEMS,
   ],
 };
 
@@ -51,26 +62,20 @@ export const RESOURCES_MENU = {
   ],
 };
 
-// Own top-level menu: Geography with its sub-pages directly underneath.
+// Kept only so any file that still imports GEOGRAPHY_MENU doesn't break.
+// It is NOT in MENUS below, so it no longer shows as its own top-level menu.
 export const GEOGRAPHY_MENU = {
   label: "Geography",
   route: "/about/geography/places",
-  children: [
-    { label: "Places", route: "/about/geography/places" },
-    { label: "Hidden Paths", route: "/experiences/hidden-paths" },
-    { label: "Explore Villages", route: "/experiences/explore-villages" },
-    { label: "Itineraries", route: "/experiences/itineraries" },
-    { label: "Circuits", route: "/experiences/circuits" },
-  ],
+  children: GEOGRAPHY_ITEMS,
 };
 
 // DashboardLayout puts "Home" first, then these in order:
-// Home → About Us → Plan Your Trip → Experiences → Stories → Resources → Geography
+// Home → About Us → Plan Your Trip → Experiences → Stories → Resources
 export const MENUS = [
   ABOUT_US_MENU,
   PLAN_MENU,
   EXPERIENCES_MENU,
   STORIES_MENU,
   RESOURCES_MENU,
-  GEOGRAPHY_MENU,
 ];
