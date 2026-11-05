@@ -452,37 +452,6 @@ export default function DashboardOverview() {
       {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
           config, move this @import into index.html <head> as <link> tags. */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Serif+Devanagari:wght@600;700&display=swap');
-
-        /* ================= TYPOGRAPHY SYSTEM =================
-           One scale for the whole site. Use these classes instead of ad-hoc
-           Tailwind sizes (text-xs / text-3xl / mb-5 ...) so every page matches.
-           Minimum text size is 12px (labels) and 14px for readable copy.
-           TODO: move this block into index.css so all pages share it. */
-        :root {
-          --font-heading: 'Fraunces', 'Noto Serif Devanagari', Georgia, serif;
-          --font-body: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
-        }
-        .font-display { font-family: var(--font-heading); }
-        .font-body { font-family: var(--font-body); }
-
-        /* H1 — one per page (hero / page title) */
-        .t-h1 { font-family: var(--font-heading); font-weight: 700; font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem); line-height: 1.15; letter-spacing: -0.01em; }
-        /* H2 — every section heading */
-        .t-h2 { font-family: var(--font-heading); font-weight: 700; font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem); line-height: 1.2; letter-spacing: -0.005em; color: #0f172a; }
-        /* H3 — card titles */
-        .t-h3 { font-family: var(--font-body); font-weight: 600; font-size: 1.0625rem; line-height: 1.35; }
-        /* Lead — the intro line under an H2 */
-        .t-lead { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.65; color: #475569; max-width: 42rem; }
-        /* Body copy */
-        .t-body { font-family: var(--font-body); font-size: 1rem; line-height: 1.65; }
-        /* Small — card descriptions, secondary copy */
-        .t-small { font-size: 0.875rem; line-height: 1.55; }
-        /* Meta — dates, authors, captions */
-        .t-meta { font-size: 0.8125rem; line-height: 1.4; }
-        /* Eyebrow / label — small uppercase tags */
-        .t-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.3; }
-
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }

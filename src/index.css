@@ -1,4 +1,19 @@
-@import "tailwindcss";
-.selected-marker {
-  filter: hue-rotate(150deg) saturate(3) brightness(0.9);
+@theme {
+  --font-display: 'Fraunces', 'Noto Serif Devanagari', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+}
+
+@layer base {
+  body { font-family: var(--font-body); font-size: 1rem; line-height: 1.65; }
+}
+
+@layer components {
+  .t-h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem); line-height: 1.15; letter-spacing: -0.01em; }
+  .t-h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem); line-height: 1.2; letter-spacing: -0.005em; color: #0f172a; }
+  .t-h3 { font-family: var(--font-body); font-weight: 600; font-size: 1.0625rem; line-height: 1.35; }
+  .t-lead { font-size: 1.0625rem; line-height: 1.65; color: #475569; max-width: 42rem; }
+  .t-body { font-size: 1rem; line-height: 1.65; }
+  .t-small { font-size: 0.875rem; line-height: 1.55; }
+  .t-meta { font-size: 0.8125rem; line-height: 1.4; }
+  .t-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.3; }
 }
