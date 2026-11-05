@@ -3,6 +3,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Landmark,
+  Compass,
+  BookOpen,
   PlayCircle,
   ShieldCheck,
   TrendingUp,
@@ -621,7 +623,8 @@ export default function DashboardOverview() {
       <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <h2 className="t-h2 mb-2">
+            <h2 className="t-h2 mb-2 flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[#B4532A]"><Compass size={22} aria-hidden="true" /></span>
               Local Experiences
             </h2>
             <p className="t-lead mb-8">
@@ -784,9 +787,10 @@ export default function DashboardOverview() {
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <Reveal>
-              <h2 className="t-h2 mb-6">
-                Stories from Ratnagiri
-              </h2>
+              <h2 className="t-h2 mb-6 flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700"><BookOpen size={22} aria-hidden="true" /></span>
+              Stories from Ratnagiri
+            </h2>
             </Reveal>
 
             <div
@@ -922,9 +926,10 @@ export default function DashboardOverview() {
           {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
             <Reveal>
-              <h2 className="t-h2 mb-6">
-                Videos
-              </h2>
+              <h2 className="t-h2 mb-6 flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600"><PlayCircle size={22} aria-hidden="true" /></span>
+              Videos
+            </h2>
             </Reveal>
 
             <div
@@ -1043,7 +1048,8 @@ export default function DashboardOverview() {
       <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <h2 className="t-h2 mb-2">
+            <h2 className="t-h2 mb-2 flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-[#0b3149]"><Landmark size={22} aria-hidden="true" /></span>
               Society, Economy &amp; Governance
             </h2>
             <p className="t-lead mb-8">
