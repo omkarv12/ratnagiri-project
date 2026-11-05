@@ -29,14 +29,6 @@ import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
 import EconomyImg from "../assets/Economy.jpg";
 import GoodGovernanceImg from "../assets/good_governance.jpg";
-import {
-  ambientCss,
-  KonkanBackdrop,
-  MangoGroveBackdrop,
-  FortSkylineBackdrop,
-  WaveLayer,
-  Palm,
-} from "../components/AmbientBackdrops";
 // Cinematic loading screen (needs RatnagiriLoader.jsx in the same folder)
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
 import { Mail, Send, Phone } from "lucide-react";
@@ -538,13 +530,10 @@ export default function DashboardOverview() {
         }
         .rt-hero-text { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35); }
 
-        /* Ambient "live wallpaper" animations (palms, mangoes, waves, birds...) */
-        ${ambientCss}
       `}</style>
 
       {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
       <section className="relative px-2 sm:px-3 lg:px-4 py-2 sm:py-3 overflow-hidden">
-        <KonkanBackdrop />
 
         <div className="relative max-w-[1680px] mx-auto">
           {/* Full-width rotating photo carousel with caption */}
@@ -630,7 +619,6 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 2 — Experiences ================= */}
       <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
-        <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
             <h2 className="t-h2 mb-2">
@@ -688,7 +676,7 @@ export default function DashboardOverview() {
               </div>
 
               {/* weekday initials */}
-              <div className="grid grid-cols-7 px-3 pt-2 text-center text-[10px] font-bold tracking-wider text-slate-400 shrink-0">
+              <div className="grid grid-cols-7 px-3 pt-2 text-center text-[11px] font-bold tracking-wider text-slate-500 shrink-0">
                 {CAL_WEEKDAYS.map((d, i) => (
                   <div key={i}>{d}</div>
                 ))}
@@ -750,19 +738,19 @@ export default function DashboardOverview() {
                 <div className="border-t border-slate-100 pt-2">
                   {calFeatured ? (
                     <button onClick={() => navigate(CALENDAR_ROUTE)} className="w-full text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
                         {calEvents.length} event{calEvents.length === 1 ? "" : "s"} in{" "}
                         {MONTH_NAMES[calMonth]}
                       </p>
-                      <p className="mt-0.5 text-xs font-semibold text-slate-800 truncate">
+                      <p className="mt-0.5 text-sm font-semibold text-slate-900 truncate">
                         {calFeatured.title}
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="t-meta text-slate-500">
                         {formatShortDate(calFeatured.event_date)}
                       </p>
                     </button>
                   ) : (
-                    <p className="text-[11px] text-slate-400">
+                    <p className="t-meta text-slate-500">
                       No events listed for {MONTH_NAMES[calMonth]}.
                     </p>
                   )}
@@ -791,8 +779,6 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 3 — Stories & Videos ================= */}
       <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
-        <WaveLayer height={110} fill="#0f766e" opacity={0.08} duration={16} />
-        <WaveLayer height={70} fill="#0f766e" opacity={0.06} duration={10} reverse />
 
         <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Stories — 2 published stories per page, sliding as a page */}
@@ -1044,7 +1030,7 @@ export default function DashboardOverview() {
                 href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rt-cta mt-4 inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                className="rt-cta mt-4 t-small inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
               >
                 Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
               </a>
@@ -1055,7 +1041,6 @@ export default function DashboardOverview() {
 
       {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
       <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
-        <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
             <h2 className="t-h2 mb-2">
@@ -1103,22 +1088,6 @@ export default function DashboardOverview() {
         {/* top accent bar — same gradient family as the header's CTA buttons */}
         <div className="h-1 w-full bg-gradient-to-r from-[#B4532A] via-[#FBBF24] to-[#0f766e]" />
 
-        <svg
-          className="absolute inset-x-0 top-1 w-full h-20 opacity-[0.05] pointer-events-none"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="xMidYMin slice"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M0 40 C160 10 320 60 480 40 C640 20 800 60 960 40 C1120 20 1280 60 1440 40 L1440 0 L0 0 Z"
-            fill="#5EEAD4"
-          />
-        </svg>
-        <Palm
-          className="absolute right-4 bottom-0 h-56 w-auto opacity-[0.10] pointer-events-none"
-          fill="#5EEAD4"
-        />
 
         {/* ---- Stats strip: visitor counter + quick site stats + newsletter ---- */}
         <div className="relative border-b border-white/10">
@@ -1131,7 +1100,7 @@ export default function DashboardOverview() {
               <p className="font-display text-lg font-bold text-white">
                 {stories.length > 0 ? stories.length : "—"}
               </p>
-              <p className="text-[10px] uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">
                 Stories published
               </p>
             </div>
@@ -1140,7 +1109,7 @@ export default function DashboardOverview() {
 
             <div className="leading-tight">
               <p className="font-display text-lg font-bold text-white">9</p>
-              <p className="text-[10px] uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">
                 Talukas covered
               </p>
             </div>
@@ -1186,24 +1155,24 @@ export default function DashboardOverview() {
         {/* ---- Emergency helpline quick-dial ---- */}
         <div className="relative border-b border-white/10">
           <div className="mx-auto max-w-[1680px] px-6 sm:px-10 py-4 flex flex-wrap items-center gap-x-8 gap-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-400">
+            <p className="t-eyebrow text-amber-400">
               Emergency Helpline
             </p>
-            <a href="tel:100" className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition">
+            <a href="tel:100" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition">
               <Phone size={12} /> Police — 100
             </a>
-            <a href="tel:108" className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition">
+            <a href="tel:108" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition">
               <Phone size={12} /> Ambulance — 108
             </a>
             <button
               onClick={() => navigate("/police-stations")}
-              className="text-xs text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+              className="text-sm text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
             >
               Nearby police stations
             </button>
             <button
               onClick={() => navigate("/medical-facilities")}
-              className="text-xs text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+              className="text-sm text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
             >
               Nearby hospitals
             </button>
@@ -1216,7 +1185,7 @@ export default function DashboardOverview() {
               <h2 className="font-display italic text-2xl text-white mb-3">
                 Ratnagiri Tourism
               </h2>
-              <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-xs">
+              <p className="t-small text-slate-300 mb-6 max-w-xs">
                 Travel sustainably, enjoy fully — guiding visitors through the
                 Konkan coast's beaches, forts, food and culture.
               </p>
@@ -1238,7 +1207,7 @@ export default function DashboardOverview() {
 
             {footerColumns.map((col) => (
               <div key={col.heading}>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-400 mb-4">
+                <p className="t-eyebrow text-teal-400 mb-4">
                   {col.heading}
                 </p>
                 <ul className="space-y-3">
@@ -1259,19 +1228,19 @@ export default function DashboardOverview() {
           </div>
 
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-slate-500">
+            <p className="t-meta text-slate-400">
               © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
             </p>
             <div className="flex gap-5">
               <button
                 onClick={() => navigate("/privacy")}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+                className="t-meta text-slate-400 hover:text-white transition-colors duration-200"
               >
                 Privacy Policy
               </button>
               <button
                 onClick={() => navigate("/terms")}
-                className="text-xs text-slate-500 hover:text-slate-300 transition-colors duration-200"
+                className="t-meta text-slate-400 hover:text-white transition-colors duration-200"
               >
                 Terms of Use
               </button>
