@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 @theme {
   --font-display: 'Fraunces', 'Noto Serif Devanagari', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
