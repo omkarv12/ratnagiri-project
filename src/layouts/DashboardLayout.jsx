@@ -389,7 +389,7 @@ export default function DashboardLayout() {
                 className="flex min-w-0 items-center"
               >
                 <span className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
-                  Ratnagiri Tourism
+                  Visit Ratnagiri 
                 </span>
               </button>
             </div>

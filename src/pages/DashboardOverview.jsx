@@ -5,7 +5,6 @@ import {
   Landmark,
   PlayCircle,
   ShieldCheck,
-  Search,
   TrendingUp,
   Handshake,
   ExternalLink,
@@ -188,7 +187,7 @@ function Reveal({ children, className = "" }) {
 }
 
 export default function DashboardOverview() {
-  const { locations, loading } = useLocations();
+  const { loading } = useLocations();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -229,22 +228,6 @@ export default function DashboardOverview() {
   const goToNextSlide = () =>
     setCurrentSlide((prev) => (prev + 1) % heroImages.length);
 
-  // Hero search bar. TODO: point this at the real search/results route once
-  // it exists — for now it lands on /search?q=...
-  const [searchQuery, setSearchQuery] = useState("");
-  const handleHeroSearch = (e) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (!q) return;
-    // If we have a live match in the site index, go straight there;
-    // otherwise fall back to the dedicated search results page.
-    const bestMatch = searchIndex.find((item) =>
-      item.label?.toLowerCase().includes(q.toLowerCase())
-    );
-    navigate(bestMatch ? bestMatch.route : `/search?q=${encodeURIComponent(q)}`);
-    setShowSuggestions(false);
-  };
-
   // ---- Panel 2: Experiences -------------------------------------------------
   // Each card opens its own page (ExperiencePage), whose content is managed in
   // Admin → Local Experiences.
@@ -266,37 +249,6 @@ export default function DashboardOverview() {
       description: "Meet fisherfolk, farmers and artisans in their own villages.",
       image: CommunityInteractionImg,
       route: "/experiences/community-interaction",
-    },
-  ];
-
-  // Still used by the site-wide search index below (the Upcoming Events
-  // panel itself has been replaced by the mini calendar).
-  const whatsNewData = [
-    {
-      title: "Ganeshotsav",
-      description: "Konkan's biggest festival is coming — reserve early for the best rates.",
-      image: Slider1,
-      badge: "NEW",
-      route: "/homestays",
-    },
-    {
-      title: "New Guided Trail: Fort to Bhagwati Bandar",
-      description: "A 3 km coastal walk with a local guide, launching this season.",
-      image: Slider3,
-      badge: "NEW",
-      route: "/experiences/guided-walks",
-    },
-    {
-      title: "Monsoon Travel Advisory",
-      description: "Some beach and fort routes have seasonal restrictions.",
-      image: Slider6,
-      route: "/resources/transport-facilities",
-    },
-    {
-      title: "Alphonso Season Calendar",
-      description: "Orchard visits and tasting trails run from March to May.",
-      image: Slider2,
-      route: "/experiences/konkani-food",
     },
   ];
 
@@ -498,52 +450,44 @@ export default function DashboardOverview() {
     { icon: TwitterIcon, label: "Twitter", href: "https://twitter.com" },
   ];
 
-  // ---- Site-wide search index -------------------------------------------
-  // Flattens every section of this page (experiences, calendar events,
-  // stories, footer links) plus the live `locations` data from context into
-  // one searchable list, so the hero search bar can actually find things
-  // across the whole site instead of only deep-linking to a /search route
-  // that may not exist yet.
-  const searchIndex = [
-    ...experiencesData.map((c) => ({ label: c.title, sub: c.description, route: c.route })),
-    ...aboutPillars.map((p) => ({ label: p.title, sub: p.description, route: p.route })),
-    ...whatsNewData.map((w) => ({ label: w.title, sub: w.description, route: w.route })),
-    ...stories.map((s) => ({
-      label: s.title,
-      sub: s.excerpt,
-      route: `/stories/${s.slug}`,
-    })),
-    ...footerColumns.flatMap((col) =>
-      col.links.map((l) => ({ label: l.label, sub: col.heading, route: l.route }))
-    ),
-    ...(locations || []).map((l) => ({
-      label: l.name || l.title || "Untitled place",
-      sub: l.category || l.type || "Place",
-      route: l.route || (l.slug ? `/place/${l.slug}` : l.id ? `/place/${l.id}` : "/map"),
-    })),
-  ];
-
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchResults = searchQuery.trim()
-    ? searchIndex
-        .filter((item) =>
-          item.label?.toLowerCase().includes(searchQuery.trim().toLowerCase())
-        )
-        .slice(0, 6)
-    : [];
-
   // Cinematic loading screen replaces the old 🚂 loader.
   if (loading || !minTimeDone) return <RatnagiriCinematic />;
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div className="font-body animate-in fade-in duration-500">
       {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
           config, move this @import into index.html <head> as <link> tags. */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Serif+Devanagari:wght@600;700&display=swap');
 
-        .font-display { font-family: 'Fraunces', Georgia, serif; }
-        .font-body { font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif; }
+        /* ================= TYPOGRAPHY SYSTEM =================
+           One scale for the whole site. Use these classes instead of ad-hoc
+           Tailwind sizes (text-xs / text-3xl / mb-5 ...) so every page matches.
+           Minimum text size is 12px (labels) and 14px for readable copy.
+           TODO: move this block into index.css so all pages share it. */
+        :root {
+          --font-heading: 'Fraunces', 'Noto Serif Devanagari', Georgia, serif;
+          --font-body: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+        }
+        .font-display { font-family: var(--font-heading); }
+        .font-body { font-family: var(--font-body); }
+
+        /* H1 — one per page (hero / page title) */
+        .t-h1 { font-family: var(--font-heading); font-weight: 700; font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem); line-height: 1.15; letter-spacing: -0.01em; }
+        /* H2 — every section heading */
+        .t-h2 { font-family: var(--font-heading); font-weight: 700; font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem); line-height: 1.2; letter-spacing: -0.005em; color: #0f172a; }
+        /* H3 — card titles */
+        .t-h3 { font-family: var(--font-body); font-weight: 600; font-size: 1.0625rem; line-height: 1.35; }
+        /* Lead — the intro line under an H2 */
+        .t-lead { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.65; color: #475569; max-width: 42rem; }
+        /* Body copy */
+        .t-body { font-family: var(--font-body); font-size: 1rem; line-height: 1.65; }
+        /* Small — card descriptions, secondary copy */
+        .t-small { font-size: 0.875rem; line-height: 1.55; }
+        /* Meta — dates, authors, captions */
+        .t-meta { font-size: 0.8125rem; line-height: 1.4; }
+        /* Eyebrow / label — small uppercase tags */
+        .t-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.3; }
 
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
@@ -603,7 +547,7 @@ export default function DashboardOverview() {
         <KonkanBackdrop />
 
         <div className="relative max-w-[1680px] mx-auto">
-          {/* Full-width rotating photo carousel with search bar + caption */}
+          {/* Full-width rotating photo carousel with caption */}
           <div className="relative rounded-2xl overflow-hidden h-[520px] sm:h-[580px] lg:h-[660px] shadow-[0_35px_70px_-20px_rgba(11,49,73,0.5)] ring-1 ring-black/5">
             {heroImages.map((img, index) => (
               <div
@@ -650,73 +594,16 @@ export default function DashboardOverview() {
                   className="absolute left-0 top-5 bottom-5 w-1 rounded-r-full bg-gradient-to-b from-[#FBBF24] via-[#B4532A] to-teal-500"
                 />
 
-                <p className="rt-hero-text text-[11px] sm:text-xs font-semibold tracking-[0.18em] text-[#FBBF24] mb-3 font-body">
+                <p className="rt-hero-text t-eyebrow text-[#FBBF24] mb-3">
                   Explore &middot; Experience &middot; Support Local
                 </p>
-                <h1 className="rt-hero-text font-display text-white leading-[1.05] whitespace-nowrap text-2xl sm:text-3xl lg:text-4xl mb-4">
+                <h1 className="rt-hero-text t-h1 text-white mb-4">
                   Discover <span className="text-[#FBBF24]">Ratnagiri</span>
                 </h1>
-                <p className="text-white/90 text-sm sm:text-base max-w-md font-body mb-6 leading-relaxed">
+                <p className="t-body text-white/90 max-w-md mb-0">
                   Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
                   homestays and Konkan flavours, all in one place.
                 </p>
-
-                {/* search bar — searches across the whole site (experiences,
-                    calendar events, stories, footer links and any live
-                    locations from context), with a live dropdown */}
-                <form onSubmit={handleHeroSearch} className="relative max-w-md">
-                  <div className="flex items-center gap-2 bg-white rounded-full pl-4 pr-1.5 py-2 shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)] ring-1 ring-transparent focus-within:ring-2 focus-within:ring-teal-400/70 transition-shadow duration-300">
-                    <Search size={16} className="text-slate-500 shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setShowSuggestions(true);
-                      }}
-                      onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                      placeholder="Search beaches, forts, stays..."
-                      className="flex-1 min-w-0 text-sm text-slate-800 placeholder:text-slate-500 bg-transparent outline-none font-body"
-                    />
-                    <button
-                      type="submit"
-                      className="shrink-0 bg-[#B4532A] hover:bg-[#9c4522] text-white text-xs font-semibold px-4 py-2 rounded-full transition"
-                    >
-                      Search
-                    </button>
-                  </div>
-
-                  {showSuggestions && searchResults.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white rounded-xl shadow-xl ring-1 ring-black/10 overflow-hidden z-20">
-                      {searchResults.map((result, i) => (
-                        <li key={`${result.label}-${i}`} className={i > 0 ? "border-t border-slate-100" : ""}>
-                          <button
-                            type="button"
-                            onMouseDown={() => {
-                              navigate(result.route);
-                              setSearchQuery("");
-                              setShowSuggestions(false);
-                            }}
-                            className="w-full flex items-center justify-between gap-3 text-left px-4 py-2.5 hover:bg-slate-50 transition"
-                          >
-                            <span className="min-w-0">
-                              <span className="block text-sm font-medium text-slate-800 truncate">
-                                {result.label}
-                              </span>
-                              {result.sub && (
-                                <span className="block text-xs text-slate-500 truncate">
-                                  {result.sub}
-                                </span>
-                              )}
-                            </span>
-                            <ChevronRight size={14} className="text-slate-300 shrink-0" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </form>
               </div>
             </div>
 
@@ -746,10 +633,10 @@ export default function DashboardOverview() {
         <MangoGroveBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="t-h2 mb-2">
               Local Experiences
             </h2>
-            <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+            <p className="t-lead mb-8">
               Walks, meals and encounters that go beyond the sightseeing list.
             </p>
           </Reveal>
@@ -768,9 +655,9 @@ export default function DashboardOverview() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                 {/* black shade on the inner border — soft vignette framing the card */}
                 <div className="absolute inset-0 rounded-xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
-                <div className="absolute inset-x-0 bottom-0 p-4">
-                  <p className="text-white font-semibold text-sm">{title}</p>
-                  <p className="text-white/75 text-xs mt-1 leading-snug">{description}</p>
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <p className="t-h3 text-white">{title}</p>
+                  <p className="t-small text-white/85 mt-1">{description}</p>
                 </div>
               </button>
             ))}
@@ -911,7 +798,7 @@ export default function DashboardOverview() {
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <Reveal>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+              <h2 className="t-h2 mb-6">
                 Stories from Ratnagiri
               </h2>
             </Reveal>
@@ -963,19 +850,19 @@ export default function DashboardOverview() {
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
                                 {story.category?.name && (
-                                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 text-teal-700 text-[9px] font-bold rounded uppercase tracking-wide">
+                                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 text-teal-700 text-[11px] font-bold rounded uppercase tracking-wide">
                                     {story.category.name}
                                   </span>
                                 )}
                               </div>
 
                               <div className="p-4">
-                                <p className="text-sm font-semibold text-slate-800 leading-snug mb-1 line-clamp-2">
+                                <p className="t-h3 text-slate-900 mb-1 line-clamp-2">
                                   {story.title}
                                 </p>
 
                                 {(story.author_name || story.published_at) && (
-                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400 mb-1.5">
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 t-meta text-slate-500 mb-2">
                                     {story.author_name && (
                                       <span className="flex items-center gap-1">
                                         <User size={10} /> {story.author_name}
@@ -989,11 +876,11 @@ export default function DashboardOverview() {
                                   </div>
                                 )}
 
-                                <p className="text-xs text-slate-600 leading-snug line-clamp-2 mb-2">
+                                <p className="t-small text-slate-600 line-clamp-2 mb-3">
                                   {story.excerpt || "Read the full story to find out more."}
                                 </p>
 
-                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
+                                <span className="t-small inline-flex items-center gap-1 font-semibold text-teal-700">
                                   Read story
                                   <ChevronRight size={11} className="transition-transform duration-300 group-hover:translate-x-1" />
                                 </span>
@@ -1049,7 +936,7 @@ export default function DashboardOverview() {
           {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
             <Reveal>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-5">
+              <h2 className="t-h2 mb-6">
                 Videos
               </h2>
             </Reveal>
@@ -1102,7 +989,7 @@ export default function DashboardOverview() {
                             )}
                           </div>
                           <div className="p-3">
-                            <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">
+                            <p className="t-small font-semibold text-slate-900 line-clamp-2">
                               {video.title}
                             </p>
                           </div>
@@ -1171,10 +1058,10 @@ export default function DashboardOverview() {
         <FortSkylineBackdrop />
         <div className="relative max-w-[1680px] mx-auto">
           <Reveal>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
+            <h2 className="t-h2 mb-2">
               Society, Economy &amp; Governance
             </h2>
-            <p className="text-sm sm:text-base text-slate-500 max-w-lg mb-8">
+            <p className="t-lead mb-8">
               A quick look at what keeps Ratnagiri running, beyond the tourist
               trail.
             </p>
@@ -1202,8 +1089,8 @@ export default function DashboardOverview() {
                 </span>
 
                 <div className="absolute inset-x-0 bottom-0 p-5">
-                  <p className="text-white font-semibold text-base">{title}</p>
-                  <p className="text-white/80 text-xs mt-1.5 leading-relaxed">{description}</p>
+                  <p className="t-h3 text-white">{title}</p>
+                  <p className="t-small text-white/85 mt-1">{description}</p>
                 </div>
               </button>
             ))}
