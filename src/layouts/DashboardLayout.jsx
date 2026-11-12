@@ -9,19 +9,23 @@ import {
   ShieldCheck,
   MapPlus,
   HeartHandshake,
+  Waves,
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
 import Breadcrumb from "../components/Breadcrumb";
 
 /* ------------------------------------------------------------------ */
-/*  Theme: fonts, colour tokens, animations (unchanged palette)        */
+/*  Theme: fonts, colour tokens, animations                            */
+/*  Header palette = Arabian Sea: deep navy -> teal, mango accent.     */
 /* ------------------------------------------------------------------ */
 const THEME_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 
 .rt-root {
+  --rt-deep: #082638;
   --rt-navy: #0b3149;
   --rt-teal: #0f766e;
+  --rt-sea: #0f5f5c;
   --rt-laterite: #B4532A;
   --rt-mango: #FBBF24;
   --rt-mist: #F4F8F9;
@@ -41,21 +45,79 @@ const THEME_CSS = `
   outline-offset: 2px;
 }
 
-/* One orchestrated moment: header drops in once on load */
+/* ---------- Header shell ---------- */
 @keyframes rt-drop {
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .rt-header-in { animation: rt-drop .5s ease-out both; }
 
-/* "Live" pulse dot on the map button (keeps going, slowly) */
-@keyframes rt-ping {
-  0%   { transform: scale(1); opacity: .8; }
-  80%, 100% { transform: scale(2.6); opacity: 0; }
+/* At the top of the page: full-width bar with a sea gradient.
+   After scrolling: a floating, rounded, frosted-glass bar. */
+.rt-header {
+  position: relative;
+  pointer-events: auto;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background-color: rgba(8, 38, 56, 1);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08), 0 8px 20px -10px rgba(2,20,32,.55);
+  transition: border-radius .35s ease, background-color .35s ease,
+              box-shadow .35s ease, border-color .35s ease;
 }
-.rt-ping { animation: rt-ping 2s cubic-bezier(0, 0, .2, 1) infinite; }
+.rt-header::before {            /* gradient layer, fades back when floating */
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(100deg, #082638 0%, #0b3149 40%, #0f5f5c 100%);
+  opacity: 1;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.rt-header::after {             /* thin mango hairline along the top edge */
+  content: "";
+  position: absolute; left: 1.25rem; right: 1.25rem; top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(251,191,36,.55), transparent);
+  pointer-events: none;
+}
+.rt-header-float {
+  border-radius: 1.5rem;
+  background-color: rgba(8, 38, 56, .78);
+  border-color: rgba(255,255,255,.14);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: 0 20px 40px -16px rgba(2,20,32,.65), 0 2px 6px rgba(2,20,32,.2);
+}
+.rt-header-float::before { opacity: .38; }
 
-/* Nav links: soft pill, gentle grow, mango underline that draws in */
+/* Reading-progress line, only visible while floating */
+.rt-progress {
+  position: absolute;
+  left: 1.5rem; right: 1.5rem; bottom: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #FDE68A, #FBBF24, #F59E0B);
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+  transition: opacity .3s ease;
+  pointer-events: none;
+}
+.rt-header-float .rt-progress { opacity: 1; }
+
+/* Brand mark */
+.rt-mark {
+  display: flex; align-items: center; justify-content: center;
+  width: 2.25rem; height: 2.25rem; flex-shrink: 0;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #FFE066, #F59E0B);
+  color: var(--rt-navy);
+  box-shadow: 0 4px 10px -3px rgba(245,158,11,.6), inset 0 0 0 2px rgba(255,255,255,.55);
+  transition: transform .3s ease;
+}
+button:hover > .rt-mark { transform: rotate(-8deg) scale(1.06); }
+
+/* ---------- Nav links ---------- */
 .rt-nav-link {
   position: relative;
   transition: background-color .15s, transform .2s;
@@ -82,7 +144,7 @@ const THEME_CSS = `
 .group:focus-within > .rt-nav-link::after,
 .rt-nav-link[data-active="true"]::after { transform: scaleX(1); }
 
-/* Dropdown items: teal wash, laterite dot, small slide */
+/* ---------- Dropdown items ---------- */
 .rt-dd-item { transition: background-color .15s, color .15s, transform .2s; }
 .rt-dd-item .rt-dot {
   width: 6px; height: 6px; border-radius: 9999px;
@@ -96,15 +158,15 @@ const THEME_CSS = `
 }
 .rt-dd-item:hover .rt-dot { background: var(--rt-laterite); transform: scale(1.5); }
 
-/* After a menu item is clicked the dropdown is forced shut, even while the
-   mouse is still hovering it. It re-opens on the next mouse leave / focus. */
+/* After a menu item is clicked the dropdown is forced shut until the next
+   mouse leave / focus. */
 .rt-dd-closed {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
 }
 
-/* ---------- Header action buttons: identical size, each with its own look ---------- */
+/* ---------- Header action buttons ---------- */
 .rt-btn {
   position: relative;
   display: flex;
@@ -125,7 +187,7 @@ const THEME_CSS = `
 .rt-btn:hover  { transform: translateY(-3px) scale(1.04); }
 .rt-btn:active { transform: translateY(0) scale(.97); }
 
-/* Interactive Map: vivid teal gradient, white edge, its own pulsing glow (offset from Contribute) */
+/* Interactive Map */
 @keyframes rt-glow-teal {
   0%   { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 0 rgba(45,212,191,.7); }
   70%  { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 14px rgba(45,212,191,0); }
@@ -143,7 +205,6 @@ const THEME_CSS = `
   animation-play-state: paused;
   box-shadow: 0 18px 30px -8px rgba(13,148,136,.9), 0 0 24px rgba(45,212,191,.7);
 }
-/* map pin gently hops, like it is pointing at a place */
 @keyframes rt-hop {
   0%, 60%, 100% { transform: translateY(0); }
   30%           { transform: translateY(-3px); }
@@ -152,7 +213,7 @@ const THEME_CSS = `
 }
 .rt-mapplus { animation: rt-hop 2.4s ease-in-out infinite; }
 
-/* Contribute: the hero button. Mango gradient, white edge, glowing ring that keeps pulsing */
+/* Contribute: the hero button */
 @keyframes rt-glow {
   0%   { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 0 rgba(251,191,36,.7); }
   70%  { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 14px rgba(251,191,36,0); }
@@ -160,7 +221,7 @@ const THEME_CSS = `
 }
 .rt-btn-give {
   background: linear-gradient(135deg, #FFE066 0%, #FBBF24 45%, #F59E0B 100%);
-  color: #5a1420;
+  color: #0b3149;
   border: 2px solid #fff;
   animation: rt-glow 2.2s ease-out infinite;
 }
@@ -178,18 +239,20 @@ const THEME_CSS = `
 }
 .rt-heart { animation: rt-beat 2.2s ease-in-out infinite; }
 
-/* Admin: deep navy with a soft inner edge */
+/* Admin: frosted glass, so it stays calm next to the two bright buttons */
 .rt-btn-admin {
-  background: linear-gradient(135deg, #17598e 0%, #0b3149 100%);
+  background: rgba(255,255,255,.12);
   color: #fff;
-  box-shadow: 0 8px 18px -6px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.4), inset 0 1px 0 rgba(255,255,255,.18);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.38), inset 0 1px 0 rgba(255,255,255,.18);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 .rt-btn-admin:hover {
-  background: linear-gradient(135deg, #1f6dac 0%, #0f3d5e 100%);
-  box-shadow: 0 16px 28px -8px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.55), 0 0 22px rgba(94,234,212,.35);
+  background: rgba(255,255,255,.22);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 14px 26px -10px rgba(0,0,0,.6), 0 0 22px rgba(94,234,212,.35);
 }
 
-/* Small red "NEW" tag on the Interactive Map button (static, no animation) */
+/* "NEW" tag on the Interactive Map button */
 .rt-badge {
   position: absolute;
   top: -.5rem;
@@ -209,7 +272,7 @@ const THEME_CSS = `
   pointer-events: none;
 }
 
-/* Light sweep that glides across each button every few seconds */
+/* Light sweep */
 @keyframes rt-sweep {
   0%, 55% { left: -60%; }
   100%    { left: 140%; }
@@ -242,15 +305,12 @@ const THEME_CSS = `
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
 
-// Shared classes for every top-level nav item: white, base size, semibold, single line.
-// Slightly roomier padding so the menu bar reads broader.
 const NAV_ITEM_CLASS =
   "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3 xl:px-4 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
 
-// Every top-level nav entry, in order. Home is first, then the configured menus.
 const NAV_ITEMS = [{ label: "Home", route: "/dashboard", exact: true }, ...MENUS];
 
-const NAV_GAP = 4; // px — must match the gap-1 used by the nav row
+const NAV_GAP = 4; // px — must match gap-1 on the nav row
 
 /* ------------------------------------------------------------------ */
 /*  Small components                                                   */
@@ -265,13 +325,9 @@ function Caret() {
   );
 }
 
-// One dropdown panel. Renders flat items, and recurses for any item that
-// itself has "children" (used for Plan Your Trip → Geography), opening as a
-// flyout beside the parent item. `flyLeft` makes flyouts open to the left so
-// panels near the right edge of the screen never run off-screen.
 function DropdownPanel({ items, navigate, flyLeft = false }) {
   return (
-    <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
+    <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-xl shadow-slate-900/20 border border-slate-100 border-t-2 border-t-teal-600 py-2">
       {items.map((child) =>
         child.children ? (
           <div key={child.label} className="relative group/sub">
@@ -310,14 +366,6 @@ function DropdownPanel({ items, navigate, flyLeft = false }) {
   );
 }
 
-// A top-level nav item. With children it opens a dropdown on hover or keyboard
-// focus; without children it is a plain link. `align="right"` anchors the panel
-// to the item's right edge (used for items near the right side of the bar).
-//
-// The dropdown is driven by CSS hover/focus, which stays "on" after a click
-// (the button keeps focus and the mouse is still over it). So after any click
-// we force the panel shut (`closed`), blur the focused element, and only let
-// it open again once the mouse leaves or the item is focused again.
 function NavDropdown({ menu, active, navigate, align = "left", noNavigate = false }) {
   const right = align === "right";
   const hasChildren = Array.isArray(menu.children) && menu.children.length > 0;
@@ -334,6 +382,7 @@ function NavDropdown({ menu, active, navigate, align = "left", noNavigate = fals
       <button
         onClick={() => menu.route && navigate(menu.route)}
         data-active={active}
+        aria-current={active ? "page" : undefined}
         className={NAV_ITEM_CLASS}
       >
         {menu.label}
@@ -353,6 +402,7 @@ function NavDropdown({ menu, active, navigate, align = "left", noNavigate = fals
         }}
         data-active={active}
         aria-haspopup="true"
+        aria-current={active ? "page" : undefined}
         className={`${NAV_ITEM_CLASS} gap-1 ${noNavigate ? "cursor-default" : ""}`}
       >
         {menu.label}
@@ -370,9 +420,7 @@ function NavDropdown({ menu, active, navigate, align = "left", noNavigate = fals
   );
 }
 
-// The page links in the header. It measures how many fit in the space it has
-// and moves the rest into a "More" dropdown, so links never wrap, get cut off
-// or push the buttons on the right out of place — at any screen width.
+// Measures how many links fit and moves the rest into "More".
 function PrimaryNav({ items, navigate, isItemActive }) {
   const wrapRef = useRef(null);
   const measureRef = useRef(null);
@@ -395,7 +443,6 @@ function PrimaryNav({ items, navigate, isItemActive }) {
       return;
     }
 
-    // Not everything fits: keep as many as fit next to the "More" button.
     let used = moreWidth;
     let count = 0;
     for (const w of widths) {
@@ -415,7 +462,6 @@ function PrimaryNav({ items, navigate, isItemActive }) {
     if (!wrap || typeof ResizeObserver === "undefined") return undefined;
     const observer = new ResizeObserver(recalc);
     observer.observe(wrap);
-    // Web fonts change text widths once they load.
     if (document.fonts?.ready) document.fonts.ready.then(recalc);
     return () => observer.disconnect();
   }, [recalc]);
@@ -433,7 +479,8 @@ function PrimaryNav({ items, navigate, isItemActive }) {
   const moreActive = hidden.some(isItemActive);
 
   return (
-    <div
+    <nav
+      aria-label="Primary"
       ref={wrapRef}
       className="relative flex min-w-0 items-center justify-start gap-1 pl-2 xl:pl-4"
     >
@@ -443,7 +490,6 @@ function PrimaryNav({ items, navigate, isItemActive }) {
           menu={item}
           active={isItemActive(item)}
           navigate={navigate}
-          // Items in the right half open their panels toward the left.
           align={i >= Math.ceil(items.length / 2) ? "right" : "left"}
         />
       ))}
@@ -452,7 +498,6 @@ function PrimaryNav({ items, navigate, isItemActive }) {
         <NavDropdown menu={moreMenu} active={moreActive} navigate={navigate} align="right" noNavigate />
       )}
 
-      {/* Invisible copy of every item, used only to measure natural widths. */}
       <div
         ref={measureRef}
         aria-hidden="true"
@@ -473,7 +518,7 @@ function PrimaryNav({ items, navigate, isItemActive }) {
           <Caret />
         </span>
       </div>
-    </div>
+    </nav>
   );
 }
 
@@ -483,9 +528,35 @@ function PrimaryNav({ items, navigate, isItemActive }) {
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const progressRef = useRef(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Floating state + reading progress, throttled to one update per frame.
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setScrolled(y > 12);
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        if (progressRef.current) {
+          progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+        }
+      });
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [location.pathname]);
 
   const isItemActive = (item) =>
     !!item.route &&
@@ -495,6 +566,13 @@ export default function DashboardLayout() {
     <div className="rt-root flex min-h-screen bg-[#F4F8F9]">
       <style>{THEME_CSS}</style>
 
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-900"
+      >
+        Skip to content
+      </a>
+
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <main
@@ -502,82 +580,93 @@ export default function DashboardLayout() {
           sidebarOpen ? "lg:ml-64" : "ml-0"
         }`}
       >
-        {/* ============ Single sticky bar: title · pages · CTAs · Admin ============ */}
-        <header className="rt-header-in sticky top-0 z-40 bg-[#7b1e2b] shadow-md">
-          {/* The middle column takes all leftover space; PrimaryNav fits as many
-              links as it can there and tucks the rest under "More". CTAs stay
-              icon-only until very wide screens so the menu bar gets the room. */}
-          <div className="grid h-20 w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5">
-            {/* Left: mobile toggle + title */}
-            <div className="flex min-w-0 items-center gap-1 sm:gap-3 lg:shrink-0">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label="Toggle menu"
-                className="lg:hidden flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-base font-semibold text-white hover:bg-white/10 transition"
-              >
-                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+        {/* Sticky wrapper: its padding is what makes the bar "float" off the edges.
+            pointer-events-none so the transparent gap never blocks clicks. */}
+        <div
+          className={`rt-header-in pointer-events-none sticky top-0 z-40 transition-[padding] duration-300 ease-out ${
+            scrolled ? "px-2 pt-2 sm:px-4 sm:pt-3 lg:px-6" : "px-0 pt-0"
+          }`}
+        >
+          <header className={`rt-header ${scrolled ? "rt-header-float" : ""}`}>
+            <div
+              className={`relative grid w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5 transition-[height] duration-300 ease-out ${
+                scrolled ? "h-16" : "h-20"
+              }`}
+            >
+              {/* Left: mobile toggle + brand */}
+              <div className="flex min-w-0 items-center gap-1 sm:gap-3 lg:shrink-0">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  aria-label="Toggle menu"
+                  aria-expanded={sidebarOpen}
+                  className="lg:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white hover:bg-white/10 transition"
+                >
+                  {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
 
-              <button
-                onClick={() => navigate("/dashboard")}
-                aria-label="Ratnagiri Tourism — home"
-                className="flex min-w-0 items-center"
-              >
-                <span className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
-                  Visit Ratnagiri
-                </span>
-              </button>
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  aria-label="Visit Ratnagiri — home"
+                  className="flex min-w-0 items-center gap-2.5"
+                >
+                  <span className="rt-mark" aria-hidden="true">
+                    <Waves size={19} strokeWidth={2.4} />
+                  </span>
+                  <span className="rt-display truncate whitespace-nowrap text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
+                    Visit Ratnagiri
+                  </span>
+                </button>
+              </div>
+
+              {/* Center: page links (desktop only; smaller screens use the sidebar) */}
+              <div className="hidden lg:block min-w-0">
+                <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
+              </div>
+
+              {/* Right: CTAs */}
+              <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
+                <button
+                  onClick={() => navigate("/map")}
+                  aria-label="Interactive Map"
+                  title="Interactive Map"
+                  className="rt-btn rt-btn-map"
+                >
+                  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
+                  <MapPlus size={19} className="rt-mapplus relative text-white drop-shadow" />
+                  <span className="relative hidden 2xl:inline">Interactive Map</span>
+                  <span className="rt-badge" aria-hidden="true">
+                    NEW
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => navigate("/registration")}
+                  aria-label="Contribute: location and services"
+                  title="Contribute: location and services"
+                  className="rt-btn rt-btn-give"
+                >
+                  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
+                  <HeartHandshake size={18} className="rt-heart relative text-[#0b3149]" />
+                  <span className="relative hidden 2xl:inline">Contribute</span>
+                </button>
+
+                <button
+                  onClick={() => navigate(user ? "/admin" : "/login")}
+                  aria-label="Admin"
+                  title="Admin"
+                  className="rt-btn rt-btn-admin"
+                >
+                  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
+                  <ShieldCheck size={18} className="rt-shield relative" />
+                  <span className="relative hidden 2xl:inline">Admin login</span>
+                </button>
+              </div>
             </div>
 
-            {/* Center: page links (desktop only; phones and tablets use the sidebar) */}
-            <div className="hidden lg:block min-w-0">
-              <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
-            </div>
-
-            {/* Right: CTAs + Admin (all three are the same size) */}
-            <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
-              {/* Interactive Map */}
-              <button
-                onClick={() => navigate("/map")}
-                aria-label="Interactive Map"
-                title="Interactive Map"
-                className="rt-btn rt-btn-map"
-              >
-                <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={19} className="rt-mapplus relative text-white drop-shadow" />
-                <span className="relative hidden 2xl:inline">Interactive Map</span>
-                {/* Tag that invites people to try the map */}
-                <span className="rt-badge" aria-hidden="true">
-                  NEW
-                </span>
-              </button>
-
-              {/* Contribute: the one that should catch the eye first */}
-              <button
-                onClick={() => navigate("/registration")}
-                aria-label="Contribute: location and services"
-                title="Contribute: location and services"
-                className="rt-btn rt-btn-give"
-              >
-                <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <HeartHandshake size={18} className="rt-heart relative text-[#7b1e2b]" />
-                <span className="relative hidden 2xl:inline">Contribute</span>
-              </button>
-
-              {/* Admin */}
-              <button
-                onClick={() => navigate(user ? "/admin" : "/login")}
-                aria-label="Admin"
-                title="Admin"
-                className="rt-btn rt-btn-admin"
-              >
-                <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <ShieldCheck size={18} className="rt-shield relative" />
-                <span className="relative hidden 2xl:inline">Admin login</span>
-              </button>
-            </div>
-          </div>
-        </header>
+            {/* Reading progress (visible while floating) */}
+            <span ref={progressRef} className="rt-progress" aria-hidden="true" />
+          </header>
+        </div>
 
         {/* Main content */}
         <div id="main-content" tabIndex={-1} className="pb-8 outline-none">
