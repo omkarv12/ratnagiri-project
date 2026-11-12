@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { MENUS } from "../config/navMenus";
@@ -9,7 +10,12 @@ import {
   ShieldCheck,
   MapPlus,
   HeartHandshake,
-  Waves,
+  Search,
+  Moon,
+  Sun,
+  Globe,
+  Check,
+  CornerDownLeft,
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
 import Breadcrumb from "../components/Breadcrumb";
@@ -104,18 +110,6 @@ const THEME_CSS = `
   pointer-events: none;
 }
 .rt-header-float .rt-progress { opacity: 1; }
-
-/* Brand mark */
-.rt-mark {
-  display: flex; align-items: center; justify-content: center;
-  width: 2.25rem; height: 2.25rem; flex-shrink: 0;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #FFE066, #F59E0B);
-  color: var(--rt-navy);
-  box-shadow: 0 4px 10px -3px rgba(245,158,11,.6), inset 0 0 0 2px rgba(255,255,255,.55);
-  transition: transform .3s ease;
-}
-button:hover > .rt-mark { transform: rotate(-8deg) scale(1.06); }
 
 /* ---------- Nav links ---------- */
 .rt-nav-link {
@@ -251,6 +245,40 @@ button:hover > .rt-mark { transform: rotate(-8deg) scale(1.06); }
   background: rgba(255,255,255,.22);
   box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 14px 26px -10px rgba(0,0,0,.6), 0 0 22px rgba(94,234,212,.35);
 }
+
+/* ---------- Utility buttons: search, theme, language ---------- */
+.rt-util {
+  position: relative;
+  display: flex;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #fff;
+  background: rgba(255,255,255,.1);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.28);
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+.rt-util:hover {
+  background: rgba(255,255,255,.2);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.55);
+}
+.rt-util:active { transform: scale(.95); }
+
+/* ---------- Dark mode (applies to the page content area) ---------- */
+html.rt-dark { color-scheme: dark; }
+html.rt-dark .rt-root { background: #080c0e !important; }
+html.rt-dark #main-content { filter: invert(1) hue-rotate(180deg); }
+html.rt-dark #main-content :where(img, video, iframe, canvas, picture, .leaflet-container, [style*="background-image"]) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ---------- Google Translate: hide its banner / widget chrome ---------- */
+body { top: 0 !important; }
+iframe.skiptranslate, .goog-te-banner-frame { display: none !important; }
+.goog-tooltip, .goog-tooltip:hover { display: none !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
 
 /* "NEW" tag on the Interactive Map button */
 .rt-badge {
@@ -526,6 +554,263 @@ function PrimaryNav({ items, navigate, isItemActive }) {
 /*  Layout                                                             */
 /* ------------------------------------------------------------------ */
 
+const IS_MAC =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+/* ---------- Language (uses Google Translate under the hood) ---------- */
+const LANGS = [
+  { code: "en", native: "English" },
+  { code: "mr", native: "मराठी" },
+  { code: "hi", native: "हिन्दी" },
+];
+
+const readLang = () => {
+  if (typeof document === "undefined") return "en";
+  const m = document.cookie.match(/googtrans=\/[a-z-]+\/([a-z-]+)/i);
+  return m ? m[1] : "en";
+};
+
+const writeLang = (code) => {
+  const past = "expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  const host = window.location.hostname;
+  if (code === "en") {
+    document.cookie = `googtrans=; ${past}; path=/`;
+    document.cookie = `googtrans=; ${past}; path=/; domain=${host}`;
+  } else {
+    document.cookie = `googtrans=/en/${code}; path=/`;
+    document.cookie = `googtrans=/en/${code}; path=/; domain=${host}`;
+  }
+  window.location.reload();
+};
+
+/* ---------- Search index built from the nav menus ---------- */
+function flattenMenus(items, trail = []) {
+  const out = [];
+  items.forEach((item) => {
+    if (item.route) out.push({ label: item.label, route: item.route, trail });
+    if (item.children?.length) out.push(...flattenMenus(item.children, [...trail, item.label]));
+  });
+  return out;
+}
+
+function LanguageMenu({ lang, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (!ref.current?.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative hidden sm:block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Change language"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Language"
+        className="rt-util w-9"
+      >
+        <Globe size={17} />
+        {lang !== "en" && (
+          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-amber-400" />
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-3 w-44 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl shadow-slate-900/20"
+        >
+          {LANGS.map((l) => (
+            <button
+              key={l.code}
+              role="menuitemradio"
+              aria-checked={l.code === lang}
+              translate="no"
+              onClick={() => {
+                setOpen(false);
+                if (l.code !== lang) onSelect(l.code);
+              }}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[15px] font-medium text-slate-800 hover:bg-teal-50 hover:text-teal-800"
+            >
+              {l.native}
+              {l.code === lang && <Check size={16} className="text-teal-600" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Ctrl/⌘ + K command palette ---------- */
+function CommandPalette({ open, onClose, pages, navigate, dark, onToggleTheme, lang, onLang }) {
+  const [query, setQuery] = useState("");
+  const [index, setIndex] = useState(0);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    setIndex(0);
+    const t = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  const actions = useMemo(
+    () => [
+      {
+        label: dark ? "Switch to light mode" : "Switch to dark mode",
+        hint: "Appearance",
+        keywords: "dark light theme mode night",
+        run: onToggleTheme,
+      },
+      ...LANGS.map((l) => ({
+        label: `Language: ${l.native}`,
+        hint: l.code === lang ? "Current" : "Language",
+        keywords: `language translate ${l.code} भाषा`,
+        run: () => l.code !== lang && onLang(l.code),
+      })),
+    ],
+    [dark, lang, onToggleTheme, onLang]
+  );
+
+  const list = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const pageHits = q
+      ? pages
+          .filter((p) => `${p.label} ${p.trail.join(" ")}`.toLowerCase().includes(q))
+          .sort((a, b) => Number(b.label.toLowerCase().startsWith(q)) - Number(a.label.toLowerCase().startsWith(q)))
+      : pages;
+    const actionHits = q
+      ? actions.filter((a) => `${a.label} ${a.hint} ${a.keywords}`.toLowerCase().includes(q))
+      : actions;
+    return [
+      ...pageHits.slice(0, 8).map((p) => ({ ...p, type: "Pages" })),
+      ...actionHits.map((a) => ({ ...a, type: "Actions" })),
+    ];
+  }, [query, pages, actions]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [index, list]);
+
+  if (!open) return null;
+
+  const choose = (item) => {
+    if (!item) return;
+    onClose();
+    if (item.type === "Pages") navigate(item.route);
+    else item.run();
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") {
+      onClose();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (list.length) setIndex((i) => (i + 1) % list.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (list.length) setIndex((i) => (i - 1 + list.length) % list.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      choose(list[index]);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[70] flex items-start justify-center bg-slate-950/60 px-3 pt-[10vh] backdrop-blur-sm"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl shadow-slate-950/40"
+      >
+        <div className="flex items-center gap-3 border-b border-slate-100 px-4">
+          <Search size={18} className="shrink-0 text-slate-400" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Search pages, places and settings"
+            aria-label="Search"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="rt-search-list"
+            className="h-14 w-full bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+          />
+          <kbd className="hidden rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] text-slate-500 sm:inline">
+            Esc
+          </kbd>
+        </div>
+
+        <div ref={listRef} id="rt-search-list" role="listbox" className="max-h-[50vh] overflow-y-auto p-2">
+          {list.length === 0 && (
+            <p className="px-3 py-8 text-center text-sm text-slate-500">
+              Nothing found for “{query}”. Try a page or place name.
+            </p>
+          )}
+          {list.map((item, i) => (
+            <div key={`${item.type}-${item.label}-${item.route || i}`}>
+              {(i === 0 || list[i - 1].type !== item.type) && (
+                <p className="px-3 pb-1 pt-2 text-xs font-semibold text-slate-500">{item.type}</p>
+              )}
+              <button
+                role="option"
+                aria-selected={i === index}
+                data-active={i === index}
+                onMouseMove={() => setIndex(i)}
+                onClick={() => choose(item)}
+                className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left ${
+                  i === index ? "bg-teal-50 text-teal-900" : "text-slate-800"
+                }`}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] font-medium">{item.label}</span>
+                  {item.type === "Pages" && item.trail.length > 0 && (
+                    <span className="block truncate text-xs text-slate-500">{item.trail.join(" › ")}</span>
+                  )}
+                </span>
+                {item.type === "Actions" && (
+                  <span className="shrink-0 text-xs text-slate-500">{item.hint}</span>
+                )}
+                {i === index && item.type === "Pages" && (
+                  <CornerDownLeft size={15} className="shrink-0 text-teal-700" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -533,6 +818,72 @@ export default function DashboardLayout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  /* Search palette */
+  const [searchOpen, setSearchOpen] = useState(false);
+  const pages = useMemo(() => {
+    const all = [
+      ...flattenMenus(NAV_ITEMS),
+      { label: "Interactive Map", route: "/map", trail: [] },
+      { label: "Contribute: location and services", route: "/registration", trail: [] },
+    ];
+    const seen = new Set();
+    return all.filter((p) => {
+      const key = `${p.route}|${p.label}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* Dark mode (remembered between visits) */
+  const [dark, setDark] = useState(() => {
+    try {
+      return localStorage.getItem("rt-theme") === "dark";
+    } catch {
+      return false;
+    }
+  });
+  const toggleTheme = useCallback(() => setDark((d) => !d), []);
+
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle("rt-dark", dark);
+    try {
+      localStorage.setItem("rt-theme", dark ? "dark" : "light");
+    } catch {
+      /* storage unavailable */
+    }
+    return () => document.documentElement.classList.remove("rt-dark");
+  }, [dark]);
+
+  /* Language */
+  const [lang] = useState(readLang);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    if (lang === "en" || document.getElementById("rt-gt-script")) return;
+    window.rtGoogleTranslateInit = () => {
+      new window.google.translate.TranslateElement(
+        { pageLanguage: "en", autoDisplay: false },
+        "rt-gt"
+      );
+    };
+    const s = document.createElement("script");
+    s.id = "rt-gt-script";
+    s.async = true;
+    s.src = "https://translate.google.com/translate_a/element.js?cb=rtGoogleTranslateInit";
+    document.body.appendChild(s);
+  }, [lang]);
 
   // Floating state + reading progress, throttled to one update per frame.
   useEffect(() => {
@@ -607,12 +958,9 @@ export default function DashboardLayout() {
                 <button
                   onClick={() => navigate("/dashboard")}
                   aria-label="Visit Ratnagiri — home"
-                  className="flex min-w-0 items-center gap-2.5"
+                  className="flex min-w-0 items-center"
                 >
-                  <span className="rt-mark" aria-hidden="true">
-                    <Waves size={19} strokeWidth={2.4} />
-                  </span>
-                  <span className="rt-display truncate whitespace-nowrap text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
+                  <span translate="no" className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
                     Visit Ratnagiri
                   </span>
                 </button>
@@ -623,8 +971,40 @@ export default function DashboardLayout() {
                 <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
               </div>
 
-              {/* Right: CTAs */}
+              {/* Right: utilities + CTAs */}
               <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
+                {/* Search (Ctrl/⌘ + K) */}
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label={`Search (${IS_MAC ? "Command" : "Control"} K)`}
+                  title="Search"
+                  className="rt-util w-9 xl:w-auto xl:gap-2 xl:px-3.5"
+                >
+                  <Search size={17} />
+                  <kbd
+                    translate="no"
+                    className="hidden rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-[11px] leading-none xl:inline"
+                  >
+                    {IS_MAC ? "⌘" : "Ctrl"} K
+                  </kbd>
+                </button>
+
+                {/* Dark / light mode */}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+                  aria-pressed={dark}
+                  title={dark ? "Light mode" : "Dark mode"}
+                  className="rt-util hidden w-9 sm:flex"
+                >
+                  {dark ? <Sun size={17} /> : <Moon size={17} />}
+                </button>
+
+                {/* Language */}
+                <LanguageMenu lang={lang} onSelect={writeLang} />
+
                 <button
                   onClick={() => navigate("/map")}
                   aria-label="Interactive Map"
@@ -675,6 +1055,17 @@ export default function DashboardLayout() {
         </div>
       </main>
       <BackToTop />
+      <CommandPalette
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        pages={pages}
+        navigate={navigate}
+        dark={dark}
+        onToggleTheme={toggleTheme}
+        lang={lang}
+        onLang={writeLang}
+      />
+      <div id="rt-gt" style={{ display: "none" }} />
     </div>
   );
 }
