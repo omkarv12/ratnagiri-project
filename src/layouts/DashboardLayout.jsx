@@ -181,6 +181,34 @@ const THEME_CSS = `
   box-shadow: 0 16px 28px -8px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.55), 0 0 22px rgba(94,234,212,.35);
 }
 
+/* "NEW / MUST TRY" tag on the Interactive Map button */
+.rt-badge {
+  position: absolute;
+  top: -.7rem;
+  right: -.55rem;
+  z-index: 2;
+  padding: .12rem .5rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #FFE066, #FBBF24);
+  color: #0b3149;
+  border: 2px solid #fff;
+  font-size: .625rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px -2px rgba(0,0,0,.5);
+  transform: rotate(6deg);
+  animation: rt-tag 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes rt-tag {
+  0%, 60%, 100% { transform: rotate(6deg) scale(1); }
+  70%           { transform: rotate(-6deg) scale(1.15); }
+  80%           { transform: rotate(6deg) scale(1.1); }
+  90%           { transform: rotate(-3deg) scale(1.05); }
+}
+
 /* Light sweep that glides across each button every few seconds */
 @keyframes rt-sweep {
   0%, 55% { left: -60%; }
@@ -502,9 +530,10 @@ export default function DashboardLayout() {
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                 <MapPlus size={19} className="rt-mapplus relative text-white drop-shadow" />
                 <span className="relative hidden 2xl:inline">Interactive Map</span>
-                <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-                  <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
+                {/* Tag that invites people to try the map */}
+                <span className="rt-badge" aria-hidden="true">
+                  <span className="2xl:hidden">NEW</span>
+                  <span className="hidden 2xl:inline">★ MUST TRY</span>
                 </span>
               </button>
 
