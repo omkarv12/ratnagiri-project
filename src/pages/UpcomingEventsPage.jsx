@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -46,79 +46,77 @@ function imageOf(e) {
   return `${API_BASE_URL}${raw.startsWith("/") ? "" : "/"}${raw}`;
 }
 
-/* ───────────── one event card ───────────── */
+/* ───────────── one event card (compact) ───────────── */
 
-function EventCard({ e, index }) {
+function EventCard({ e, first }) {
   const [failed, setFailed] = useState(false);
   const src = imageOf(e);
   const showImg = src && !failed;
   const place = e.location || e.venue || e.place;
 
   return (
-    <article
-      className="group flex w-[86%] shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-white shadow-[0_18px_40px_-24px_rgba(11,49,73,0.45)] ring-1 ring-slate-200/80 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-26px_rgba(11,49,73,0.55)] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
-    >
+    <article className="group flex w-[240px] shrink-0 flex-col overflow-hidden rounded-2xl bg-white shadow-[0_14px_30px_-20px_rgba(11,49,73,0.5)] ring-1 ring-slate-200/80 transition duration-500 hover:-translate-y-1 hover:shadow-[0_24px_46px_-22px_rgba(11,49,73,0.55)] sm:w-[260px] xl:w-[280px]">
       {/* image */}
-      <div className="relative h-60 overflow-hidden bg-[#0b3149] sm:h-64 xl:h-72">
+      <div className="relative h-36 overflow-hidden bg-[#0b3149] xl:h-40">
         {showImg ? (
           <img
             src={src}
             alt={e.title}
             loading="lazy"
+            draggable={false}
             onError={() => setFailed(true)}
             className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.07]"
           />
         ) : (
           <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-[#0b3149] via-[#0d4150] to-[#0f766e]">
-            <span aria-hidden="true" className="absolute -right-10 -top-10 h-48 w-48 rounded-full border border-white/10" />
-            <span aria-hidden="true" className="absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-[#FBBF24]/10 blur-2xl" />
-            <CalendarDays size={54} className="relative text-white/25" strokeWidth={1.2} />
+            <span aria-hidden="true" className="absolute -right-8 -top-8 h-32 w-32 rounded-full border border-white/10" />
+            <span aria-hidden="true" className="absolute -bottom-10 -left-8 h-36 w-36 rounded-full bg-[#FBBF24]/10 blur-2xl" />
+            <CalendarDays size={38} className="relative text-white/25" strokeWidth={1.2} />
           </div>
         )}
 
-        {/* readable bottom fade */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0b3149]/70 via-transparent to-[#0b3149]/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0b3149]/65 via-transparent to-[#0b3149]/15" />
 
         {/* date badge */}
-        <div className="absolute left-4 top-4 flex h-[68px] w-[58px] flex-col items-center justify-center rounded-2xl bg-white/95 shadow-lg backdrop-blur">
-          <span className="text-2xl font-extrabold leading-none text-[#0b3149]">{dayOf(e.event_date)}</span>
-          <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#B4532A]">
+        <div className="absolute left-3 top-3 flex h-[54px] w-[46px] flex-col items-center justify-center rounded-xl bg-white/95 shadow-lg backdrop-blur">
+          <span className="text-xl font-extrabold leading-none text-[#0b3149]">{dayOf(e.event_date)}</span>
+          <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#B4532A]">
             {monthOf(e.event_date)}
           </span>
         </div>
 
         {/* countdown pill */}
-        <span className="absolute right-4 top-4 rounded-full bg-[#FBBF24] px-3 py-1 text-xs font-bold text-[#0b3149] shadow-md">
+        <span className="absolute right-3 top-3 rounded-full bg-[#FBBF24] px-2.5 py-0.5 text-[11px] font-bold text-[#0b3149] shadow-md">
           {whenLabel(e.event_date)}
         </span>
 
-        {index === 0 && (
-          <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white ring-1 ring-white/30 backdrop-blur">
-            <Sparkles size={12} className="text-[#FBBF24]" /> Next up
+        {first && (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white ring-1 ring-white/30 backdrop-blur">
+            <Sparkles size={11} className="text-[#FBBF24]" /> Next up
           </span>
         )}
       </div>
 
       {/* body */}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-4">
         {e.organizer_name && (
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal-700">
+          <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700">
             by {e.organizer_name}
           </p>
         )}
-        <h3 className="mt-2 text-xl font-bold leading-snug text-[#0b3149] sm:text-[22px]">{e.title}</h3>
+        <h3 className="mt-1 line-clamp-2 text-base font-bold leading-snug text-[#0b3149]">{e.title}</h3>
         {e.description && (
-          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">{e.description}</p>
+          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-slate-600">{e.description}</p>
         )}
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays size={14} className="text-[#B4532A]" />
-            {weekdayOf(e.event_date)}, {fullDate(e.event_date)}
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 pt-3 text-[11px] font-medium text-slate-500">
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays size={12} className="text-[#B4532A]" />
+            {fullDate(e.event_date)}
           </span>
           {place && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin size={14} className="text-[#B4532A]" />
+            <span className="inline-flex items-center gap-1">
+              <MapPin size={12} className="text-[#B4532A]" />
               {place}
             </span>
           )}
@@ -128,114 +126,126 @@ function EventCard({ e, index }) {
   );
 }
 
-/* ───────────── horizontal carousel ───────────── */
+/* ───────────── endless, self-scrolling carousel ───────────── */
+
+const SPEED = 0.6; // pixels per frame (about 36px per second). Raise for faster.
 
 function EventsCarousel({ events }) {
   const track = useRef(null);
-  const [paused, setPaused] = useState(false);
-  const [edge, setEdge] = useState({ start: true, end: false });
-  const [progress, setProgress] = useState(0);
+  const paused = useRef(false);
+  const resumeTimer = useRef(null);
+  const [still, setStill] = useState(false);
 
-  const step = () => {
-    const card = track.current?.children[0];
-    return card ? card.offsetWidth + GAP : 0;
+  // Make sure one copy is wide enough, then render two copies for a seamless loop.
+  let base = events;
+  while (base.length < 6) base = base.concat(events);
+
+  const hold = (ms) => {
+    paused.current = true;
+    clearTimeout(resumeTimer.current);
+    if (ms) resumeTimer.current = setTimeout(() => (paused.current = false), ms);
+  };
+  const release = () => {
+    clearTimeout(resumeTimer.current);
+    paused.current = false;
   };
 
-  const update = useCallback(() => {
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setStill(true);
+      return undefined;
+    }
+
+    const half = () => (el.scrollWidth + GAP) / 2;
+    let pos = half(); // start in the middle so scrolling left also loops
+    el.scrollLeft = pos;
+    let raf = 0;
+
+    const loop = () => {
+      const h = half();
+      if (paused.current) {
+        pos = el.scrollLeft; // follow manual scrolling, arrows and drags
+      } else {
+        pos += SPEED;
+        el.scrollLeft = pos;
+      }
+      if (pos >= h * 2 - 1) { pos -= h; el.scrollLeft = pos; }
+      else if (pos <= 1) { pos += h; el.scrollLeft = pos; }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(resumeTimer.current);
+    };
+  }, [events.length]);
+
+  const nudge = (dir) => {
     const el = track.current;
     if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    setEdge({ start: el.scrollLeft <= 4, end: el.scrollLeft >= max - 4 });
-    setProgress(max <= 0 ? 1 : 0.12 + 0.88 * (el.scrollLeft / max));
-  }, []);
-
-  useEffect(() => {
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [update, events.length]);
-
-  const go = (dir) => track.current?.scrollBy({ left: dir * step(), behavior: "smooth" });
-
-  // Gentle auto-advance. Hover, touch or focus pauses it; loops back to the start.
-  useEffect(() => {
-    const el = track.current;
-    if (!el || paused || events.length < 2) return undefined;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
-    const id = setInterval(() => {
-      const max = el.scrollWidth - el.clientWidth;
-      if (max <= 4) return;
-      if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
-      else el.scrollBy({ left: step(), behavior: "smooth" });
-    }, 4800);
-    return () => clearInterval(id);
-  }, [paused, events.length]);
-
-  const canScroll = !(edge.start && edge.end);
+    hold(1600);
+    el.scrollBy({ left: dir * 300, behavior: "smooth" });
+  };
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="h-10 w-1.5 rounded-full bg-gradient-to-b from-[#FBBF24] via-[#B4532A] to-teal-600" />
+          <span className="h-9 w-1.5 rounded-full bg-gradient-to-b from-[#FBBF24] via-[#B4532A] to-teal-600" />
           <div>
             <h2 className="text-2xl font-bold text-[#0b3149] sm:text-3xl">Coming up</h2>
             <p className="text-sm text-slate-500">The next happenings across the district</p>
           </div>
         </div>
 
-        {canScroll && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => go(-1)}
-              disabled={edge.start}
-              aria-label="Previous events"
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0b3149] ring-1 ring-slate-200 transition hover:bg-[#0b3149] hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-white disabled:hover:text-[#0b3149]"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={() => go(1)}
-              disabled={edge.end}
-              aria-label="Next events"
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#B4532A] text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="mr-1 hidden text-xs font-medium text-slate-400 sm:inline">Hover to pause</span>
+          <button
+            onClick={() => nudge(-1)}
+            aria-label="Scroll back"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#0b3149] ring-1 ring-slate-200 transition hover:bg-[#0b3149] hover:text-white"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => nudge(1)}
+            aria-label="Scroll forward"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#B4532A] text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
-      <div
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={() => setPaused(true)}
-        onFocus={() => setPaused(true)}
-        onBlur={() => setPaused(false)}
-      >
+      <div className="relative">
         <div
           ref={track}
-          onScroll={update}
+          onMouseEnter={() => hold()}
+          onMouseLeave={release}
+          onTouchStart={() => hold()}
+          onTouchEnd={() => hold(2500)}
+          onFocus={() => hold()}
+          onBlur={release}
           tabIndex={0}
-          aria-label="Upcoming events, scroll sideways"
-          className="rt-hide-scroll -mx-1 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-1 pb-6 pt-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+          aria-label="Upcoming events, scrolls automatically. Hover to pause."
+          className={`rt-hide-scroll flex gap-6 overflow-x-auto py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${still ? "snap-x" : ""}`}
         >
-          {events.map((e, i) => (
-            <EventCard key={e.id} e={e} index={i} />
+          {base.map((e, i) => (
+            <EventCard key={`a-${e.id}-${i}`} e={e} first={i === 0} />
           ))}
+          {!still &&
+            base.map((e, i) => (
+              <div key={`b-${e.id}-${i}`} aria-hidden="true" className="contents">
+                <EventCard e={e} first={false} />
+              </div>
+            ))}
         </div>
 
-        {canScroll && (
-          <div className="mt-1 flex items-center gap-4">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-200">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#FBBF24] via-[#B4532A] to-teal-600 transition-[width] duration-300"
-                style={{ width: `${progress * 100}%` }}
-              />
-            </div>
-            <p className="text-xs font-medium text-slate-400">Swipe or use arrows</p>
-          </div>
-        )}
+        {/* soft edge fades */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-transparent sm:w-16" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent sm:w-16" />
       </div>
     </div>
   );
