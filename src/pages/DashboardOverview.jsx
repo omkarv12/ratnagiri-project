@@ -14,6 +14,8 @@ import {
   CalendarDays,
   PlusCircle,
   User,
+  MapPin,
+  ArrowRight,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -40,15 +42,16 @@ import VisitorCounter from "../components/VisitorCounter";
 
 const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
 
+// How long each hero photo stays on screen (ms). Also drives the progress bar.
+const HERO_SLIDE_MS = 6000;
+
 // The loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
 // loader only while data is actually loading.
 const MIN_LOADER_MS = 0;
 
-// Route of the Upcoming Events page (UpcomingEventsPage — full calendar +
-// contribute form + "Coming up" list). Matches "Upcoming Events" under the
-// Experiences menu in config/navMenus. Both buttons under the mini calendar
-// in the Experiences section send people here.
+// Route of the Upcoming Events page (UpcomingEventsPage). Matches "Upcoming
+// Events" under the Experiences menu in config/navMenus.
 const CALENDAR_ROUTE = "/experiences/upcoming-events";
 
 // ---- Mini calendar helpers (Experiences section) ----
@@ -140,8 +143,7 @@ function formatStoryDate(dateStr) {
 
 /* ------------------------------------------------------------------
    Scroll reveal — fades a section up into place the first time it
-   enters the viewport, then leaves it alone. One deliberate reveal
-   per section rather than an animation firing on every card.
+   enters the viewport, then leaves it alone.
 ------------------------------------------------------------------ */
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -180,6 +182,28 @@ function Reveal({ children, className = "" }) {
   );
 }
 
+// Consistent section heading: small eyebrow with a rule, big serif title,
+// optional lead line. Used by every major section so the page reads as one.
+function SectionHead({ eyebrow, title, lead, icon: Icon, iconClass = "", compact = false }) {
+  return (
+    <Reveal className={compact ? "mb-6" : "mb-10 max-w-3xl"}>
+      <p className="mb-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#B4532A]">
+        <span className="h-px w-8 bg-[#B4532A]" />
+        {eyebrow}
+      </p>
+      <h2 className="t-h2 flex items-center gap-3">
+        {Icon && (
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconClass}`}>
+            <Icon size={22} aria-hidden="true" />
+          </span>
+        )}
+        {title}
+      </h2>
+      {lead && <p className="t-lead mt-3">{lead}</p>}
+    </Reveal>
+  );
+}
+
 export default function DashboardOverview() {
   const { loading } = useLocations();
   const navigate = useNavigate();
@@ -209,20 +233,22 @@ export default function DashboardOverview() {
     return () => clearTimeout(t);
   }, []);
 
+  // Restarts whenever the slide changes, so the progress bar and the slide
+  // always stay in step (also after a manual click).
   useEffect(() => {
-    const interval = setInterval(() => {
+    const t = setTimeout(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    }, HERO_SLIDE_MS);
+    return () => clearTimeout(t);
+  }, [currentSlide]);
 
-  // Manual carousel controls for the hero photo strip.
+  // Manual carousel controls for the hero.
   const goToPrevSlide = () =>
     setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   const goToNextSlide = () =>
     setCurrentSlide((prev) => (prev + 1) % heroImages.length);
 
-  // ---- Panel 2: Experiences -------------------------------------------------
+  // ---- Experiences -----------------------------------------------------------
   // Each card opens its own page (ExperiencePage), whose content is managed in
   // Admin → Local Experiences.
   const experiencesData = [
@@ -296,7 +322,7 @@ export default function DashboardOverview() {
     calSorted[0] ||
     null;
 
-  // ---- Panel 3: Stories & Videos --------------------------------------------
+  // ---- Stories & Videos -------------------------------------------------------
   // Stories are the real, published posts from the Stories section (same
   // blogApi the /stories page uses) — no mock data here.
   const [stories, setStories] = useState([]);
@@ -313,8 +339,7 @@ export default function DashboardOverview() {
       .finally(() => setStoriesLoading(false));
   }, []);
 
-  // Stories carousel: shows 2 stories per page, sliding as a whole page in
-  // and out (instead of one card centred with empty space either side).
+  // Stories carousel: shows 2 stories per page, sliding as a whole page.
   const STORY_PAGE_SIZE = 2;
   const storyPages = chunkArray(stories, STORY_PAGE_SIZE);
   const [storyPage, setStoryPage] = useState(0);
@@ -339,8 +364,6 @@ export default function DashboardOverview() {
   }, [storyPages.length, storyPage]);
 
   // ---- Videos: 2-per-page carousel, click a thumbnail to play that video --
-  // Each card starts as a thumbnail (no network call, no autoplay) and only
-  // turns into a live embed once the person clicks it.
   const VIDEO_PAGE_SIZE = 2;
   const videoPages = chunkArray(videosData, VIDEO_PAGE_SIZE);
   const [videoPage, setVideoPage] = useState(0);
@@ -364,7 +387,7 @@ export default function DashboardOverview() {
     return () => clearInterval(interval);
   }, [videoAutoPaused, videoPages.length, playingVideoId]);
 
-  // ---- Panel 4: About ---------------------------------------------------------
+  // ---- About ---------------------------------------------------------------------
   const aboutPillars = [
     {
       title: "Society",
@@ -399,6 +422,14 @@ export default function DashboardOverview() {
       description:
         "The district administration and tourism office work with village panchayats to register homestays and maintain public beaches and forts.",
     },
+  ];
+
+  // Quick-start tiles that overlap the bottom of the hero.
+  const quickLinks = [
+    { label: "Plan Your Trip", hint: "Routes, stays & tips", icon: Compass, route: "/plan-your-trip" },
+    { label: "Interactive Map", hint: "Explore every place", icon: MapPin, route: "/map" },
+    { label: "Upcoming Events", hint: "Festivals & happenings", icon: CalendarDays, route: CALENDAR_ROUTE },
+    { label: "Stories", hint: "Voices of the Konkan", icon: BookOpen, route: "/dashboard#stories" },
   ];
 
   // Footer links — every route here matches an entry in config/navMenus.js
@@ -449,213 +480,295 @@ export default function DashboardOverview() {
 
   return (
     <div className="font-body animate-in fade-in duration-500">
-      {/* Fonts + shared animation. TODO: once fonts are added to the Tailwind
-          config, move this @import into index.html <head> as <link> tags. */}
       <style>{`
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-up { animation: fadeUp 0.6s ease-out both; }
+        .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-fade-up-2 { animation: fadeUp 0.8s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-fade-up-3 { animation: fadeUp 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-fade-up-4 { animation: fadeUp 0.8s 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-        /* Slim scrollbar, reused for horizontal strips and the calendar's
-           event list */
+        /* Hero progress segment fills over exactly one slide's duration */
+        @keyframes rt-fill { from { width: 0; } to { width: 100%; } }
+        .rt-seg-fill { animation: rt-fill ${HERO_SLIDE_MS}ms linear both; }
+
+        /* "Scroll" cue: a line that keeps travelling down */
+        @keyframes rt-scrolldown {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+        .rt-scroll-line { animation: rt-scrolldown 1.8s ease-in-out infinite; }
+
+        /* Slim scrollbar */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
         .rt-feed::-webkit-scrollbar-track { background: transparent; }
         .rt-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
         .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        @media (prefers-reduced-motion: reduce) {
-          .animate-fade-up { animation: none; }
-        }
-
-        /* World-class card treatment: a soft resting shadow that deepens
-           and tints toward the section's accent color on hover, paired
-           with a gentle lift. Applied via .rt-card + a tint modifier. */
+        /* Card treatment: a soft resting shadow that deepens and tints toward
+           the section accent on hover, with a gentle lift. */
         .rt-card {
-          box-shadow: 0 10px 28px -14px rgba(15, 23, 42, 0.22);
-          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+          box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.28);
+          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
         }
-        .rt-card:hover {
-          transform: translateY(-4px);
+        .rt-card:hover { transform: translateY(-6px); }
+        .rt-card.tint-amber:hover { box-shadow: 0 32px 56px -20px rgba(180, 83, 42, 0.45); }
+        .rt-card.tint-teal:hover  { box-shadow: 0 32px 56px -20px rgba(15, 118, 110, 0.4); }
+        .rt-card.tint-rose:hover  { box-shadow: 0 32px 56px -20px rgba(225, 29, 72, 0.35); }
+        .rt-card.tint-navy:hover  { box-shadow: 0 32px 56px -20px rgba(11, 49, 73, 0.45); }
+
+        /* Photo cards: description + "explore" row slide up on hover */
+        .rt-reveal-row {
+          max-height: 0;
+          opacity: 0;
+          overflow: hidden;
+          transition: max-height 0.45s ease, opacity 0.35s ease, margin 0.45s ease;
         }
-        .rt-card.tint-amber:hover { box-shadow: 0 26px 50px -18px rgba(180, 83, 42, 0.4); }
-        .rt-card.tint-teal:hover { box-shadow: 0 26px 50px -18px rgba(15, 118, 110, 0.35); }
-        .rt-card.tint-rose:hover { box-shadow: 0 26px 50px -18px rgba(225, 29, 72, 0.32); }
-        .rt-card.tint-navy:hover { box-shadow: 0 26px 50px -18px rgba(11, 49, 73, 0.4); }
-        @media (prefers-reduced-motion: reduce) {
-          .rt-card, .rt-card:hover { transition: none; transform: none; }
+        .group:hover .rt-reveal-row,
+        .group:focus-visible .rt-reveal-row { max-height: 4rem; opacity: 1; margin-top: 0.75rem; }
+        @media (hover: none) {
+          .rt-reveal-row { max-height: 4rem; opacity: 1; margin-top: 0.75rem; }
         }
 
-        /* CTA arrow nudges right on hover instead of the whole row moving */
+        /* CTA arrow nudges right on hover */
         .rt-cta-arrow { transition: transform 0.25s ease; }
         .rt-cta:hover .rt-cta-arrow { transform: translateX(3px); }
 
-        /* Hero text panel: keeps the headline readable on every slide,
-           bright sky or dark sea. */
-        .rt-hero-panel {
-          background: linear-gradient(135deg, rgba(11, 49, 73, 0.88), rgba(11, 49, 73, 0.72));
-          -webkit-backdrop-filter: blur(10px) saturate(1.1);
-          backdrop-filter: blur(10px) saturate(1.1);
-        }
-        .rt-hero-text { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35); }
+        .rt-hero-text { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45); }
 
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fade-up, .animate-fade-up-2, .animate-fade-up-3, .animate-fade-up-4 { animation: none; }
+          .rt-seg-fill { animation: none; width: 100%; }
+          .rt-scroll-line { animation: none; }
+          .rt-card, .rt-card:hover { transition: none; transform: none; }
+        }
       `}</style>
 
-      {/* ================= Panel 1 — Hero carousel (photo only, full width) ================= */}
-      <section className="relative px-2 sm:px-3 lg:px-4 py-2 sm:py-3 overflow-hidden">
+      {/* ================= Hero — full-bleed, edge to edge ================= */}
+      <section className="relative h-[calc(100svh-5rem)] max-h-[940px] min-h-[580px] w-full overflow-hidden bg-[#06141f]">
+        {/* slides: crossfade + slow zoom on the active photo */}
+        {heroImages.map((img, index) => (
+          <div
+            key={index}
+            aria-hidden={index !== currentSlide}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('${img}')`,
+              opacity: index === currentSlide ? 1 : 0,
+              transform: index === currentSlide ? "scale(1.1)" : "scale(1)",
+              transition: "opacity 1.4s ease-in-out, transform 8s ease-out",
+              willChange: "opacity, transform",
+            }}
+          />
+        ))}
 
-        <div className="relative max-w-[1680px] mx-auto">
-          {/* Full-width rotating photo carousel with caption */}
-          <div className="relative rounded-2xl overflow-hidden h-[520px] sm:h-[580px] lg:h-[660px] shadow-[0_35px_70px_-20px_rgba(11,49,73,0.5)] ring-1 ring-black/5">
-            {heroImages.map((img, index) => (
-              <div
-                key={index}
-                className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
-                style={{
-                  backgroundImage: `url('${img}')`,
-                  opacity: index === currentSlide ? 1 : 0,
-                }}
-              />
-            ))}
-            {/* slightly stronger scrim than before, so bright skies never wash out the frame */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/45" />
+        {/* scrims: darker at the left (text) and bottom (controls) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#04121c]/80 via-[#04121c]/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/85 via-transparent to-[#04121c]/40" />
 
-            {/* black shade on the inner border — a soft vignette that frames
-                every slide the same way, so the carousel reads as one
-                consistent frame rather than six different photos */}
-            <div className="absolute inset-0 rounded-2xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_90px_30px_rgba(0,0,0,0.5)]" />
-
-            {/* carousel arrows */}
-            <button
-              onClick={goToPrevSlide}
-              aria-label="Previous photo"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={goToNextSlide}
-              aria-label="Next photo"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-            >
-              <ChevronRight size={18} />
-            </button>
-
-            {/* content block — vertically centred, sitting on a deep-navy
-                frosted panel (site navy #0b3149) with a mango → laterite →
-                teal accent bar, so the text is readable on any photo.
-                Side padding keeps it clear of the carousel arrows. */}
-            <div className="absolute inset-0 flex flex-col justify-center px-12 sm:px-16 lg:px-20 pb-10 animate-fade-up">
-              <div className="rt-hero-panel relative max-w-xl rounded-2xl ring-1 ring-white/15 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.65)] p-5 pl-6 sm:p-7 sm:pl-9">
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-5 bottom-5 w-1 rounded-r-full bg-gradient-to-b from-[#FBBF24] via-[#B4532A] to-teal-500"
-                />
-
-                <p className="rt-hero-text t-eyebrow text-[#FBBF24] mb-3">
-                  Explore &middot; Experience &middot; Support Local
-                </p>
-                <h1 className="rt-hero-text t-h1 text-white mb-4">
-                  Discover <span className="text-[#FBBF24]">Ratnagiri</span>
-                </h1>
-                <p className="t-body text-white/90 max-w-md mb-0">
-                  Where the Sahyadri hills meet the Arabian Sea — beaches, forts,
-                  homestays and Konkan flavours, all in one place.
-                </p>
-              </div>
-            </div>
-
-            <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4">
-              <p className="rt-hero-text font-display italic text-white text-sm sm:text-base border-b border-dashed border-white/50 pb-1">
-                Beaches, forts, culture &amp; Konkan flavours
+        {/* content */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
+            <div className="max-w-3xl pb-16 sm:pb-12">
+              <p className="rt-hero-text animate-fade-up mb-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.28em] text-[#FBBF24] sm:text-xs">
+                <span className="h-px w-10 bg-[#FBBF24]" />
+                Explore &middot; Experience &middot; Support Local
               </p>
-              <div className="flex gap-1.5 shrink-0">
-                {heroImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    aria-label={`Go to slide ${index + 1}`}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentSlide ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
-                    }`}
-                  />
-                ))}
+
+              <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[5.75rem]">
+                Discover
+                <br />
+                <span className="text-[#FBBF24]">Ratnagiri</span>
+              </h1>
+
+              <p className="rt-hero-text animate-fade-up-3 mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
+                Where the Sahyadri hills meet the Arabian Sea. Beaches, forts,
+                homestays and Konkan flavours, all in one place.
+              </p>
+
+              <div className="animate-fade-up-4 mt-9 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => navigate("/plan-your-trip")}
+                  className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[#FBBF24] px-7 py-3.5 text-sm font-bold text-[#0b3149] shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:-translate-y-0.5 hover:bg-[#fcc934]"
+                >
+                  Plan your trip
+                  <ArrowRight size={16} className="rt-cta-arrow" />
+                </button>
+                <button
+                  onClick={() => navigate("/map")}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-7 py-3.5 text-sm font-semibold text-white ring-1 ring-white/40 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
+                >
+                  <MapPin size={16} />
+                  Explore the map
+                </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* bottom row: progress segments · counter · arrows */}
+        <div className="absolute inset-x-0 bottom-0 pb-20 sm:pb-24">
+          <div className="mx-auto flex w-full max-w-[1680px] items-center gap-5 px-6 sm:px-10 lg:px-16">
+            <div className="flex flex-1 items-center gap-2 sm:max-w-xl">
+              {heroImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                  className="group relative h-6 flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                >
+                  <span className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-white/30 transition-all group-hover:h-[5px]">
+                    {index < currentSlide && <span className="block h-full w-full bg-white" />}
+                    {index === currentSlide && (
+                      <span key={currentSlide} className="rt-seg-fill block h-full bg-white" />
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <p className="hidden text-sm font-semibold tabular-nums text-white/80 sm:block">
+              {String(currentSlide + 1).padStart(2, "0")}
+              <span className="mx-1.5 text-white/40">/</span>
+              {String(heroImages.length).padStart(2, "0")}
+            </p>
+
+            <div className="ml-auto flex gap-2">
+              <button
+                onClick={goToPrevSlide}
+                aria-label="Previous photo"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white hover:text-[#0b3149] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={goToNextSlide}
+                aria-label="Next photo"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white hover:text-[#0b3149] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* scroll cue */}
+        <div className="pointer-events-none absolute bottom-24 right-6 hidden flex-col items-center gap-2 lg:flex xl:right-10">
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70 [writing-mode:vertical-rl]">
+            Scroll
+          </span>
+          <span className="relative h-12 w-px overflow-hidden bg-white/25">
+            <span className="rt-scroll-line absolute inset-0 bg-white" />
+          </span>
+        </div>
       </section>
 
-      {/* ================= Panel 2 — Experiences ================= */}
-      <section id="experiences" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
-        <div className="relative max-w-[1680px] mx-auto">
-          <Reveal>
-            <h2 className="t-h2 mb-2 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[#B4532A]"><Compass size={22} aria-hidden="true" /></span>
-              Local Experiences
-            </h2>
-            <p className="t-lead mb-8">
-              Walks, meals and encounters that go beyond the sightseeing list.
-            </p>
-          </Reveal>
+      {/* ================= Quick-start tiles (overlap the hero) ================= */}
+      <section className="relative z-10 -mt-14 px-5 sm:px-10 lg:px-16">
+        <div className="mx-auto grid max-w-[1680px] grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {quickLinks.map(({ label, hint, icon: Icon, route }) => (
+            <button
+              key={label}
+              onClick={() => navigate(route)}
+              className="rt-card tint-amber group flex items-center gap-3 rounded-2xl bg-white p-4 text-left ring-1 ring-slate-200/70 sm:gap-4 sm:p-5"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0b3149] to-[#0f766e] text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 sm:h-12 sm:w-12">
+                <Icon size={20} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-bold text-[#0b3149] sm:text-base">{label}</span>
+                <span className="hidden truncate text-xs text-slate-500 sm:block">{hint}</span>
+              </span>
+              <ArrowRight
+                size={16}
+                className="ml-auto hidden shrink-0 text-[#B4532A] transition-transform duration-300 group-hover:translate-x-1 sm:block"
+              />
+            </button>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.3fr] gap-5">
-            {experiencesData.map(({ title, description, image, route }) => (
+      {/* ================= Experiences ================= */}
+      <section id="experiences" className="relative scroll-mt-24 overflow-hidden px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full bg-amber-200/30 blur-3xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
+
+        <div className="relative mx-auto max-w-[1680px]">
+          <SectionHead
+            eyebrow="Experience"
+            title="Local Experiences"
+            icon={Compass}
+            iconClass="bg-amber-100 text-[#B4532A]"
+            lead="Walks, meals and encounters that go beyond the sightseeing list."
+          />
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.3fr]">
+            {experiencesData.map(({ title, description, image, route }, i) => (
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="rt-card tint-amber group text-left rounded-xl overflow-hidden relative h-96"
+                className="rt-card tint-amber group relative h-[26rem] overflow-hidden rounded-3xl text-left"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                {/* black shade on the inner border — soft vignette framing the card */}
-                <div className="absolute inset-0 rounded-xl pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
-                <div className="absolute inset-x-0 bottom-0 p-5">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/90 via-[#04121c]/20 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
+
+                <span className="absolute left-5 top-5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold tracking-widest text-white ring-1 ring-white/30 backdrop-blur">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <div className="absolute inset-x-0 bottom-0 p-6">
                   <p className="t-h3 text-white">{title}</p>
-                  <p className="t-small text-white/85 mt-1">{description}</p>
+                  <p className="t-small mt-1 text-white/80">{description}</p>
+                  <div className="rt-reveal-row">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#FBBF24]">
+                      Explore <ArrowRight size={14} />
+                    </span>
+                  </div>
                 </div>
               </button>
             ))}
 
-            {/* Mini calendar — replaces the old Upcoming Events list. Dots
-                mark days with events; the buttons below open the full
-                calendar page (CALENDAR_ROUTE) or its contribute form. */}
-            <div className="rt-card tint-amber rounded-xl overflow-hidden h-96 flex flex-col bg-white">
+            {/* Mini calendar. Dots mark days with events; the buttons below
+                open the full calendar page (CALENDAR_ROUTE) or its form. */}
+            <div className="rt-card tint-amber flex h-[26rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
               {/* month header + prev/next */}
-              <div className="flex items-center justify-between px-3 py-3 bg-[#B4532A] text-white shrink-0">
+              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[#B4532A] to-[#8f3f1f] px-3 py-3.5 text-white">
+                <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full border border-white/15" />
                 <button
                   onClick={() => shiftCalMonth(-1)}
                   aria-label="Previous month"
-                  className="w-7 h-7 rounded-full hover:bg-white/15 flex items-center justify-center transition"
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/20"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <p className="text-sm font-semibold">
-                  {MONTH_NAMES[calMonth]} {calYear}
+                <p className="relative font-display text-base font-semibold">
+                  {MONTH_NAMES[calMonth]} <span className="font-normal text-white/70">{calYear}</span>
                 </p>
                 <button
                   onClick={() => shiftCalMonth(1)}
                   aria-label="Next month"
-                  className="w-7 h-7 rounded-full hover:bg-white/15 flex items-center justify-center transition"
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/20"
                 >
                   <ChevronRight size={16} />
                 </button>
               </div>
 
               {/* weekday initials */}
-              <div className="grid grid-cols-7 px-3 pt-2 text-center text-[11px] font-bold tracking-wider text-slate-500 shrink-0">
+              <div className="grid shrink-0 grid-cols-7 px-3 pt-3 text-center text-[11px] font-bold tracking-wider text-slate-400">
                 {CAL_WEEKDAYS.map((d, i) => (
                   <div key={i}>{d}</div>
                 ))}
               </div>
 
               {/* day grid */}
-              <div className="grid grid-cols-7 gap-y-0.5 px-3 pt-1 shrink-0">
+              <div className="grid shrink-0 grid-cols-7 gap-y-0.5 px-3 pt-1">
                 {calCells.map((day, i) => {
                   if (day === null) return <div key={`blank-${i}`} className="h-8" />;
 
@@ -693,12 +806,12 @@ export default function DashboardOverview() {
                       key={key}
                       onClick={() => navigate(CALENDAR_ROUTE)}
                       title={dayEvents.map((e) => e.title).join(", ")}
-                      className="h-8 flex flex-col items-center justify-start rounded-md hover:bg-amber-50 transition"
+                      className="flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-amber-50"
                     >
                       {inner}
                     </button>
                   ) : (
-                    <div key={key} className="h-8 flex flex-col items-center justify-start">
+                    <div key={key} className="flex h-8 flex-col items-center justify-start">
                       {inner}
                     </div>
                   );
@@ -706,7 +819,7 @@ export default function DashboardOverview() {
               </div>
 
               {/* next event / empty state */}
-              <div className="flex-1 min-h-0 px-3 pt-2 overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-hidden px-3 pt-2">
                 <div className="border-t border-slate-100 pt-2">
                   {calFeatured ? (
                     <button onClick={() => navigate(CALENDAR_ROUTE)} className="w-full text-left">
@@ -714,7 +827,7 @@ export default function DashboardOverview() {
                         {calEvents.length} event{calEvents.length === 1 ? "" : "s"} in{" "}
                         {MONTH_NAMES[calMonth]}
                       </p>
-                      <p className="mt-0.5 text-sm font-semibold text-slate-900 truncate">
+                      <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
                         {calFeatured.title}
                       </p>
                       <p className="t-meta text-slate-500">
@@ -730,16 +843,16 @@ export default function DashboardOverview() {
               </div>
 
               {/* buttons */}
-              <div className="flex gap-2 px-3 pb-3 pt-2 shrink-0">
+              <div className="flex shrink-0 gap-2 px-3 pb-3 pt-2">
                 <button
                   onClick={() => navigate(`${CALENDAR_ROUTE}#contribute`)}
-                  className="flex-1 flex items-center justify-center gap-1 rounded-full border border-[#B4532A] text-[#B4532A] hover:bg-amber-50 text-xs font-semibold py-1.5 transition"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-full border border-[#B4532A] py-2 text-xs font-semibold text-[#B4532A] transition hover:bg-amber-50"
                 >
                   <PlusCircle size={13} /> Contribute
                 </button>
                 <button
                   onClick={() => navigate(CALENDAR_ROUTE)}
-                  className="flex-1 flex items-center justify-center gap-1 rounded-full bg-[#B4532A] hover:bg-[#9c4522] text-white text-xs font-semibold py-1.5 transition"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[#B4532A] py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
                 >
                   <CalendarDays size={13} /> View Calendar
                 </button>
@@ -749,18 +862,23 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Panel 3 — Stories & Videos ================= */}
-      <section id="stories" className="relative overflow-hidden bg-sky-50 px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
+      {/* ================= Stories & Videos ================= */}
+      <section
+        id="stories"
+        className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-[#eaf4f7] via-[#f1f8fa] to-white px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
+      >
+        <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
 
-        <div className="relative max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 lg:grid-cols-2">
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
-            <Reveal>
-              <h2 className="t-h2 mb-6 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700"><BookOpen size={22} aria-hidden="true" /></span>
-              Stories from Ratnagiri
-            </h2>
-            </Reveal>
+            <SectionHead
+              compact
+              eyebrow="Read"
+              title="Stories from Ratnagiri"
+              icon={BookOpen}
+              iconClass="bg-teal-100 text-teal-700"
+            />
 
             <div
               className="w-full"
@@ -768,60 +886,60 @@ export default function DashboardOverview() {
               onMouseLeave={() => setStoryAutoPaused(false)}
             >
               {storiesLoading && (
-                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-slate-400 animate-pulse">
+                <div className="flex animate-pulse items-center justify-center rounded-2xl bg-white p-12 text-sm text-slate-400 shadow-sm">
                   Loading stories...
                 </div>
               )}
 
               {!storiesLoading && storiesError && (
-                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-red-500 text-center">
+                <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-center text-sm text-red-500 shadow-sm">
                   Couldn't load stories: {storiesError}
                 </div>
               )}
 
               {!storiesLoading && !storiesError && stories.length === 0 && (
-                <div className="bg-white rounded-xl shadow-sm flex items-center justify-center p-12 text-sm text-slate-400 text-center">
+                <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-center text-sm text-slate-400 shadow-sm">
                   No stories published yet.
                 </div>
               )}
 
               {!storiesLoading && !storiesError && stories.length > 0 && (
                 <>
-                  <div className="overflow-hidden">
+                  <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
                     <div
                       className="flex transition-transform duration-500 ease-out"
                       style={{ transform: `translateX(-${storyPage * 100}%)` }}
                     >
                       {storyPages.map((page, pageIdx) => (
-                        <div key={pageIdx} className="flex gap-4 w-full shrink-0">
+                        <div key={pageIdx} className="flex w-full shrink-0 gap-5 pr-0.5">
                           {page.map((story) => (
                             <button
                               key={story.slug}
                               onClick={() => navigate(`/stories/${story.slug}`)}
-                              className="rt-card tint-teal group text-left flex-1 min-w-0 bg-white rounded-xl overflow-hidden"
+                              className="rt-card tint-teal group min-w-0 flex-1 overflow-hidden rounded-2xl bg-white text-left ring-1 ring-slate-200/60"
                             >
-                              <div className="relative h-40 bg-slate-100">
+                              <div className="relative h-44 overflow-hidden bg-slate-100">
                                 {story.cover_image && (
                                   <div
-                                    className="absolute inset-0 bg-cover bg-center"
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                                     style={{ backgroundImage: `url(${story.cover_image})` }}
                                   />
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                                 {story.category?.name && (
-                                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-white/90 text-teal-700 text-[11px] font-bold rounded uppercase tracking-wide">
+                                  <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-teal-700 shadow-sm">
                                     {story.category.name}
                                   </span>
                                 )}
                               </div>
 
-                              <div className="p-4">
-                                <p className="t-h3 text-slate-900 mb-1 line-clamp-2">
+                              <div className="p-5">
+                                <p className="t-h3 mb-1 line-clamp-2 text-slate-900">
                                   {story.title}
                                 </p>
 
                                 {(story.author_name || story.published_at) && (
-                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 t-meta text-slate-500 mb-2">
+                                  <div className="t-meta mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
                                     {story.author_name && (
                                       <span className="flex items-center gap-1">
                                         <User size={10} /> {story.author_name}
@@ -835,7 +953,7 @@ export default function DashboardOverview() {
                                   </div>
                                 )}
 
-                                <p className="t-small text-slate-600 line-clamp-2 mb-3">
+                                <p className="t-small mb-3 line-clamp-2 text-slate-600">
                                   {story.excerpt || "Read the full story to find out more."}
                                 </p>
 
@@ -858,11 +976,11 @@ export default function DashboardOverview() {
                   </div>
 
                   {storyPages.length > 1 && (
-                    <div className="flex items-center justify-center gap-3 mt-4">
+                    <div className="flex items-center justify-center gap-3">
                       <button
                         onClick={goToPrevStoryPage}
                         aria-label="Previous stories"
-                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)] hover:scale-105 text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-teal-700 hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)]"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -873,7 +991,7 @@ export default function DashboardOverview() {
                             onClick={() => setStoryPage(i)}
                             aria-label={`Go to stories page ${i + 1}`}
                             className={`h-1.5 rounded-full transition-all ${
-                              i === storyPage ? "w-5 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                              i === storyPage ? "w-6 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
                             }`}
                           />
                         ))}
@@ -881,7 +999,7 @@ export default function DashboardOverview() {
                       <button
                         onClick={goToNextStoryPage}
                         aria-label="Next stories"
-                        className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)] hover:scale-105 text-slate-500 hover:text-teal-700 flex items-center justify-center transition"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-teal-700 hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)]"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -894,34 +1012,35 @@ export default function DashboardOverview() {
 
           {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
           <div>
-            <Reveal>
-              <h2 className="t-h2 mb-6 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600"><PlayCircle size={22} aria-hidden="true" /></span>
-              Videos
-            </h2>
-            </Reveal>
+            <SectionHead
+              compact
+              eyebrow="Watch"
+              title="Videos"
+              icon={PlayCircle}
+              iconClass="bg-rose-100 text-rose-600"
+            />
 
             <div
               className="w-full"
               onMouseEnter={() => setVideoAutoPaused(true)}
               onMouseLeave={() => setVideoAutoPaused(false)}
             >
-              <div className="overflow-hidden">
+              <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
                 <div
                   className="flex transition-transform duration-500 ease-out"
                   style={{ transform: `translateX(-${videoPage * 100}%)` }}
                 >
                   {videoPages.map((page, pageIdx) => (
-                    <div key={pageIdx} className="flex gap-4 w-full shrink-0">
+                    <div key={pageIdx} className="flex w-full shrink-0 gap-5 pr-0.5">
                       {page.map((video) => (
                         <div
                           key={video.id}
-                          className="rt-card tint-rose flex-1 min-w-0 bg-white rounded-xl overflow-hidden"
+                          className="rt-card tint-rose min-w-0 flex-1 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
                         >
                           <div className="relative aspect-video bg-black">
                             {playingVideoId === video.id ? (
                               <iframe
-                                className="absolute inset-0 w-full h-full"
+                                className="absolute inset-0 h-full w-full"
                                 src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0`}
                                 title={video.title}
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -931,25 +1050,25 @@ export default function DashboardOverview() {
                               <button
                                 onClick={() => setPlayingVideoId(video.id)}
                                 aria-label={`Play ${video.title}`}
-                                className="group/video absolute inset-0 w-full h-full"
+                                className="group/video absolute inset-0 h-full w-full"
                               >
                                 <div
-                                  className="absolute inset-0 bg-cover bg-center"
+                                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover/video:scale-105"
                                   style={{
                                     backgroundImage: `url(https://img.youtube.com/vi/${video.id}/hqdefault.jpg)`,
                                   }}
                                 />
-                                <div className="absolute inset-0 bg-black/25 group-hover/video:bg-black/10 transition" />
+                                <div className="absolute inset-0 bg-black/30 transition group-hover/video:bg-black/10" />
                                 <span className="absolute inset-0 flex items-center justify-center">
-                                  <span className="w-10 h-10 rounded-full bg-white/90 text-rose-600 flex items-center justify-center shadow-md group-hover/video:scale-110 transition-transform">
-                                    <PlayCircle size={22} />
+                                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-lg ring-8 ring-white/25 transition-transform group-hover/video:scale-110">
+                                    <PlayCircle size={24} />
                                   </span>
                                 </span>
                               </button>
                             )}
                           </div>
-                          <div className="p-3">
-                            <p className="t-small font-semibold text-slate-900 line-clamp-2">
+                          <div className="p-4">
+                            <p className="t-small line-clamp-2 font-semibold text-slate-900">
                               {video.title}
                             </p>
                           </div>
@@ -967,11 +1086,11 @@ export default function DashboardOverview() {
               </div>
 
               {videoPages.length > 1 && (
-                <div className="flex items-center justify-center gap-3 mt-4">
+                <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={goToPrevVideoPage}
                     aria-label="Previous videos"
-                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)] hover:scale-105 text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-rose-600 hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)]"
                   >
                     <ChevronLeft size={16} />
                   </button>
@@ -985,7 +1104,7 @@ export default function DashboardOverview() {
                         }}
                         aria-label={`Go to videos page ${i + 1}`}
                         className={`h-1.5 rounded-full transition-all ${
-                          i === videoPage ? "w-5 bg-rose-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                          i === videoPage ? "w-6 bg-rose-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
                         }`}
                       />
                     ))}
@@ -993,7 +1112,7 @@ export default function DashboardOverview() {
                   <button
                     onClick={goToNextVideoPage}
                     aria-label="Next videos"
-                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)] hover:scale-105 text-slate-500 hover:text-rose-600 flex items-center justify-center transition"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-rose-600 hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)]"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -1004,7 +1123,7 @@ export default function DashboardOverview() {
                 href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rt-cta mt-4 t-small inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
+                className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
               >
                 Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
               </a>
@@ -1013,44 +1132,50 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Panel 4 — About (Society / Economy / Governance) ================= */}
-      <section id="about" className="relative overflow-hidden px-5 sm:px-10 lg:px-16 py-12 sm:py-16 scroll-mt-24">
-        <div className="relative max-w-[1680px] mx-auto">
-          <Reveal>
-            <h2 className="t-h2 mb-2 flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-[#0b3149]"><Landmark size={22} aria-hidden="true" /></span>
-              Society, Economy &amp; Governance
-            </h2>
-            <p className="t-lead mb-8">
-              A quick look at what keeps Ratnagiri running, beyond the tourist
-              trail.
-            </p>
-          </Reveal>
+      {/* ================= About (Society / Economy / Governance) ================= */}
+      <section id="about" className="relative scroll-mt-24 overflow-hidden bg-white px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-slate-200/50 blur-3xl" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, route, description }) => (
+        <div className="relative mx-auto max-w-[1680px]">
+          <SectionHead
+            eyebrow="Know the district"
+            title="Society, Economy & Governance"
+            icon={Landmark}
+            iconClass="bg-slate-200 text-[#0b3149]"
+            lead="A quick look at what keeps Ratnagiri running, beyond the tourist trail."
+          />
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {aboutPillars.map(({ title, icon: Icon, color, bg, tint, image, route, description }, i) => (
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className={`rt-card ${tint} group text-left rounded-xl overflow-hidden relative h-96`}
+                className={`rt-card ${tint} group relative h-[26rem] overflow-hidden rounded-3xl text-left`}
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                {/* black shade on the inner border — soft vignette framing the card */}
-                <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_50px_18px_rgba(0,0,0,0.5)]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/90 via-[#04121c]/25 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
 
                 <span
-                  className={`absolute top-4 left-4 w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
+                  className={`absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-full ${bg} ${color} shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110`}
                 >
-                  <Icon size={18} />
+                  <Icon size={20} />
+                </span>
+                <span className="absolute right-5 top-5 font-display text-4xl font-bold text-white/25">
+                  {String(i + 1).padStart(2, "0")}
                 </span>
 
-                <div className="absolute inset-x-0 bottom-0 p-5">
+                <div className="absolute inset-x-0 bottom-0 p-6">
                   <p className="t-h3 text-white">{title}</p>
-                  <p className="t-small text-white/85 mt-1">{description}</p>
+                  <p className="t-small mt-1 text-white/80">{description}</p>
+                  <div className="rt-reveal-row">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#FBBF24]">
+                      Learn more <ArrowRight size={14} />
+                    </span>
+                  </div>
                 </div>
               </button>
             ))}
@@ -1058,18 +1183,53 @@ export default function DashboardOverview() {
         </div>
       </section>
 
+      {/* ================= Closing call-to-action ================= */}
+      <section className="relative bg-white px-5 pb-16 sm:px-10 sm:pb-24 lg:px-16">
+        <div className="relative mx-auto max-w-[1680px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#0b3149] via-[#0d4150] to-[#0f766e] px-6 py-14 text-center shadow-[0_40px_80px_-30px_rgba(11,49,73,0.6)] sm:px-12 sm:py-20">
+          <span aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full border border-white/10" />
+          <span aria-hidden="true" className="pointer-events-none absolute -right-4 -top-8 h-48 w-48 rounded-full border border-white/10" />
+          <span aria-hidden="true" className="pointer-events-none absolute -bottom-28 -left-16 h-80 w-80 rounded-full bg-[#FBBF24]/15 blur-3xl" />
+
+          <div className="relative mx-auto max-w-2xl">
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#FBBF24]">
+              Ready when you are
+            </p>
+            <h2 className="font-display text-3xl font-bold leading-tight text-white sm:text-5xl">
+              Plan your Ratnagiri journey
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-white/80 sm:text-lg">
+              Pick your places, find local stays and meet the people who make the
+              Konkan special.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={() => navigate("/plan-your-trip")}
+                className="rt-cta inline-flex items-center gap-2 rounded-full bg-[#FBBF24] px-7 py-3.5 text-sm font-bold text-[#0b3149] shadow-[0_18px_40px_-12px_rgba(251,191,36,0.6)] transition hover:-translate-y-0.5 hover:bg-[#fcc934]"
+              >
+                Plan your trip <ArrowRight size={16} className="rt-cta-arrow" />
+              </button>
+              <button
+                onClick={() => navigate("/registration")}
+                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-7 py-3.5 text-sm font-semibold text-white ring-1 ring-white/40 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
+              >
+                <PlusCircle size={16} /> Contribute a place or service
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ================= Footer ================= */}
-      <footer className="relative overflow-hidden bg-[#0b3149] mt-0">
+      <footer className="relative mt-0 overflow-hidden bg-[#0b3149]">
         {/* top accent bar — same gradient family as the header's CTA buttons */}
         <div className="h-1 w-full bg-gradient-to-r from-[#B4532A] via-[#FBBF24] to-[#0f766e]" />
 
-
         {/* ---- Stats strip: visitor counter + quick site stats + newsletter ---- */}
         <div className="relative border-b border-white/10">
-          <div className="mx-auto max-w-[1680px] px-6 sm:px-10 py-6 flex flex-wrap items-center gap-x-10 gap-y-4">
+          <div className="mx-auto flex max-w-[1680px] flex-wrap items-center gap-x-10 gap-y-4 px-6 py-6 sm:px-10 lg:px-16">
             <VisitorCounter />
 
-            <div className="h-8 w-px bg-white/10 hidden sm:block" />
+            <div className="hidden h-8 w-px bg-white/10 sm:block" />
 
             <div className="leading-tight">
               <p className="font-display text-lg font-bold text-white">
@@ -1080,7 +1240,7 @@ export default function DashboardOverview() {
               </p>
             </div>
 
-            <div className="h-8 w-px bg-white/10 hidden sm:block" />
+            <div className="hidden h-8 w-px bg-white/10 sm:block" />
 
             <div className="leading-tight">
               <p className="font-display text-lg font-bold text-white">9</p>
@@ -1098,22 +1258,22 @@ export default function DashboardOverview() {
                 setSubscribed(true);
                 setSubscribeEmail("");
               }}
-              className="ml-auto flex items-center gap-2 w-full sm:w-auto"
+              className="ml-auto flex w-full items-center gap-2 sm:w-auto"
             >
-              <div className="flex-1 sm:flex-none flex items-center gap-2 bg-white/10 rounded-full pl-4 pr-1.5 py-1.5 ring-1 ring-white/10 focus-within:ring-teal-400/50 transition">
-                <Mail size={14} className="text-slate-400 shrink-0" />
+              <div className="flex flex-1 items-center gap-2 rounded-full bg-white/10 py-1.5 pl-4 pr-1.5 ring-1 ring-white/10 transition focus-within:ring-teal-400/50 sm:flex-none">
+                <Mail size={14} className="shrink-0 text-slate-400" />
                 <input
                   type="email"
                   required
                   value={subscribeEmail}
                   onChange={(e) => setSubscribeEmail(e.target.value)}
                   placeholder="Get travel updates"
-                  className="min-w-0 w-40 sm:w-48 text-xs text-white placeholder:text-slate-400 bg-transparent outline-none font-body"
+                  className="w-40 min-w-0 bg-transparent font-body text-xs text-white outline-none placeholder:text-slate-400 sm:w-48"
                 />
                 <button
                   type="submit"
                   aria-label="Subscribe"
-                  className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 hover:bg-teal-500 text-white transition"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white transition hover:bg-teal-500"
                 >
                   <Send size={12} />
                 </button>
@@ -1121,7 +1281,7 @@ export default function DashboardOverview() {
             </form>
           </div>
           {subscribed && (
-            <p className="relative px-6 sm:px-10 pb-4 text-xs text-teal-300">
+            <p className="relative mx-auto max-w-[1680px] px-6 pb-4 text-xs text-teal-300 sm:px-10 lg:px-16">
               Thanks — you're on the list for Ratnagiri travel updates.
             </p>
           )}
@@ -1129,96 +1289,94 @@ export default function DashboardOverview() {
 
         {/* ---- Emergency helpline quick-dial ---- */}
         <div className="relative border-b border-white/10">
-          <div className="mx-auto max-w-[1680px] px-6 sm:px-10 py-4 flex flex-wrap items-center gap-x-8 gap-y-2">
-            <p className="t-eyebrow text-amber-400">
-              Emergency Helpline
-            </p>
-            <a href="tel:100" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition">
+          <div className="mx-auto flex max-w-[1680px] flex-wrap items-center gap-x-8 gap-y-2 px-6 py-4 sm:px-10 lg:px-16">
+            <p className="t-eyebrow text-amber-400">Emergency Helpline</p>
+            <a href="tel:100" className="flex items-center gap-1.5 text-sm text-slate-300 transition hover:text-white">
               <Phone size={12} /> Police — 100
             </a>
-            <a href="tel:108" className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white transition">
+            <a href="tel:108" className="flex items-center gap-1.5 text-sm text-slate-300 transition hover:text-white">
               <Phone size={12} /> Ambulance — 108
             </a>
             <button
               onClick={() => navigate("/police-stations")}
-              className="text-sm text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+              className="text-sm text-teal-400 underline decoration-dotted underline-offset-2 transition hover:text-teal-300"
             >
               Nearby police stations
             </button>
             <button
               onClick={() => navigate("/medical-facilities")}
-              className="text-sm text-teal-400 hover:text-teal-300 transition underline decoration-dotted underline-offset-2"
+              className="text-sm text-teal-400 underline decoration-dotted underline-offset-2 transition hover:text-teal-300"
             >
               Nearby hospitals
             </button>
           </div>
         </div>
 
-        <div className="relative px-6 sm:px-10 py-12 sm:py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-10 lg:gap-8">
-            <div>
-              <h2 className="font-display italic text-2xl text-white mb-3">
-                Ratnagiri Tourism
-              </h2>
-              <p className="t-small text-slate-300 mb-6 max-w-xs">
-                Travel sustainably, enjoy fully — guiding visitors through the
-                Konkan coast's beaches, forts, food and culture.
-              </p>
-              <div className="flex gap-3">
-                {socialLinks.map(({ icon: Icon, label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={label}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-slate-300 hover:bg-teal-600 hover:text-white hover:-translate-y-1 hover:shadow-[0_10px_22px_-6px_rgba(45,212,191,0.55)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  >
-                    <Icon size={16} />
-                  </a>
-                ))}
+        <div className="relative px-6 py-12 sm:px-10 sm:py-14 lg:px-16">
+          <div className="mx-auto max-w-[1680px]">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:gap-8">
+              <div>
+                <h2 className="mb-3 font-display text-2xl italic text-white">
+                  Ratnagiri Tourism
+                </h2>
+                <p className="t-small mb-6 max-w-xs text-slate-300">
+                  Travel sustainably, enjoy fully — guiding visitors through the
+                  Konkan coast's beaches, forts, food and culture.
+                </p>
+                <div className="flex gap-3">
+                  {socialLinks.map(({ icon: Icon, label, href }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-slate-300 transition-all duration-300 hover:-translate-y-1 hover:bg-teal-600 hover:text-white hover:shadow-[0_10px_22px_-6px_rgba(45,212,191,0.55)] focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    >
+                      <Icon size={16} />
+                    </a>
+                  ))}
+                </div>
               </div>
+
+              {footerColumns.map((col) => (
+                <div key={col.heading}>
+                  <p className="t-eyebrow mb-4 text-teal-400">{col.heading}</p>
+                  <ul className="space-y-3">
+                    {col.links.map((link) => (
+                      <li key={link.label}>
+                        <button
+                          onClick={() => navigate(link.route)}
+                          className="group flex cursor-pointer items-center gap-2 text-left text-sm text-slate-300 transition-colors duration-200 hover:text-white focus:underline focus:outline-none"
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600 transition-all duration-200 group-hover:scale-125 group-hover:bg-[#B4532A]" />
+                          {link.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
 
-            {footerColumns.map((col) => (
-              <div key={col.heading}>
-                <p className="t-eyebrow text-teal-400 mb-4">
-                  {col.heading}
-                </p>
-                <ul className="space-y-3">
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      <button
-                        onClick={() => navigate(link.route)}
-                        className="group flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors duration-200 text-left cursor-pointer focus:outline-none focus:underline"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-[#B4532A] group-hover:scale-125 transition-all duration-200 shrink-0" />
-                        {link.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
+              <p className="t-meta text-slate-400">
+                © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
+              </p>
+              <div className="flex gap-5">
+                <button
+                  onClick={() => navigate("/privacy")}
+                  className="t-meta text-slate-400 transition-colors duration-200 hover:text-white"
+                >
+                  Privacy Policy
+                </button>
+                <button
+                  onClick={() => navigate("/terms")}
+                  className="t-meta text-slate-400 transition-colors duration-200 hover:text-white"
+                >
+                  Terms of Use
+                </button>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="t-meta text-slate-400">
-              © {new Date().getFullYear()} Ratnagiri Tourism. All rights reserved.
-            </p>
-            <div className="flex gap-5">
-              <button
-                onClick={() => navigate("/privacy")}
-                className="t-meta text-slate-400 hover:text-white transition-colors duration-200"
-              >
-                Privacy Policy
-              </button>
-              <button
-                onClick={() => navigate("/terms")}
-                className="t-meta text-slate-400 hover:text-white transition-colors duration-200"
-              >
-                Terms of Use
-              </button>
             </div>
           </div>
         </div>
