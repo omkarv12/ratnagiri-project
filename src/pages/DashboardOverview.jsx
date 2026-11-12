@@ -424,8 +424,6 @@ export default function DashboardOverview() {
     },
   ];
 
-  
-
   // Footer links — every route here matches an entry in config/navMenus.js
   // (or the Experiences cards above).
   const footerColumns = [
@@ -604,7 +602,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* bottom row: progress segments · counter · arrows */}
-        <div className="absolute inset-x-0 bottom-0 pb-20 sm:pb-24">
+        <div className="absolute inset-x-0 bottom-0 pb-8 sm:pb-10">
           <div className="mx-auto flex w-full max-w-[1680px] items-center gap-5 px-6 sm:px-10 lg:px-16">
             <div className="flex flex-1 items-center gap-2 sm:max-w-xl">
               {heroImages.map((_, index) => (
@@ -650,38 +648,13 @@ export default function DashboardOverview() {
         </div>
 
         {/* scroll cue */}
-        <div className="pointer-events-none absolute bottom-24 right-6 hidden flex-col items-center gap-2 lg:flex xl:right-10">
+        <div className="pointer-events-none absolute bottom-20 right-6 hidden flex-col items-center gap-2 lg:flex xl:right-10">
           <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70 [writing-mode:vertical-rl]">
             Scroll
           </span>
           <span className="relative h-12 w-px overflow-hidden bg-white/25">
             <span className="rt-scroll-line absolute inset-0 bg-white" />
           </span>
-        </div>
-      </section>
-
-      {/* ================= Quick-start tiles (overlap the hero) ================= */}
-      <section className="relative z-10 -mt-14 px-5 sm:px-10 lg:px-16">
-        <div className="mx-auto grid max-w-[1680px] grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {quickLinks.map(({ label, hint, icon: Icon, route }) => (
-            <button
-              key={label}
-              onClick={() => navigate(route)}
-              className="rt-card tint-amber group flex items-center gap-3 rounded-2xl bg-white p-4 text-left ring-1 ring-slate-200/70 sm:gap-4 sm:p-5"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0b3149] to-[#0f766e] text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 sm:h-12 sm:w-12">
-                <Icon size={20} />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-bold text-[#0b3149] sm:text-base">{label}</span>
-                <span className="hidden truncate text-xs text-slate-500 sm:block">{hint}</span>
-              </span>
-              <ArrowRight
-                size={16}
-                className="ml-auto hidden shrink-0 text-[#B4532A] transition-transform duration-300 group-hover:translate-x-1 sm:block"
-              />
-            </button>
-          ))}
         </div>
       </section>
 
@@ -1133,7 +1106,7 @@ export default function DashboardOverview() {
         <div className="relative mx-auto max-w-[1680px]">
           <SectionHead
             eyebrow="Know the district"
-            title="Society, Economy and Governance"
+            title="Society, Economy & Governance"
             icon={Landmark}
             iconClass="bg-slate-200 text-[#0b3149]"
             lead="A quick look at what keeps Ratnagiri running, beyond the tourist trail."
