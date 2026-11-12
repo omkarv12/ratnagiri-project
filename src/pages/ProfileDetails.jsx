@@ -102,14 +102,20 @@ function useLocationPhotos(loc, type) {
 // Small components
 // ---------------------------------------------------------------------------
 
-// A "label ........ link" row that only renders for safe http(s) links.
+// A "label | link" row that only renders for safe http(s) links.
+// Uses the same grid as InfoRow so the label and link stay close together.
 function LinkRow({ label, href, text }) {
   const url = safeUrl(href);
   if (!url) return null;
   return (
-    <div className="flex justify-between gap-6">
-      <span className="font-semibold text-slate-600">{label}</span>
-      <a href={url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+    <div className="grid grid-cols-1 gap-1 border-b border-slate-100 py-3 last:border-b-0 sm:grid-cols-[220px_1fr] sm:gap-6">
+      <span className="text-sm font-medium text-slate-500">{label}</span>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="text-sm font-semibold text-blue-600 hover:underline"
+      >
         {text}
       </a>
     </div>
@@ -307,6 +313,10 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
   const nameSize = compact ? "text-2xl" : "text-5xl";
   const showActions = !!(phoneFirst || directionsUrl);
 
+  // On the full page, hero text and content share one centered column so the
+  // labels, values and buttons sit close together instead of stretching edge to edge.
+  const pageColumn = compact ? "" : "mx-auto w-full max-w-4xl";
+
   return (
     <div className={compact ? "" : "bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in duration-500"}>
 
@@ -354,7 +364,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
           </div>
         )}
 
-        <div className={`relative z-10 flex flex-col ${compact ? "justify-end" : "justify-between"} h-full ${compact ? "p-4" : "p-8"}`}>
+        <div className={`relative z-10 flex flex-col ${compact ? "justify-end" : "justify-between"} h-full ${compact ? "p-4" : "p-8"} ${pageColumn}`}>
           {!compact && onBack && (
             <button
               onClick={onBack}
@@ -402,7 +412,7 @@ export default function ProfileDetails({ loc, type, onBack, compact = false }) {
       </div>
 
       {/* CONTENT */}
-      <div className={compact ? "py-6" : "p-8"}>
+      <div className={compact ? "py-6" : `p-8 ${pageColumn}`}>
 
         {/* Quick actions */}
         {showActions && (
