@@ -1133,7 +1133,7 @@ export default function DashboardOverview() {
         <div className="relative mx-auto max-w-[1680px]">
           <SectionHead
             eyebrow="Know the district"
-            title="Society, Economy & Governance"
+            title="Society, Economy and Governance"
             icon={Landmark}
             iconClass="bg-slate-200 text-[#0b3149]"
             lead="A quick look at what keeps Ratnagiri running, beyond the tourist trail."
