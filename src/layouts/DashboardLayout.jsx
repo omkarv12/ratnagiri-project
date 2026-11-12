@@ -48,12 +48,12 @@ const THEME_CSS = `
 }
 .rt-header-in { animation: rt-drop .5s ease-out both; }
 
-/* "Live" pulse on the map button — plays 3 times, then rests */
+/* "Live" pulse dot on the map button (keeps going, slowly) */
 @keyframes rt-ping {
   0%   { transform: scale(1); opacity: .8; }
   80%, 100% { transform: scale(2.6); opacity: 0; }
 }
-.rt-ping { animation: rt-ping 1.6s cubic-bezier(0, 0, .2, 1) 3; }
+.rt-ping { animation: rt-ping 2s cubic-bezier(0, 0, .2, 1) infinite; }
 
 /* Nav links: soft pill, gentle grow, mango underline that draws in */
 .rt-nav-link {
@@ -96,20 +96,94 @@ const THEME_CSS = `
 }
 .rt-dd-item:hover .rt-dot { background: var(--rt-laterite); transform: scale(1.5); }
 
-/* CTA buttons: light sweep + icon motion */
+/* ---------- Header action buttons: identical size, each with its own look ---------- */
+.rt-btn {
+  position: relative;
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  white-space: nowrap;
+  border-radius: 9999px;
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+}
+@media (min-width: 1536px) { .rt-btn { width: 11rem; } }
+.rt-btn:hover  { transform: translateY(-3px) scale(1.04); }
+.rt-btn:active { transform: translateY(0) scale(.97); }
+
+/* Interactive Map: clean white pill, lifts off the maroon bar */
+.rt-btn-map {
+  background: linear-gradient(180deg, #ffffff, #eef2f6);
+  color: #0b3149;
+  box-shadow: 0 8px 18px -6px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.55);
+}
+.rt-btn-map:hover {
+  box-shadow: 0 16px 28px -8px rgba(0,0,0,.6), 0 0 0 3px #fff, 0 0 22px rgba(255,255,255,.45);
+}
+
+/* Contribute: the hero button. Mango gradient, white edge, glowing ring that keeps pulsing */
+@keyframes rt-glow {
+  0%   { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 0 rgba(251,191,36,.7); }
+  70%  { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 14px rgba(251,191,36,0); }
+  100% { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 0 rgba(251,191,36,0); }
+}
+.rt-btn-give {
+  background: linear-gradient(135deg, #FFE066 0%, #FBBF24 45%, #F59E0B 100%);
+  color: #5a1420;
+  border: 2px solid #fff;
+  animation: rt-glow 2.2s ease-out infinite;
+}
+.rt-btn-give:hover {
+  background: linear-gradient(135deg, #FFEA8A 0%, #FCC93A 45%, #F7A91B 100%);
+  animation-play-state: paused;
+  box-shadow: 0 18px 30px -8px rgba(245,158,11,.9), 0 0 24px rgba(251,191,36,.7);
+}
+@keyframes rt-beat {
+  0%, 100% { transform: scale(1); }
+  15%      { transform: scale(1.22); }
+  30%      { transform: scale(1); }
+  45%      { transform: scale(1.14); }
+  60%      { transform: scale(1); }
+}
+.rt-heart { animation: rt-beat 2.2s ease-in-out infinite; }
+
+/* Admin: deep navy with a soft inner edge */
+.rt-btn-admin {
+  background: linear-gradient(135deg, #17598e 0%, #0b3149 100%);
+  color: #fff;
+  box-shadow: 0 8px 18px -6px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.4), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.rt-btn-admin:hover {
+  background: linear-gradient(135deg, #1f6dac 0%, #0f3d5e 100%);
+  box-shadow: 0 16px 28px -8px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.55), 0 0 22px rgba(94,234,212,.35);
+}
+
+/* Light sweep that glides across each button every few seconds */
+@keyframes rt-sweep {
+  0%, 55% { left: -60%; }
+  100%    { left: 140%; }
+}
 .rt-shine::before {
   content: "";
   position: absolute; top: 0; bottom: 0; left: -60%;
   width: 40%;
-  background: linear-gradient(105deg, transparent, rgba(255,255,255,.38), transparent);
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.55), transparent);
   transform: skewX(-20deg);
-  transition: left .6s ease;
+  animation: rt-sweep 4.5s ease-in-out infinite;
 }
-.rt-cta:hover .rt-shine::before { left: 130%; }
-.rt-mapplus, .rt-heart, .rt-shield { transition: transform .4s ease; }
-.rt-cta:hover .rt-mapplus { transform: scale(1.15) rotate(-6deg); }
-.rt-cta:hover .rt-heart { transform: scale(1.15) rotate(6deg); }
-.rt-cta:hover .rt-shield { transform: scale(1.12); }
+.rt-btn-give  .rt-shine::before { animation-delay: 0s; }
+.rt-btn-map   .rt-shine::before { animation-delay: .9s; }
+.rt-btn-admin .rt-shine::before { animation-delay: 1.8s; }
+
+.rt-mapplus, .rt-shield { transition: transform .4s ease; }
+.rt-btn:hover .rt-mapplus { transform: scale(1.18) rotate(-8deg); }
+.rt-btn:hover .rt-shield  { transform: scale(1.15); }
 
 @media (prefers-reduced-motion: reduce) {
   .rt-root *, .rt-root *::before, .rt-root *::after {
@@ -399,17 +473,17 @@ export default function DashboardLayout() {
               <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
             </div>
 
-            {/* Right: CTAs + Admin */}
-            <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
-              {/* Interactive Map: now uses the map-pin-plus icon */}
+            {/* Right: CTAs + Admin (all three are the same size) */}
+            <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
+              {/* Interactive Map */}
               <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
                 title="Interactive Map"
-                className="rt-cta relative flex h-9 w-9 2xl:w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-0 text-sm font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-btn rt-btn-map"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={16} className="rt-mapplus relative text-[#B4532A]" />
+                <MapPlus size={18} className="rt-mapplus relative text-[#B4532A]" />
                 <span className="relative hidden 2xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
@@ -417,26 +491,27 @@ export default function DashboardLayout() {
                 </span>
               </button>
 
-              {/* Contribute: now uses the hands-and-heart contribution icon */}
+              {/* Contribute: the one that should catch the eye first */}
               <button
                 onClick={() => navigate("/registration")}
                 aria-label="Contribute: location and services"
                 title="Contribute: location and services"
-                className="rt-cta rt-highlight relative flex h-9 w-9 2xl:w-52 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border-2 border-white bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] px-0 text-sm font-bold text-[#0b3149] ring-2 ring-amber-300/70 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-btn rt-btn-give"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <HeartHandshake size={16} className="rt-heart relative text-[#7b1e2b]" />
+                <HeartHandshake size={18} className="rt-heart relative text-[#7b1e2b]" />
                 <span className="relative hidden 2xl:inline">Contribute</span>
               </button>
 
+              {/* Admin */}
               <button
                 onClick={() => navigate(user ? "/admin" : "/login")}
                 aria-label="Admin"
                 title="Admin"
-                className="rt-cta relative flex h-9 w-9 2xl:w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#0b3149] px-0 text-sm font-semibold text-white ring-1 ring-white/40 hover:-translate-y-0.5 hover:bg-[#134b78] hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+                className="rt-btn rt-btn-admin"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <ShieldCheck size={16} className="rt-shield relative" />
+                <ShieldCheck size={18} className="rt-shield relative" />
                 <span className="relative hidden 2xl:inline">Admin login</span>
               </button>
             </div>
