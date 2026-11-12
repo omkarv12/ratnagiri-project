@@ -16,6 +16,7 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
+import ChatBot from "../components/ChatBot";
 import Breadcrumb from "../components/Breadcrumb";
 
 /* ------------------------------------------------------------------ */
@@ -1026,6 +1027,7 @@ export default function DashboardLayout() {
         </div>
       </main>
       <BackToTop />
+      <ChatBot />
       <CommandPalette
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
