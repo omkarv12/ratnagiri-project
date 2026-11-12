@@ -8,7 +8,7 @@ import {
   X,
   ShieldCheck,
   MapPlus,
-  Compass,
+  HeartHandshake,
 } from "lucide-react";
 import BackToTop from "../components/BackToTop";
 import Breadcrumb from "../components/Breadcrumb";
@@ -106,9 +106,9 @@ const THEME_CSS = `
   transition: left .6s ease;
 }
 .rt-cta:hover .rt-shine::before { left: 130%; }
-.rt-compass, .rt-mapplus, .rt-shield { transition: transform .4s ease; }
-.rt-cta:hover .rt-compass { transform: rotate(45deg); }
+.rt-mapplus, .rt-heart, .rt-shield { transition: transform .4s ease; }
 .rt-cta:hover .rt-mapplus { transform: scale(1.15) rotate(-6deg); }
+.rt-cta:hover .rt-heart { transform: scale(1.15) rotate(6deg); }
 .rt-cta:hover .rt-shield { transform: scale(1.12); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -389,7 +389,7 @@ export default function DashboardLayout() {
                 className="flex min-w-0 items-center"
               >
                 <span className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
-                  Visit Ratnagiri 
+                  Visit Ratnagiri
                 </span>
               </button>
             </div>
@@ -401,6 +401,7 @@ export default function DashboardLayout() {
 
             {/* Right: CTAs + Admin */}
             <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+              {/* Interactive Map: now uses the map-pin-plus icon */}
               <button
                 onClick={() => navigate("/map")}
                 aria-label="Interactive Map"
@@ -408,23 +409,25 @@ export default function DashboardLayout() {
                 className="rt-cta relative flex h-9 w-9 2xl:w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-0 text-sm font-semibold text-[#0b3149] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <Compass size={16} className="rt-compass relative text-[#B4532A]" />
+                <MapPlus size={16} className="rt-mapplus relative text-[#B4532A]" />
                 <span className="relative hidden 2xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
                 </span>
               </button>
+
+              {/* Contribute: now uses the hands-and-heart contribution icon */}
               <button
-  onClick={() => navigate("/registration")}
-  aria-label="Location and services"
-  title="Location and services"
-  className="rt-cta rt-highlight relative flex h-9 w-9 2xl:w-52 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border-2 border-white bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] px-0 text-sm font-bold text-[#0b3149] ring-2 ring-amber-300/70 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
->
-  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-  <MapPlus size={16} className="rt-mapplus relative text-[#7b1e2b]" />
-  <span className="relative hidden 2xl:inline">Location and services</span>
-</button>
+                onClick={() => navigate("/registration")}
+                aria-label="Contribute: location and services"
+                title="Contribute: location and services"
+                className="rt-cta rt-highlight relative flex h-9 w-9 2xl:w-52 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border-2 border-white bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] px-0 text-sm font-bold text-[#0b3149] ring-2 ring-amber-300/70 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30 active:translate-y-0 transition-all duration-200"
+              >
+                <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
+                <HeartHandshake size={16} className="rt-heart relative text-[#7b1e2b]" />
+                <span className="relative hidden 2xl:inline">Contribute</span>
+              </button>
 
               <button
                 onClick={() => navigate(user ? "/admin" : "/login")}
