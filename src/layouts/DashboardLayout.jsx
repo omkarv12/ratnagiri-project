@@ -181,32 +181,24 @@ const THEME_CSS = `
   box-shadow: 0 16px 28px -8px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.55), 0 0 22px rgba(94,234,212,.35);
 }
 
-/* "NEW / MUST TRY" tag on the Interactive Map button */
+/* Small red "NEW" tag on the Interactive Map button (static, no animation) */
 .rt-badge {
   position: absolute;
-  top: -.7rem;
-  right: -.55rem;
+  top: -.5rem;
+  right: -.35rem;
   z-index: 2;
-  padding: .12rem .5rem;
+  padding: .06rem .32rem;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #FFE066, #FBBF24);
-  color: #0b3149;
-  border: 2px solid #fff;
-  font-size: .625rem;
-  line-height: 1.1;
+  background: #ef4444;
+  color: #fff;
+  border: 1.5px solid #fff;
+  font-size: .5625rem;
+  line-height: 1.15;
   font-weight: 800;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
   white-space: nowrap;
-  box-shadow: 0 4px 10px -2px rgba(0,0,0,.5);
-  transform: rotate(6deg);
-  animation: rt-tag 3s ease-in-out infinite;
+  box-shadow: 0 2px 6px -1px rgba(0,0,0,.45);
   pointer-events: none;
-}
-@keyframes rt-tag {
-  0%, 60%, 100% { transform: rotate(6deg) scale(1); }
-  70%           { transform: rotate(-6deg) scale(1.15); }
-  80%           { transform: rotate(6deg) scale(1.1); }
-  90%           { transform: rotate(-3deg) scale(1.05); }
 }
 
 /* Light sweep that glides across each button every few seconds */
@@ -532,8 +524,7 @@ export default function DashboardLayout() {
                 <span className="relative hidden 2xl:inline">Interactive Map</span>
                 {/* Tag that invites people to try the map */}
                 <span className="rt-badge" aria-hidden="true">
-                  <span className="2xl:hidden">NEW</span>
-                  <span className="hidden 2xl:inline">★ MUST TRY</span>
+                  NEW
                 </span>
               </button>
 
