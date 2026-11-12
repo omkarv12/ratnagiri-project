@@ -117,15 +117,32 @@ const THEME_CSS = `
 .rt-btn:hover  { transform: translateY(-3px) scale(1.04); }
 .rt-btn:active { transform: translateY(0) scale(.97); }
 
-/* Interactive Map: clean white pill, lifts off the maroon bar */
+/* Interactive Map: vivid teal gradient, white edge, its own pulsing glow (offset from Contribute) */
+@keyframes rt-glow-teal {
+  0%   { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 0 rgba(45,212,191,.7); }
+  70%  { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 14px rgba(45,212,191,0); }
+  100% { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 0 rgba(45,212,191,0); }
+}
 .rt-btn-map {
-  background: linear-gradient(180deg, #ffffff, #eef2f6);
-  color: #0b3149;
-  box-shadow: 0 8px 18px -6px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.55);
+  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 45%, #0d9488 100%);
+  color: #fff;
+  border: 2px solid #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.25);
+  animation: rt-glow-teal 2.2s ease-out 1.1s infinite;
 }
 .rt-btn-map:hover {
-  box-shadow: 0 16px 28px -8px rgba(0,0,0,.6), 0 0 0 3px #fff, 0 0 22px rgba(255,255,255,.45);
+  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #14b8a6 100%);
+  animation-play-state: paused;
+  box-shadow: 0 18px 30px -8px rgba(13,148,136,.9), 0 0 24px rgba(45,212,191,.7);
 }
+/* map pin gently hops, like it is pointing at a place */
+@keyframes rt-hop {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%           { transform: translateY(-3px); }
+  45%           { transform: translateY(0); }
+  52%           { transform: translateY(-1.5px); }
+}
+.rt-mapplus { animation: rt-hop 2.4s ease-in-out infinite; }
 
 /* Contribute: the hero button. Mango gradient, white edge, glowing ring that keeps pulsing */
 @keyframes rt-glow {
@@ -181,8 +198,8 @@ const THEME_CSS = `
 .rt-btn-map   .rt-shine::before { animation-delay: .9s; }
 .rt-btn-admin .rt-shine::before { animation-delay: 1.8s; }
 
-.rt-mapplus, .rt-shield { transition: transform .4s ease; }
-.rt-btn:hover .rt-mapplus { transform: scale(1.18) rotate(-8deg); }
+.rt-mapplus, .rt-shield { transition: transform .4s ease, scale .3s ease; }
+.rt-btn:hover .rt-mapplus { animation-play-state: paused; scale: 1.2; }
 .rt-btn:hover .rt-shield  { transform: scale(1.15); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -483,7 +500,7 @@ export default function DashboardLayout() {
                 className="rt-btn rt-btn-map"
               >
                 <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                <MapPlus size={18} className="rt-mapplus relative text-[#B4532A]" />
+                <MapPlus size={19} className="rt-mapplus relative text-white drop-shadow" />
                 <span className="relative hidden 2xl:inline">Interactive Map</span>
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                   <span className="rt-ping absolute inline-flex h-full w-full rounded-full bg-amber-400" />
