@@ -96,6 +96,14 @@ const THEME_CSS = `
 }
 .rt-dd-item:hover .rt-dot { background: var(--rt-laterite); transform: scale(1.5); }
 
+/* After a menu item is clicked the dropdown is forced shut, even while the
+   mouse is still hovering it. It re-opens on the next mouse leave / focus. */
+.rt-dd-closed {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* ---------- Header action buttons: identical size, each with its own look ---------- */
 .rt-btn {
   position: relative;
@@ -258,9 +266,9 @@ function Caret() {
 }
 
 // One dropdown panel. Renders flat items, and recurses for any item that
-// itself has "children" (used for About → Geography), opening as a flyout
-// beside the parent item. `flyLeft` makes flyouts open to the left so panels
-// near the right edge of the screen never run off-screen.
+// itself has "children" (used for Plan Your Trip → Geography), opening as a
+// flyout beside the parent item. `flyLeft` makes flyouts open to the left so
+// panels near the right edge of the screen never run off-screen.
 function DropdownPanel({ items, navigate, flyLeft = false }) {
   return (
     <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl shadow-slate-900/15 border border-slate-100 border-t-2 border-t-teal-600 py-2">
@@ -305,9 +313,21 @@ function DropdownPanel({ items, navigate, flyLeft = false }) {
 // A top-level nav item. With children it opens a dropdown on hover or keyboard
 // focus; without children it is a plain link. `align="right"` anchors the panel
 // to the item's right edge (used for items near the right side of the bar).
+//
+// The dropdown is driven by CSS hover/focus, which stays "on" after a click
+// (the button keeps focus and the mouse is still over it). So after any click
+// we force the panel shut (`closed`), blur the focused element, and only let
+// it open again once the mouse leaves or the item is focused again.
 function NavDropdown({ menu, active, navigate, align = "left", noNavigate = false }) {
   const right = align === "right";
   const hasChildren = Array.isArray(menu.children) && menu.children.length > 0;
+  const [closed, setClosed] = useState(false);
+
+  const go = (route) => {
+    setClosed(true);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    navigate(route);
+  };
 
   if (!hasChildren) {
     return (
@@ -322,10 +342,14 @@ function NavDropdown({ menu, active, navigate, align = "left", noNavigate = fals
   }
 
   return (
-    <div className="relative group">
+    <div
+      className="relative group"
+      onMouseLeave={() => setClosed(false)}
+      onFocus={() => setClosed(false)}
+    >
       <button
         onClick={() => {
-          if (!noNavigate && menu.route) navigate(menu.route);
+          if (!noNavigate && menu.route) go(menu.route);
         }}
         data-active={active}
         aria-haspopup="true"
@@ -338,9 +362,9 @@ function NavDropdown({ menu, active, navigate, align = "left", noNavigate = fals
       <div
         className={`absolute top-full z-50 pt-2 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 ${
           right ? "right-0" : "left-0"
-        }`}
+        } ${closed ? "rt-dd-closed" : ""}`}
       >
-        <DropdownPanel items={menu.children} navigate={navigate} flyLeft={right} />
+        <DropdownPanel items={menu.children} navigate={go} flyLeft={right} />
       </div>
     </div>
   );

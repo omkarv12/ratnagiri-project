@@ -44,11 +44,16 @@ export const EXPERIENCES_MENU = {
   ],
 };
 
+// Stories has three sub-pages:
+//  - Reading Stories → /stories (Stories.jsx, the full list of written stories)
+//  - Video Stories   → the Videos block on the dashboard
+//  - Reels           → /stories/reels
 export const STORIES_MENU = {
   label: "Stories",
-  route: "/dashboard#stories",
+  route: "/stories",
   children: [
-    { label: "Videos", route: "/dashboard#stories" },
+    { label: "Reading Stories", route: "/stories" },
+    { label: "Video Stories", route: "/dashboard#stories" },
     { label: "Reels", route: "/stories/reels" },
   ],
 };

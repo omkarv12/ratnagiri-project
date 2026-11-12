@@ -424,13 +424,7 @@ export default function DashboardOverview() {
     },
   ];
 
-  // Quick-start tiles that overlap the bottom of the hero.
-  const quickLinks = [
-    { label: "Plan Your Trip", hint: "Routes, stays & tips", icon: Compass, route: "/plan-your-trip" },
-    { label: "Interactive Map", hint: "Explore every place", icon: MapPin, route: "/map" },
-    { label: "Upcoming Events", hint: "Festivals & happenings", icon: CalendarDays, route: CALENDAR_ROUTE },
-    { label: "Stories", hint: "Voices of the Konkan", icon: BookOpen, route: "/dashboard#stories" },
-  ];
+  
 
   // Footer links — every route here matches an entry in config/navMenus.js
   // (or the Experiences cards above).
