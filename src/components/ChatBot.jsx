@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, X, Send, RotateCcw, MapPin, Compass } from "lucide-react";
+import { X, Send, RotateCcw, MapPin } from "lucide-react";
 import { MENUS } from "../config/navMenus";
 
 /* ------------------------------------------------------------------ */
@@ -173,6 +173,45 @@ function localReply(raw) {
 const uid = () => Math.random().toString(36).slice(2, 10);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* ---------- Cartoon robot mascot (pure SVG, no image files) ---------- */
+const MASCOT_CSS = `
+@keyframes rt-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes rt-ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.75);opacity:0}}
+@keyframes rt-blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes rt-glow{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes rt-wave{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(22deg)}75%{transform:rotate(-12deg)}85%{transform:rotate(18deg)}}
+@keyframes rt-pop{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.rt-anim,.rt-anim *{animation:none!important}}
+`;
+
+function BotMascot({ size = 44, animate = true }) {
+  const a = (name, dur) => (animate ? { animation: `${name} ${dur} ease-in-out infinite` } : undefined);
+  const box = { transformBox: "fill-box", transformOrigin: "center" };
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" className="rt-anim">
+      {/* antenna */}
+      <line x1="32" y1="10" x2="32" y2="16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="32" cy="7" r="3.6" fill="#fbbf24" style={a("rt-glow", "1.6s")} />
+      {/* ears */}
+      <rect x="5" y="29" width="7" height="12" rx="3.5" fill="#99f6e4" />
+      <rect x="52" y="29" width="7" height="12" rx="3.5" fill="#99f6e4" />
+      {/* head */}
+      <rect x="10" y="15" width="44" height="38" rx="15" fill="#ffffff" />
+      {/* face screen */}
+      <rect x="15" y="20" width="34" height="27" rx="11" fill="#0b3149" />
+      {/* eyes (blink) */}
+      <g style={{ ...box, ...a("rt-blink", "4.5s") }}>
+        <ellipse cx="25" cy="32" rx="3.4" ry="4.2" fill="#5eead4" />
+        <ellipse cx="39" cy="32" rx="3.4" ry="4.2" fill="#5eead4" />
+      </g>
+      {/* smile + cheeks */}
+      <path d="M25 40 Q32 46.5 39 40" stroke="#5eead4" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      <circle cx="20" cy="39" r="2.2" fill="#fda4af" opacity=".7" />
+      <circle cx="44" cy="39" r="2.2" fill="#fda4af" opacity=".7" />
+    </svg>
+  );
+}
+
 /* ---------- Component ---------- */
 export default function ChatBot({ apiUrl = "", position = "bottom-right", lift = false }) {
   const navigate = useNavigate();
@@ -199,6 +238,31 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
   });
   const endRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Small "Hi, I'm an AI guide" bubble next to the button (once per browser session).
+  const TEASER_KEY = "rt-chat-teaser";
+  const [teaser, setTeaser] = useState(false);
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(TEASER_KEY)) return undefined;
+    } catch {
+      /* ignore */
+    }
+    const show = setTimeout(() => setTeaser(true), 2500);
+    const hide = setTimeout(() => setTeaser(false), 16000);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, []);
+  const dismissTeaser = () => {
+    setTeaser(false);
+    try {
+      sessionStorage.setItem(TEASER_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     try {
@@ -269,17 +333,69 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
 
   return (
     <>
+      <style>{MASCOT_CSS}</style>
+
+      {/* Teaser bubble */}
+      {teaser && !open && (
+        <div
+          className={`fixed ${lift ? "bottom-[10.5rem]" : "bottom-[6.5rem]"} ${
+            left ? "left-4 sm:left-6" : "right-4 sm:right-6"
+          } rt-anim z-50 max-w-[15rem]`}
+          style={{ animation: "rt-pop .35s ease-out both" }}
+        >
+          <div className="relative rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm text-slate-800 shadow-xl">
+            <p className="font-bold text-[#0b3149]">
+              <span className="inline-block origin-bottom-right" style={{ animation: "rt-wave 2.4s ease-in-out infinite" }}>
+                👋
+              </span>{" "}
+              Hi, I'm your AI guide!
+            </p>
+            <p className="mt-0.5 text-slate-600">Ask me about beaches, food, stays or how to get here.</p>
+            <button
+              type="button"
+              onClick={dismissTeaser}
+              aria-label="Dismiss"
+              className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X size={14} />
+            </button>
+            <span
+              className={`absolute -bottom-1.5 ${left ? "left-6" : "right-6"} h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white`}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Launcher */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close chat" : "Open chat"}
+        onClick={() => {
+          dismissTeaser();
+          setOpen((o) => !o);
+        }}
+        aria-label={open ? "Close chat" : "Open AI chat assistant"}
         aria-expanded={open}
-        className={`fixed ${launcherPos} z-50 h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149] text-white shadow-xl shadow-slate-900/30 ring-4 ring-white/80 transition-transform hover:scale-105 active:scale-95 ${
+        className={`fixed ${launcherPos} z-50 h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149] text-white shadow-xl shadow-slate-900/30 ring-4 ring-white/80 transition-transform hover:scale-105 active:scale-95 ${
           open ? "hidden sm:flex" : "flex"
         }`}
       >
-        {open ? <X size={24} /> : <MessageCircle size={24} />}
+        {open ? (
+          <X size={26} />
+        ) : (
+          <>
+            <span
+              className="rt-anim pointer-events-none absolute inset-0 rounded-full bg-teal-400"
+              style={{ animation: "rt-ring 2.2s ease-out infinite" }}
+              aria-hidden="true"
+            />
+            <span className="rt-anim relative flex" style={{ animation: "rt-float 3s ease-in-out infinite" }}>
+              <BotMascot size={46} />
+            </span>
+            <span className="absolute -right-1 -top-1 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-slate-900 ring-2 ring-white">
+              AI
+            </span>
+          </>
+        )}
       </button>
 
       {/* Panel */}
@@ -292,12 +408,17 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
         >
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-[#082638] via-[#0b3149] to-[#0f5f5c] px-4 py-3.5 pt-[max(0.875rem,env(safe-area-inset-top))] text-white">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
-              <Compass size={20} />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <BotMascot size={34} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-bold leading-tight">Ratnagiri Guide</p>
-              <p className="truncate text-xs text-teal-100">Places, food, stays and travel tips</p>
+              <p className="flex items-center gap-2 truncate text-base font-bold leading-tight">
+                Ratnagiri Guide
+                <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-slate-900">
+                  AI
+                </span>
+              </p>
+              <p className="truncate text-xs text-teal-100">AI assistant for places, food, stays and travel</p>
             </div>
             <button
               type="button"
@@ -326,17 +447,24 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
           >
             {messages.map((m) => (
               <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex flex-col items-start"}>
-                <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed ${
-                    m.role === "user"
-                      ? "rounded-br-md bg-teal-700 text-white"
-                      : "rounded-bl-md border border-slate-200 bg-white text-slate-800"
-                  }`}
-                >
-                  {m.text}
+                <div className="flex max-w-full items-end gap-2">
+                  {m.role !== "user" && (
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
+                      <BotMascot size={24} animate={false} />
+                    </span>
+                  )}
+                  <div
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed ${
+                      m.role === "user"
+                        ? "rounded-br-md bg-teal-700 text-white"
+                        : "rounded-bl-md border border-slate-200 bg-white text-slate-800"
+                    }`}
+                  >
+                    {m.text}
+                  </div>
                 </div>
                 {m.actions?.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-2 ml-10 flex flex-wrap gap-2">
                     {m.actions.map((a) => (
                       <button
                         key={a.route + a.label}
@@ -354,14 +482,19 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
             ))}
 
             {typing && (
-              <div className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3" aria-label="Typing">
-                {[0, 150, 300].map((d) => (
-                  <span
-                    key={d}
-                    className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                    style={{ animationDelay: `${d}ms` }}
-                  />
-                ))}
+              <div className="flex items-end gap-2" aria-label="Typing">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
+                  <BotMascot size={24} />
+                </span>
+                <div className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3">
+                  {[0, 150, 300].map((d) => (
+                    <span
+                      key={d}
+                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                      style={{ animationDelay: `${d}ms` }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <div ref={endRef} />
@@ -410,7 +543,7 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
               </button>
             </div>
             <p className="mt-2 text-center text-[11px] text-slate-500">
-              General guidance only. Check official sources before you travel.
+              AI assistant: answers can be wrong. Check official sources before you travel.
             </p>
           </form>
         </div>
