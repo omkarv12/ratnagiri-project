@@ -74,23 +74,12 @@ const TOURISM_TYPES = [
 // localStorage-backed favorites, keyed as "type:id" so different tables never collide.
 const FAVORITES_KEY = "rt_favorites";
 
-// Remembers that the user has already seen the "tap a numbered circle" hint.
-const CLUSTER_HINT_KEY = "rt_cluster_hint_seen";
-
 function loadFavorites() {
   try {
     const raw = localStorage.getItem(FAVORITES_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
-  }
-}
-
-function loadClusterHintVisible() {
-  try {
-    return !localStorage.getItem(CLUSTER_HINT_KEY);
-  } catch {
-    return true;
   }
 }
 
@@ -246,38 +235,6 @@ function MapCategoryChips({ value, onChange }) {
         );
       })}
     </div>
-  );
-}
-
-// One-time hint explaining the numbered circles (clusters) on the map.
-// Styles for the pulsing ring live here so no global CSS file needs editing.
-function ClusterHint({ onDismiss }) {
-  return (
-    <>
-      <style>{`
-        .cluster-pulse { animation: clusterPulse 2s ease-out infinite; }
-        @keyframes clusterPulse {
-          0%   { box-shadow: 0 0 0 0 rgba(180, 83, 42, 0.6); }
-          70%  { box-shadow: 0 0 0 12px rgba(180, 83, 42, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(180, 83, 42, 0); }
-        }
-      `}</style>
-      <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[1000] w-max max-w-[92%] bg-slate-900 text-white rounded-xl shadow-xl px-3 py-2.5 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
-        <span className="w-8 h-8 rounded-full bg-[#B4532A] border-2 border-white flex items-center justify-center text-xs font-bold shrink-0 animate-bounce">
-          14
-        </span>
-        <p className="text-xs leading-snug">
-          <strong>🎁 Psst! Those numbered circles are treasure chests.</strong>{' '}
-          Tap one to unwrap the hidden gems inside — go on, explore! 🗺️✨
-        </p>
-        <button
-          onClick={onDismiss}
-          className="text-xs font-semibold text-orange-300 hover:text-orange-200 shrink-0"
-        >
-          Let's go!
-        </button>
-      </div>
-    </>
   );
 }
 
@@ -614,18 +571,6 @@ export default function SustainabilityMap() {
   // Favorites ("save for later"), persisted to localStorage.
   const [favorites, setFavorites] = useState(loadFavorites);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-
-  // One-time hint that explains the numbered cluster circles on the map.
-  const [showClusterHint, setShowClusterHint] = useState(loadClusterHintVisible);
-
-  const dismissClusterHint = () => {
-    setShowClusterHint(false);
-    try {
-      localStorage.setItem(CLUSTER_HINT_KEY, "1");
-    } catch {
-      // localStorage unavailable — the hint is simply hidden for this session.
-    }
-  };
 
   const refKey = (type, id) => `${type}:${id}`;
   const isFavorite = (type, id) => favorites.includes(refKey(type, id));
@@ -1818,11 +1763,6 @@ export default function SustainabilityMap() {
           </div>
         )}
 
-        {/* One-time hint: explains that the numbered circles can be tapped. */}
-        {showClusterHint && activeTab !== 'trip' && !activeRoute && (
-          <ClusterHint onDismiss={dismissClusterHint} />
-        )}
-
         <MapContainer center={[17.7554, 73.1923]} zoom={11} zoomControl={false} className="w-full h-full z-0">
           <ZoomControl position="topright" />
           <LayersControl position="bottomleft">
@@ -1876,11 +1816,10 @@ export default function SustainabilityMap() {
             maxClusterRadius={50}
             showCoverageOnHover={false}
             spiderfyOnMaxZoom
-            eventHandlers={{ clusterclick: dismissClusterHint }}
             iconCreateFunction={(cluster) => {
               const count = cluster.getChildCount();
               return L.divIcon({
-                html: `<div class="cluster-pulse" title="🎁 ${count} hidden gems inside – tap to unwrap!" style="
+                html: `<div style="
                   background:#B4532A;color:#fff;width:38px;height:38px;
                   border-radius:50%;display:flex;align-items:center;justify-content:center;
                   font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.35);
