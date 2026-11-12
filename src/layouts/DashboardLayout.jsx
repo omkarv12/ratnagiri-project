@@ -11,8 +11,6 @@ import {
   MapPlus,
   HeartHandshake,
   Search,
-  Moon,
-  Sun,
   Globe,
   Check,
   CornerDownLeft,
@@ -266,13 +264,8 @@ const THEME_CSS = `
 }
 .rt-util:active { transform: scale(.95); }
 
-/* ---------- Dark mode (applies to the page content area) ---------- */
-html.rt-dark { color-scheme: dark; }
-html.rt-dark .rt-root { background: #080c0e !important; }
-html.rt-dark #main-content { filter: invert(1) hue-rotate(180deg); }
-html.rt-dark #main-content :where(img, video, iframe, canvas, picture, .leaflet-container, [style*="background-image"]) {
-  filter: invert(1) hue-rotate(180deg);
-}
+/* Admin: small, icon-only, same size at every screen width */
+.rt-btn.rt-btn-admin { height: 2.25rem; width: 2.25rem; }
 
 /* ---------- Google Translate: hide its banner / widget chrome ---------- */
 body { top: 0 !important; }
@@ -562,6 +555,24 @@ const LANGS = [
   { code: "en", native: "English" },
   { code: "mr", native: "मराठी" },
   { code: "hi", native: "हिन्दी" },
+  { code: "as", native: "অসমীয়া" },
+  { code: "bn", native: "বাংলা" },
+  { code: "bho", native: "भोजपुरी" },
+  { code: "doi", native: "डोगरी" },
+  { code: "gu", native: "ગુજરાતી" },
+  { code: "kn", native: "ಕನ್ನಡ" },
+  { code: "gom", native: "कोंकणी" },
+  { code: "mai", native: "मैथिली" },
+  { code: "ml", native: "മലയാളം" },
+  { code: "mni-Mtei", native: "Meiteilon (Manipuri)" },
+  { code: "ne", native: "नेपाली" },
+  { code: "or", native: "ଓଡ଼ିଆ" },
+  { code: "pa", native: "ਪੰਜਾਬੀ" },
+  { code: "sa", native: "संस्कृतम्" },
+  { code: "sd", native: "سنڌي" },
+  { code: "ta", native: "தமிழ்" },
+  { code: "te", native: "తెలుగు" },
+  { code: "ur", native: "اردو" },
 ];
 
 const readLang = () => {
@@ -633,7 +644,7 @@ function LanguageMenu({ lang, onSelect }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-3 w-44 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl shadow-slate-900/20"
+          className="absolute right-0 top-full z-50 mt-3 max-h-[70vh] w-56 overflow-y-auto overscroll-contain rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl shadow-slate-900/20"
         >
           {LANGS.map((l) => (
             <button
@@ -658,7 +669,7 @@ function LanguageMenu({ lang, onSelect }) {
 }
 
 /* ---------- Ctrl/⌘ + K command palette ---------- */
-function CommandPalette({ open, onClose, pages, navigate, dark, onToggleTheme, lang, onLang }) {
+function CommandPalette({ open, onClose, pages, navigate, lang, onLang }) {
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const inputRef = useRef(null);
@@ -673,21 +684,14 @@ function CommandPalette({ open, onClose, pages, navigate, dark, onToggleTheme, l
   }, [open]);
 
   const actions = useMemo(
-    () => [
-      {
-        label: dark ? "Switch to light mode" : "Switch to dark mode",
-        hint: "Appearance",
-        keywords: "dark light theme mode night",
-        run: onToggleTheme,
-      },
-      ...LANGS.map((l) => ({
+    () =>
+      LANGS.map((l) => ({
         label: `Language: ${l.native}`,
         hint: l.code === lang ? "Current" : "Language",
         keywords: `language translate ${l.code} भाषा`,
         run: () => l.code !== lang && onLang(l.code),
       })),
-    ],
-    [dark, lang, onToggleTheme, onLang]
+    [lang, onLang]
   );
 
   const list = useMemo(() => {
@@ -699,7 +703,7 @@ function CommandPalette({ open, onClose, pages, navigate, dark, onToggleTheme, l
       : pages;
     const actionHits = q
       ? actions.filter((a) => `${a.label} ${a.hint} ${a.keywords}`.toLowerCase().includes(q))
-      : actions;
+      : [];
     return [
       ...pageHits.slice(0, 8).map((p) => ({ ...p, type: "Pages" })),
       ...actionHits.map((a) => ({ ...a, type: "Actions" })),
@@ -756,7 +760,7 @@ function CommandPalette({ open, onClose, pages, navigate, dark, onToggleTheme, l
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search pages, places and settings"
+            placeholder="Search pages, or type “language”"
             aria-label="Search"
             role="combobox"
             aria-expanded="true"
@@ -846,26 +850,6 @@ export default function DashboardLayout() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  /* Dark mode (remembered between visits) */
-  const [dark, setDark] = useState(() => {
-    try {
-      return localStorage.getItem("rt-theme") === "dark";
-    } catch {
-      return false;
-    }
-  });
-  const toggleTheme = useCallback(() => setDark((d) => !d), []);
-
-  useLayoutEffect(() => {
-    document.documentElement.classList.toggle("rt-dark", dark);
-    try {
-      localStorage.setItem("rt-theme", dark ? "dark" : "light");
-    } catch {
-      /* storage unavailable */
-    }
-    return () => document.documentElement.classList.remove("rt-dark");
-  }, [dark]);
 
   /* Language */
   const [lang] = useState(readLang);
@@ -990,18 +974,6 @@ export default function DashboardLayout() {
                   </kbd>
                 </button>
 
-                {/* Dark / light mode */}
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-                  aria-pressed={dark}
-                  title={dark ? "Light mode" : "Dark mode"}
-                  className="rt-util hidden w-9 sm:flex"
-                >
-                  {dark ? <Sun size={17} /> : <Moon size={17} />}
-                </button>
-
                 {/* Language */}
                 <LanguageMenu lang={lang} onSelect={writeLang} />
 
@@ -1037,8 +1009,7 @@ export default function DashboardLayout() {
                   className="rt-btn rt-btn-admin"
                 >
                   <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                  <ShieldCheck size={18} className="rt-shield relative" />
-                  <span className="relative hidden 2xl:inline">Admin login</span>
+                  <ShieldCheck size={16} className="rt-shield relative" />
                 </button>
               </div>
             </div>
@@ -1060,8 +1031,6 @@ export default function DashboardLayout() {
         onClose={() => setSearchOpen(false)}
         pages={pages}
         navigate={navigate}
-        dark={dark}
-        onToggleTheme={toggleTheme}
         lang={lang}
         onLang={writeLang}
       />
