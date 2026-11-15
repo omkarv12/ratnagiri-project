@@ -14,7 +14,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 // >>> REPLACE THIS with your real deployed Flask URL (no trailing slash). <<<
-const API_BASE = "https://your-backend.up.railway.app";
+const API_BASE = "https://ratnagiri-backend-production.up.railway.app";
 const HASHTAG = "#RatnagiriReels";
 
 export const AWARD_CATEGORIES = [
