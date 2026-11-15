@@ -6,9 +6,6 @@
 // Each has Pending / Approved / Rejected lists with approve, reject,
 // award, likes override and delete.
 //
-// Auth: the reels endpoints need "Authorization: Bearer <ADMIN_TOKEN>".
-// The token is read from localStorage("admin_token"); if it is missing or
-// wrong, the panel asks for it once and remembers it.
 
 import React, { useCallback, useEffect, useState } from "react";
 import API_BASE_URL from "../config";
@@ -29,36 +26,18 @@ export default function AdminMediaPanel() {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(() => localStorage.getItem("admin_token") || "");
-  const [tokenDraft, setTokenDraft] = useState("");
 
-  const api = useCallback(
-    async (path, opts = {}) => {
-      const res = await fetch(`${API_BASE_URL}${path}`, {
-        ...opts,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...(opts.headers || {}),
-        },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 401) {
-        localStorage.removeItem("admin_token");
-        setToken("");
-        throw new Error("Admin token missing or wrong. Enter it again.");
-      }
-      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-      return data;
-    },
-    [token]
-  );
+  const api = useCallback(async (path, opts = {}) => {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...opts,
+      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    return data;
+  }, []);
 
   const load = useCallback(async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError("");
     try {
@@ -71,7 +50,7 @@ export default function AdminMediaPanel() {
     } finally {
       setLoading(false);
     }
-  }, [api, status, section, token]);
+  }, [api, status, section]);
 
   useEffect(() => {
     load();
@@ -116,43 +95,8 @@ export default function AdminMediaPanel() {
     setBusy(null);
   };
 
-  const saveToken = (e) => {
-    e.preventDefault();
-    const t = tokenDraft.trim();
-    if (!t) return;
-    localStorage.setItem("admin_token", t);
-    setToken(t);
-    setTokenDraft("");
-    setError("");
-  };
-
   const current = SECTIONS.find((s) => s.key === section);
   const isReel = section === "reel";
-
-  // ---- token gate ----
-  if (!token) {
-    return (
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Reels &amp; Videos</h2>
-        <form onSubmit={saveToken} className="bg-white p-5 rounded shadow max-w-md space-y-3">
-          <p className="text-sm text-gray-600">
-            Enter the admin token (the <code>ADMIN_TOKEN</code> set on the server) to review submissions.
-          </p>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <input
-            type="password"
-            value={tokenDraft}
-            onChange={(e) => setTokenDraft(e.target.value)}
-            placeholder="Admin token"
-            className="border rounded px-3 py-2 w-full"
-          />
-          <button className="px-4 py-2 bg-teal-700 text-white rounded hover:bg-teal-800 text-sm font-semibold">
-            Save token
-          </button>
-        </form>
-      </section>
-    );
-  }
 
   return (
     <section>
