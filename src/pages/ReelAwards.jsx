@@ -7,14 +7,13 @@
 // and a submission form that goes to admin approval. No dependencies beyond React.
 //
 // EDIT:  API_BASE  (your Flask backend URL, "" only if the frontend proxies /api)
-// Open the page with ?demo=1 to preview the layout with placeholder data.
 // ?tab=videos opens the Videos side directly.
 // A link ending in #reel-<id> opens that item straight away (the Share button makes these links).
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 // >>> REPLACE THIS with your real deployed Flask URL (no trailing slash). <<<
-const API_BASE = "https://ratnagiri-backend-production.up.railway.app";
+const API_BASE = "https://your-backend.up.railway.app";
 const HASHTAG = "#RatnagiriReels";
 
 export const AWARD_CATEGORIES = [
@@ -26,26 +25,6 @@ export const AWARD_CATEGORIES = [
 ];
 
 const ModeContext = createContext("reel");
-
-/* Layout-testing data, shown only when the page is opened with ?demo=1 and never to normal visitors.
-   The two video ids are the ones already used in your DashboardOverview.jsx; the titles, creators,
-   handles, places and like counts are invented placeholders, not real entries. */
-const DEMO = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
-const SAMPLE = [
-  { id: 1, title: "Sunrise at Ganpatipule", creator: "Konkan Diaries", handle: "@konkan.diaries", place: "Ganpatipule", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 412, award: "Best reel of the year", note: "Chosen by the jury for its light, its pacing and the way it lets the beach speak." },
-  { id: 2, title: "A proper Konkani thali", creator: "Kokan Kitchen", handle: "@kokan.kitchen", place: "Ratnagiri", platform: "youtube", video_id: "tfi_WmqM6to", likes: 388, award: "Best food reel" },
-  { id: 3, title: "Walking Ratnadurg at dusk", creator: "Sahyadri Frames", handle: "@sahyadri.frames", place: "Ratnagiri town", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 301, award: "Best fort and coast reel" },
-  { id: 4, title: "A quiet morning in Velneshwar", creator: "Slow Konkan", handle: "@slow.konkan", place: "Velneshwar", platform: "youtube", video_id: "tfi_WmqM6to", likes: 254, award: "Best village story" },
-  { id: 5, title: "Alphonso season, orchard to box", creator: "Aamchi Kokan", handle: "@aamchi.kokan", place: "Devgad", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 198, award: null },
-  { id: 6, title: "Sleeping inside a mango orchard", creator: "Farm Stay Fan", handle: "@farmstayfan", place: "Devgad", platform: "youtube", video_id: "tfi_WmqM6to", likes: 143, award: null },
-];
-const SAMPLE_VIDEOS = [
-  { id: 101, title: "Ganpatipule temple, a full walkthrough", creator: "Priya Travels", handle: "@priya.travels", place: "Ganpatipule", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 530, award: null },
-  { id: 102, title: "Jaigad Fort travel vlog", creator: "Amit Vlogs", handle: "@amit.vlogs", place: "Jaigad", platform: "youtube", video_id: "tfi_WmqM6to", likes: 412, award: null },
-  { id: 103, title: "Homestay tour in Guhagar", creator: "Neha Stays", handle: "@neha.stays", place: "Guhagar", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 305, award: null },
-  { id: 104, title: "Konkan coast road trip, day one", creator: "Road Notes", handle: "@road.notes", place: "Ratnagiri", platform: "youtube", video_id: "tfi_WmqM6to", likes: 220, award: null },
-  { id: 105, title: "Mango season at Devgad", creator: "Aamchi Kokan", handle: "@aamchi.kokan", place: "Devgad", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 160, award: null },
-];
 
 const STEPS = {
   reel: [
@@ -406,11 +385,6 @@ export default function ReelAwards() {
   // Load the list for the chosen format (reload whenever the toggle changes).
   useEffect(() => {
     setPlaying(null);
-    if (DEMO) {
-      setReels(isVideo ? SAMPLE_VIDEOS : SAMPLE);
-      setLoaded(true);
-      return undefined;
-    }
     let live = true;
     setLoaded(false);
     setReels([]);
