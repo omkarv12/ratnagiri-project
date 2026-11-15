@@ -1,16 +1,20 @@
 // src/pages/ReelAwards.jsx  ->  route: /stories/reels
 //
-// Reels-only awards page: hero, top 3 by likes, award winners, creators wall, all approved reels,
-// and a submission form (YouTube Shorts or Instagram reel link) that goes to admin approval.
-// Every reel is shown in vertical 9:16 format. No dependencies beyond React.
+// One page, two formats, switched with a toggle:
+//   Reels  : vertical 9:16 (YouTube Shorts + Instagram reels), awards + podium
+//   Videos : horizontal 16:9 (regular YouTube videos), podium by likes
+// Each has: hero, top 3 by likes, award winners, creators wall, all approved items,
+// and a submission form that goes to admin approval. No dependencies beyond React.
 //
-// EDIT:  API_BASE  (your Flask backend URL, "" if the frontend proxies /api)
-// Open the page with ?demo=1 to preview the layout with placeholder reels.
-// A link ending in #reel-<id> opens that reel straight away (the Share button makes these links).
+// EDIT:  API_BASE  (your Flask backend URL, "" only if the frontend proxies /api)
+// Open the page with ?demo=1 to preview the layout with placeholder data.
+// ?tab=videos opens the Videos side directly.
+// A link ending in #reel-<id> opens that item straight away (the Share button makes these links).
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-const API_BASE = ""; // e.g. "https://your-backend.up.railway.app"
+// >>> REPLACE THIS with your real deployed Flask URL (no trailing slash). <<<
+const API_BASE = "https://your-backend.up.railway.app";
 const HASHTAG = "#RatnagiriReels";
 
 export const AWARD_CATEGORIES = [
@@ -20,6 +24,8 @@ export const AWARD_CATEGORIES = [
   "Best village story",
   "Best homestay reel",
 ];
+
+const ModeContext = createContext("reel");
 
 /* Layout-testing data, shown only when the page is opened with ?demo=1 and never to normal visitors.
    The two video ids are the ones already used in your DashboardOverview.jsx; the titles, creators,
@@ -33,17 +39,31 @@ const SAMPLE = [
   { id: 5, title: "Alphonso season, orchard to box", creator: "Aamchi Kokan", handle: "@aamchi.kokan", place: "Devgad", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 198, award: null },
   { id: 6, title: "Sleeping inside a mango orchard", creator: "Farm Stay Fan", handle: "@farmstayfan", place: "Devgad", platform: "youtube", video_id: "tfi_WmqM6to", likes: 143, award: null },
 ];
-
-const STEPS = [
-  { t: "Film a vertical reel", d: "Up to 90 seconds, shot in Ratnagiri district. Beaches, forts, food, villages and homestays all count." },
-  { t: `Post it with ${HASHTAG}`, d: "Upload to YouTube Shorts or Instagram, then paste the public link in the form below." },
-  { t: "We review and publish", d: "Our team approves eligible reels. Approved reels appear on this page, and the three with the most likes win the top positions." },
+const SAMPLE_VIDEOS = [
+  { id: 101, title: "Ganpatipule temple, a full walkthrough", creator: "Priya Travels", handle: "@priya.travels", place: "Ganpatipule", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 530, award: null },
+  { id: 102, title: "Jaigad Fort travel vlog", creator: "Amit Vlogs", handle: "@amit.vlogs", place: "Jaigad", platform: "youtube", video_id: "tfi_WmqM6to", likes: 412, award: null },
+  { id: 103, title: "Homestay tour in Guhagar", creator: "Neha Stays", handle: "@neha.stays", place: "Guhagar", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 305, award: null },
+  { id: 104, title: "Konkan coast road trip, day one", creator: "Road Notes", handle: "@road.notes", place: "Ratnagiri", platform: "youtube", video_id: "tfi_WmqM6to", likes: 220, award: null },
+  { id: 105, title: "Mango season at Devgad", creator: "Aamchi Kokan", handle: "@aamchi.kokan", place: "Devgad", platform: "youtube", video_id: "BZWqwLF5mxI", likes: 160, award: null },
 ];
 
-const PERKS = [
-  { t: "Your reel on our website", d: "Your name, handle and reel appear on this public page once approved." },
-  { t: "A link to share", d: "Every reel gets its own link that opens it in the player. Send it to family and followers." },
-  { t: "A place on the podium", d: "The three reels with the most likes take 1st, 2nd and 3rd place." },
+const STEPS = {
+  reel: [
+    { t: "Film a vertical reel", d: "Up to 90 seconds, shot in Ratnagiri district. Beaches, forts, food, villages and homestays all count." },
+    { t: `Post it with ${HASHTAG}`, d: "Upload to YouTube Shorts or Instagram, then paste the public link in the form below." },
+    { t: "We review and publish", d: "Our team approves eligible reels. Approved reels appear on this page, and the three with the most likes win the top positions." },
+  ],
+  video: [
+    { t: "Film a travel video", d: "A regular horizontal video shot in Ratnagiri district. Walkthroughs, vlogs, food trails and homestay tours all count." },
+    { t: `Post it on YouTube with ${HASHTAG}`, d: "Upload it as a public YouTube video, then paste the link in the form below." },
+    { t: "We review and publish", d: "Our team approves eligible videos. Approved videos appear on this page, and the three with the most likes take the top positions." },
+  ],
+};
+
+const perksFor = (noun) => [
+  { t: `Your ${noun} on our website`, d: `Your name, handle and ${noun} appear on this public page once approved.` },
+  { t: "A link to share", d: `Every ${noun} gets its own link that opens it in the player. Send it to family and followers.` },
+  { t: "A place on the podium", d: `The three ${noun}s with the most likes take 1st, 2nd and 3rd place.` },
 ];
 
 /* ---------- helpers ---------- */
@@ -57,16 +77,28 @@ export function parseReelLink(raw) {
   return null;
 }
 
-const embedSrc = (r) =>
-  r.platform === "instagram"
-    ? `https://www.instagram.com/reel/${r.video_id}/embed`
-    : `https://www.youtube-nocookie.com/embed/${r.video_id}?autoplay=1&rel=0&playsinline=1&loop=1&playlist=${r.video_id}`;
+/* Same rule the server uses: Shorts and Instagram are reels, other YouTube links are videos. */
+export function linkKind(raw) {
+  const p = parseReelLink(raw);
+  if (!p) return null;
+  if (p.platform === "instagram") return "reel";
+  return /youtube\.com\/shorts\//i.test(raw) ? "reel" : "video";
+}
+
+const embedSrc = (r, mode) => {
+  if (r.platform === "instagram") return `https://www.instagram.com/reel/${r.video_id}/embed`;
+  if (mode === "video") return `https://www.youtube-nocookie.com/embed/${r.video_id}?autoplay=1&rel=0&playsinline=1`;
+  return `https://www.youtube-nocookie.com/embed/${r.video_id}?autoplay=1&rel=0&playsinline=1&loop=1&playlist=${r.video_id}`;
+};
 
 const thumbOf = (r) => (r.platform === "youtube" ? `https://i.ytimg.com/vi/${r.video_id}/hqdefault.jpg` : null);
 const hueOf = (r) => ((r.id || 1) * 47) % 360;
 const fmt = (n) => new Intl.NumberFormat("en-IN").format(n || 0);
 const initials = (name) =>
   (name || "?").replace(/^@/, "").split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((s) => s[0].toUpperCase()).join("") || "?";
+
+const initialMode = () =>
+  typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "videos" ? "video" : "reel";
 
 function useInView() {
   const ref = useRef(null);
@@ -178,9 +210,11 @@ function LikeCount({ reel }) {
 }
 
 function ShareButton({ reel }) {
+  const mode = useContext(ModeContext);
   const [done, setDone] = useState(false);
   async function share() {
-    const url = `${window.location.origin}${window.location.pathname}#reel-${reel.id}`;
+    const tab = mode === "video" ? "?tab=videos" : "";
+    const url = `${window.location.origin}${window.location.pathname}${tab}#reel-${reel.id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "Ratnagiri Reel Awards", text: `"${reel.title}" by ${reel.creator} on the Ratnagiri Reel Awards`, url });
@@ -191,17 +225,19 @@ function ShareButton({ reel }) {
       }
     } catch { /* share sheet closed */ }
   }
-  return <button className="ra-share" onClick={share}>{done ? "Link copied" : "Share this reel"}</button>;
+  return <button className="ra-share" onClick={share}>{done ? "Link copied" : `Share this ${mode === "video" ? "video" : "reel"}`}</button>;
 }
 
-/* ---------- vertical poster with play button ---------- */
+/* ---------- poster with play button (9:16 for reels, 16:9 for videos, set in CSS) ---------- */
 function Poster({ item, onPlay, badge }) {
+  const mode = useContext(ModeContext);
   const [broken, setBroken] = useState(false);
   const src = thumbOf(item);
+  const label = item.platform === "instagram" ? "Instagram reel" : mode === "video" ? "Video" : "Reel";
   return (
-    <button className="ra-poster" style={{ "--hue": hueOf(item) }} onClick={() => onPlay(item)} aria-label={`Play reel ${item.title}`}>
+    <button className="ra-poster" style={{ "--hue": hueOf(item) }} onClick={() => onPlay(item)} aria-label={`Play ${mode === "video" ? "video" : "reel"} ${item.title}`}>
       {src && !broken && <img src={src} alt="" loading="lazy" onError={() => setBroken(true)} />}
-      {(!src || broken) && <span className="ra-poster-ig">{item.platform === "instagram" ? "Instagram reel" : "Reel"}</span>}
+      {(!src || broken) && <span className="ra-poster-ig">{label}</span>}
       {badge && <span className="ra-badge">{badge}</span>}
       <span className="ra-play" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5-11-6.5Z" /></svg>
@@ -210,8 +246,8 @@ function Poster({ item, onPlay, badge }) {
   );
 }
 
-/* ---------- pop-up reel player (always vertical) ---------- */
-function PlayerModal({ item, caption, special, onClose }) {
+/* ---------- pop-up player (vertical for reels, horizontal for videos) ---------- */
+function PlayerModal({ item, caption, special, mode, onClose }) {
   const closeRef = useRef(null);
   useEffect(() => {
     closeRef.current?.focus();
@@ -229,8 +265,8 @@ function PlayerModal({ item, caption, special, onClose }) {
       {special && <Confetti run count={60} />}
       <div className="ra-modal-wrap" onClick={(e) => e.stopPropagation()}>
         <div className={`ra-modal-box ${special ? "is-special" : ""}`}>
-          <iframe src={embedSrc(item)} title={item.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
-          <button ref={closeRef} className="ra-close" onClick={onClose} aria-label="Close reel">×</button>
+          <iframe src={embedSrc(item, mode)} title={item.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+          <button ref={closeRef} className="ra-close" onClick={onClose} aria-label={`Close ${mode === "video" ? "video" : "reel"}`}>×</button>
         </div>
         <div className="ra-modal-cap">
           <Creator reel={item} />
@@ -241,39 +277,74 @@ function PlayerModal({ item, caption, special, onClose }) {
   );
 }
 
+/* ---------- Reels | Videos toggle ---------- */
+function ModeToggle({ mode, onChange }) {
+  return (
+    <div className="ra-toggle-wrap">
+      <div className="ra-toggle" role="tablist" aria-label="Choose format">
+        <button role="tab" aria-selected={mode === "reel"} className={mode === "reel" ? "on" : ""} onClick={() => onChange("reel")}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 10.5v3l2.6-1.5L11 10.5Z" fill="currentColor" />
+          </svg>
+          Reels
+        </button>
+        <button role="tab" aria-selected={mode === "video"} className={mode === "video" ? "on" : ""} onClick={() => onChange("video")}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+            <rect x="2.5" y="6" width="19" height="12" rx="2.5" /><path d="M10.5 9.5v5l4.2-2.5-4.2-2.5Z" fill="currentColor" />
+          </svg>
+          Videos
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- submission form ---------- */
-function SubmitForm() {
+function SubmitForm({ mode }) {
+  const isVideo = mode === "video";
+  const noun = isVideo ? "video" : "reel";
+  const Noun = isVideo ? "Video" : "Reel";
   const empty = { name: "", handle: "", email: "", phone: "", place: "", title: "", category: AWARD_CATEGORIES[0], link: "", consent: false };
   const [f, setF] = useState(empty);
   const [state, setState] = useState({ status: "idle", msg: "" }); // idle | sending | done | error
   const parsed = useMemo(() => parseReelLink(f.link), [f.link]);
+  const kind = useMemo(() => linkKind(f.link), [f.link]);
+  const okLink = Boolean(parsed) && kind === mode;
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
+
+  const wrongTabMsg = () =>
+    kind === "reel"
+      ? "This is a YouTube Short or Instagram reel. Switch to the Reels tab to submit it."
+      : "This is a regular YouTube video. Switch to the Videos tab to submit it.";
+  const badLinkMsg = isVideo ? "Paste a regular YouTube video link." : "Paste a YouTube Shorts or Instagram reel link.";
 
   async function submit(e) {
     e.preventDefault();
-    if (!parsed) return setState({ status: "error", msg: "Paste a YouTube Shorts or Instagram reel link." });
+    if (!parsed) return setState({ status: "error", msg: badLinkMsg });
+    if (kind !== mode) return setState({ status: "error", msg: wrongTabMsg() });
     setState({ status: "sending", msg: "" });
     try {
       const res = await fetch(`${API_BASE}/api/reels/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...f, url: f.link.trim(), ...parsed }),
+        body: JSON.stringify({ ...f, kind: mode, category: isVideo ? "" : f.category, url: f.link.trim(), ...parsed }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not submit your reel. Try again in a moment.");
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}. Check the backend URL (API_BASE) and that POST /api/reels/submit exists.`);
       setState({ status: "done", msg: "" });
       setF(empty);
     } catch (err) {
-      setState({ status: "error", msg: err.message });
+      const offline = err instanceof TypeError; // fetch itself failed: wrong URL, CORS or server down
+      setState({ status: "error", msg: offline ? "Could not reach the server. Check the backend URL (API_BASE) and CORS settings." : err.message });
     }
   }
 
   if (state.status === "done") {
     return (
       <div className="ra-form ra-form-done" role="status">
-        <h3>Your reel is in</h3>
-        <p>We review every entry. Once your reel is approved, it appears on this page with your name on it.</p>
-        <button className="ra-btn ra-btn-line" onClick={() => setState({ status: "idle", msg: "" })}>Submit another reel</button>
+        <h3>Your {noun} is in</h3>
+        <p>We review every entry. Once your {noun} is approved, it appears on this page with your name on it.</p>
+        <button className="ra-btn ra-btn-line" onClick={() => setState({ status: "idle", msg: "" })}>Submit another {noun}</button>
       </div>
     );
   }
@@ -285,29 +356,36 @@ function SubmitForm() {
         <label>Instagram or YouTube handle<input value={f.handle} onChange={set("handle")} placeholder="@yourname" /></label>
         <label>Email *<input required type="email" value={f.email} onChange={set("email")} autoComplete="email" /></label>
         <label>Phone (optional)<input type="tel" value={f.phone} onChange={set("phone")} autoComplete="tel" /></label>
-        <label>Reel title *<input required value={f.title} onChange={set("title")} placeholder="Sunrise at Ganpatipule" /></label>
+        <label>{Noun} title *<input required value={f.title} onChange={set("title")} placeholder={isVideo ? "Ganpatipule temple walkthrough" : "Sunrise at Ganpatipule"} /></label>
         <label>Place in Ratnagiri *<input required value={f.place} onChange={set("place")} placeholder="Ganpatipule" /></label>
       </div>
-      <label>Award category *
-        <select value={f.category} onChange={set("category")}>
-          {AWARD_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </label>
-      <label>Reel link (YouTube Shorts or Instagram) *
-        <input required value={f.link} onChange={set("link")} placeholder="https://www.instagram.com/reel/..." inputMode="url" />
+      {!isVideo && (
+        <label>Award category *
+          <select value={f.category} onChange={set("category")}>
+            {AWARD_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </label>
+      )}
+      <label>{isVideo ? "Video link (YouTube) *" : "Reel link (YouTube Shorts or Instagram) *"}
+        <input
+          required value={f.link} onChange={set("link")} inputMode="url"
+          placeholder={isVideo ? "https://www.youtube.com/watch?v=..." : "https://www.instagram.com/reel/..."}
+        />
       </label>
       {f.link && (
-        <p className={`ra-hint ${parsed ? "ok" : "bad"}`}>
-          {parsed ? `Found a ${parsed.platform === "youtube" ? "YouTube Short" : "Instagram reel"}.` : "This is not a YouTube Shorts or Instagram reel link."}
+        <p className={`ra-hint ${okLink ? "ok" : "bad"}`}>
+          {okLink
+            ? `Found a ${parsed.platform === "instagram" ? "Instagram reel" : isVideo ? "YouTube video" : "YouTube Short"}.`
+            : parsed ? wrongTabMsg() : badLinkMsg}
         </p>
       )}
       <label className="ra-check">
         <input type="checkbox" required checked={f.consent} onChange={set("consent")} />
-        <span>I made this reel, I shot it in Ratnagiri district, and I allow it to be shown on this website.</span>
+        <span>I made this {noun}, I shot it in Ratnagiri district, and I allow it to be shown on this website.</span>
       </label>
       {state.status === "error" && <p className="ra-hint bad" role="alert">{state.msg}</p>}
       <button className="ra-btn ra-btn-solid" disabled={state.status === "sending"}>
-        {state.status === "sending" ? "Submitting..." : "Submit my reel"}
+        {state.status === "sending" ? "Submitting..." : `Submit my ${noun}`}
       </button>
     </form>
   );
@@ -315,24 +393,36 @@ function SubmitForm() {
 
 /* ---------- page ---------- */
 export default function ReelAwards() {
-  const [reels, setReels] = useState(DEMO ? SAMPLE : []);
-  const [loaded, setLoaded] = useState(DEMO);
+  const [mode, setMode] = useState(initialMode);
+  const isVideo = mode === "video";
+  const noun = isVideo ? "video" : "reel";
+
+  const [reels, setReels] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const [playing, setPlaying] = useState(null);
   const [stageRef, stageSeen] = useInView();
   const deepLinked = useRef(false);
 
+  // Load the list for the chosen format (reload whenever the toggle changes).
   useEffect(() => {
-    if (DEMO) return undefined; // demo mode keeps the placeholder data
+    setPlaying(null);
+    if (DEMO) {
+      setReels(isVideo ? SAMPLE_VIDEOS : SAMPLE);
+      setLoaded(true);
+      return undefined;
+    }
     let live = true;
-    fetch(`${API_BASE}/api/reels`)
+    setLoaded(false);
+    setReels([]);
+    fetch(`${API_BASE}/api/reels?kind=${mode}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => live && Array.isArray(d.reels) && setReels(d.reels))
       .catch(() => {})
       .finally(() => live && setLoaded(true));
     return () => { live = false; };
-  }, []);
+  }, [mode, isVideo]);
 
-  // A shared link ending in #reel-<id> opens that reel once.
+  // A shared link ending in #reel-<id> opens that item once.
   useEffect(() => {
     if (deepLinked.current || reels.length === 0) return;
     const m = window.location.hash.match(/^#reel-(\d+)$/);
@@ -341,6 +431,17 @@ export default function ReelAwards() {
     const hit = reels.find((r) => String(r.id) === m[1]);
     if (hit) setPlaying(hit);
   }, [reels]);
+
+  function switchMode(next) {
+    if (next === mode) return;
+    deepLinked.current = true; // a switch should never re-open an old shared link
+    const url = new URL(window.location.href);
+    if (next === "video") url.searchParams.set("tab", "videos");
+    else url.searchParams.delete("tab");
+    url.hash = "";
+    window.history.replaceState(null, "", url.toString());
+    setMode(next);
+  }
 
   const top3 = useMemo(() => [...reels].sort((a, b) => b.likes - a.likes).slice(0, 3), [reels]);
   const podium = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3; // 2nd, 1st, 3rd
@@ -366,190 +467,196 @@ export default function ReelAwards() {
   const captionFor = (r) => (r.award ? r.award : rankOf(r) ? `Position ${rankOf(r)} by likes` : "");
 
   return (
-    <main className="ra">
-      <style>{CSS}</style>
-      <Backdrop />
+    <ModeContext.Provider value={mode}>
+      <main className={`ra ${isVideo ? "is-video" : ""}`}>
+        <style>{CSS}</style>
+        <Backdrop />
 
-      <div className="ra-page">
-        {/* hero */}
-        <section className="ra-hero">
-          <div className="ra-hero-copy">
-            <h1>Ratnagiri Reel Awards</h1>
-            <p className="ra-lead">
-              Season 2026. The best vertical reels of the Konkan coast, made by travellers and locals. The three reels with the most likes take the podium.
-            </p>
-            <div className="ra-cta">
-              <a className="ra-btn ra-btn-solid" href="#enter">Submit your reel</a>
-              <a className="ra-btn ra-btn-line" href={reels.length ? "#top3" : "#enter"}>{reels.length ? "See the podium" : "How to enter"}</a>
-            </div>
-            {reels.length > 0 && (
-              <dl className="ra-stats">
-                <div><dt>Reels</dt><dd>{fmt(reels.length)}</dd></div>
-                <div><dt>Creators</dt><dd>{fmt(creators.length)}</dd></div>
-                <div><dt>Likes</dt><dd>{fmt(totalLikes)}</dd></div>
-              </dl>
-            )}
-          </div>
-          {hero && (
-            <div className="ra-hero-reel">
-              <Crown className="ra-crown-float" />
-              <div className="ra-ring ra-ring-lg">
-                <Poster item={hero} onPlay={setPlaying} badge={hero.award || "Most liked"} />
+        <div className="ra-page">
+          <ModeToggle mode={mode} onChange={switchMode} />
+
+          {/* hero */}
+          <section className="ra-hero">
+            <div className="ra-hero-copy">
+              <h1>{isVideo ? "Ratnagiri Travel Videos" : "Ratnagiri Reel Awards"}</h1>
+              <p className="ra-lead">
+                {isVideo
+                  ? "Season 2026. The best travel videos of the Konkan coast, made by travellers and locals. The three videos with the most likes take the podium."
+                  : "Season 2026. The best vertical reels of the Konkan coast, made by travellers and locals. The three reels with the most likes take the podium."}
+              </p>
+              <div className="ra-cta">
+                <a className="ra-btn ra-btn-solid" href="#enter">Submit your {noun}</a>
+                <a className="ra-btn ra-btn-line" href={reels.length ? "#top3" : "#enter"}>{reels.length ? "See the podium" : "How to enter"}</a>
               </div>
-              <p className="ra-hero-by"><strong>{hero.title}</strong>by {hero.creator}</p>
+              {reels.length > 0 && (
+                <dl className="ra-stats">
+                  <div><dt>{isVideo ? "Videos" : "Reels"}</dt><dd>{fmt(reels.length)}</dd></div>
+                  <div><dt>Creators</dt><dd>{fmt(creators.length)}</dd></div>
+                  <div><dt>Likes</dt><dd>{fmt(totalLikes)}</dd></div>
+                </dl>
+              )}
             </div>
-          )}
-        </section>
-
-        {loaded && reels.length === 0 && (
-          <section className="ra-section ra-empty">
-            <h2 className="ra-h2">The first reels are coming</h2>
-            <p className="ra-h2-sub">No reel has been approved yet. Yours could open the page.</p>
-            <a className="ra-btn ra-btn-solid" href="#enter">Submit your reel</a>
+            {hero && (
+              <div className="ra-hero-reel">
+                <Crown className="ra-crown-float" />
+                <div className="ra-ring ra-ring-lg">
+                  <Poster item={hero} onPlay={setPlaying} badge={hero.award || "Most liked"} />
+                </div>
+                <p className="ra-hero-by"><strong>{hero.title}</strong>by {hero.creator}</p>
+              </div>
+            )}
           </section>
-        )}
 
-        {/* top 3 */}
-        {reels.length > 0 && (
-          <section className="ra-section" id="top3">
-            <h2 className="ra-h2">The podium</h2>
-            <p className="ra-h2-sub">The three reels with the most likes on YouTube and Instagram. The ranking updates automatically.</p>
-            <div className="ra-podium">
-              {podium.map((r) => {
-                const rank = rankOf(r);
-                return (
-                  <article className={`ra-pod ra-pod-${rank}`} key={r.id}>
-                    <div className="ra-pod-media">
-                      {rank === 1 && <Crown className="ra-crown-pod" />}
-                      <div className={rank === 1 ? "ra-ring" : "ra-plain"}>
-                        <Poster item={r} onPlay={setPlaying} />
+          {loaded && reels.length === 0 && (
+            <section className="ra-section ra-empty">
+              <h2 className="ra-h2">{isVideo ? "The first videos are coming" : "The first reels are coming"}</h2>
+              <p className="ra-h2-sub">No {noun} has been approved yet. Yours could open the page.</p>
+              <a className="ra-btn ra-btn-solid" href="#enter">Submit your {noun}</a>
+            </section>
+          )}
+
+          {/* top 3 */}
+          {reels.length > 0 && (
+            <section className="ra-section" id="top3">
+              <h2 className="ra-h2">The podium</h2>
+              <p className="ra-h2-sub">The three {noun}s with the most likes on YouTube{isVideo ? "" : " and Instagram"}. The ranking updates automatically.</p>
+              <div className="ra-podium">
+                {podium.map((r) => {
+                  const rank = rankOf(r);
+                  return (
+                    <article className={`ra-pod ra-pod-${rank}`} key={r.id}>
+                      <div className="ra-pod-media">
+                        {rank === 1 && <Crown className="ra-crown-pod" />}
+                        <div className={rank === 1 ? "ra-ring" : "ra-plain"}>
+                          <Poster item={r} onPlay={setPlaying} />
+                        </div>
+                        <Medal rank={rank} />
                       </div>
-                      <Medal rank={rank} />
-                    </div>
+                      <h3>{r.title}</h3>
+                      <Creator reel={r} />
+                      <LikeCount reel={r} />
+                      <ShareButton reel={r} />
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* winners */}
+          {stage && (
+            <section className="ra-section" id="winners">
+              <h2 className="ra-h2">Award winners</h2>
+              <p className="ra-h2-sub">One {noun} for each award, chosen by the jury.</p>
+
+              <div className="ra-stage" ref={stageRef}>
+                <Confetti run={stageSeen} />
+                <div className="ra-stage-media">
+                  <div className="ra-ring"><Poster item={stage} onPlay={setPlaying} /></div>
+                  <Crown className="ra-crown-stage" />
+                </div>
+                <div className="ra-stage-body">
+                  <span className="ra-award-tag"><Trophy /> {stage.award}</span>
+                  <p className="ra-congrats">Congratulations, {stage.creator}</p>
+                  <h3>{stage.title}</h3>
+                  <p className="ra-by">Shot in {stage.place}</p>
+                  {stage.note && <p className="ra-note">{stage.note}</p>}
+                  <LikeCount reel={stage} />
+                  <div className="ra-actions">
+                    <button className="ra-btn ra-btn-solid" onClick={() => setPlaying(stage)}>Watch the winner</button>
+                    <ShareButton reel={stage} />
+                  </div>
+                </div>
+              </div>
+
+              {otherWinners.length > 0 && (
+                <div className="ra-awards">
+                  {otherWinners.map((w) => (
+                    <article className="ra-award" key={w.id}>
+                      <Poster item={w} onPlay={setPlaying} />
+                      <span className="ra-award-tag"><Trophy /> {w.award}</span>
+                      <h3>{w.title}</h3>
+                      <Creator reel={w} />
+                      <ShareButton reel={w} />
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* creators wall */}
+          {creators.length > 0 && (
+            <section className="ra-section ra-wall" aria-label="Creators on this website">
+              <h2 className="ra-h2">The people behind the {noun}s</h2>
+              <p className="ra-h2-sub">Every creator here has a {noun} on this website.</p>
+              <div className="ra-marquee">
+                <ul className="ra-marquee-track">
+                  {wall.map((c, i) => (
+                    <li key={i} aria-hidden={i >= wall.length / 2 ? "true" : undefined}>
+                      <span className="ra-avatar" style={{ "--hue": hueOf(c) }}>{initials(c.creator)}</span>
+                      <span className="ra-chip-text"><strong>{c.creator}</strong><small>{c.place}</small></span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {/* all items */}
+          {rest.length > 0 && (
+            <section className="ra-section" id="reels">
+              <h2 className="ra-h2">More {noun}s from the coast</h2>
+              <p className="ra-h2-sub">Watch them all. A {noun} moves up the podium as its likes grow.</p>
+              <div className="ra-reel-grid">
+                {rest.map((r) => (
+                  <article className="ra-reel" key={r.id}>
+                    <Poster item={r} onPlay={setPlaying} />
                     <h3>{r.title}</h3>
                     <Creator reel={r} />
                     <LikeCount reel={r} />
                     <ShareButton reel={r} />
                   </article>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* winners */}
-        {stage && (
-          <section className="ra-section" id="winners">
-            <h2 className="ra-h2">Award winners</h2>
-            <p className="ra-h2-sub">One reel for each award, chosen by the jury.</p>
-
-            <div className="ra-stage" ref={stageRef}>
-              <Confetti run={stageSeen} />
-              <div className="ra-stage-media">
-                <div className="ra-ring"><Poster item={stage} onPlay={setPlaying} /></div>
-                <Crown className="ra-crown-stage" />
-              </div>
-              <div className="ra-stage-body">
-                <span className="ra-award-tag"><Trophy /> {stage.award}</span>
-                <p className="ra-congrats">Congratulations, {stage.creator}</p>
-                <h3>{stage.title}</h3>
-                <p className="ra-by">Shot in {stage.place}</p>
-                {stage.note && <p className="ra-note">{stage.note}</p>}
-                <LikeCount reel={stage} />
-                <div className="ra-actions">
-                  <button className="ra-btn ra-btn-solid" onClick={() => setPlaying(stage)}>Watch the winner</button>
-                  <ShareButton reel={stage} />
-                </div>
-              </div>
-            </div>
-
-            {otherWinners.length > 0 && (
-              <div className="ra-awards">
-                {otherWinners.map((w) => (
-                  <article className="ra-award" key={w.id}>
-                    <Poster item={w} onPlay={setPlaying} />
-                    <span className="ra-award-tag"><Trophy /> {w.award}</span>
-                    <h3>{w.title}</h3>
-                    <Creator reel={w} />
-                    <ShareButton reel={w} />
-                  </article>
                 ))}
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
 
-        {/* creators wall */}
-        {creators.length > 0 && (
-          <section className="ra-section ra-wall" aria-label="Creators on this website">
-            <h2 className="ra-h2">The people behind the reels</h2>
-            <p className="ra-h2-sub">Every creator here has a reel on this website.</p>
-            <div className="ra-marquee">
-              <ul className="ra-marquee-track">
-                {wall.map((c, i) => (
-                  <li key={i} aria-hidden={i >= wall.length / 2 ? "true" : undefined}>
-                    <span className="ra-avatar" style={{ "--hue": hueOf(c) }}>{initials(c.creator)}</span>
-                    <span className="ra-chip-text"><strong>{c.creator}</strong><small>{c.place}</small></span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
-
-        {/* all reels */}
-        {rest.length > 0 && (
-          <section className="ra-section" id="reels">
-            <h2 className="ra-h2">More reels from the coast</h2>
-            <p className="ra-h2-sub">Watch them all. A reel moves up the podium as its likes grow.</p>
-            <div className="ra-reel-grid">
-              {rest.map((r) => (
-                <article className="ra-reel" key={r.id}>
-                  <Poster item={r} onPlay={setPlaying} />
-                  <h3>{r.title}</h3>
-                  <Creator reel={r} />
-                  <LikeCount reel={r} />
-                  <ShareButton reel={r} />
-                </article>
+          {/* how to enter + form */}
+          <section className="ra-section" id="enter">
+            <h2 className="ra-h2">How to enter</h2>
+            <ol className="ra-steps">
+              {STEPS[mode].map((s, i) => (
+                <li key={s.t}>
+                  <span className="ra-step-n">{i + 1}</span>
+                  <div><h3>{s.t}</h3><p>{s.d}</p></div>
+                </li>
               ))}
+            </ol>
+
+            <div className="ra-enter">
+              <div>
+                <h2 className="ra-h2 ra-form-title">Submit your {noun}</h2>
+                <SubmitForm key={mode} mode={mode} />
+              </div>
+              <aside className="ra-perks" aria-label="What you get">
+                <h3>What you get</h3>
+                <ul>
+                  {perksFor(noun).map((p) => (
+                    <li key={p.t}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+                      <div><strong>{p.t}</strong><p>{p.d}</p></div>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
             </div>
           </section>
-        )}
+        </div>
 
-        {/* how to enter + form */}
-        <section className="ra-section" id="enter">
-          <h2 className="ra-h2">How to enter</h2>
-          <ol className="ra-steps">
-            {STEPS.map((s, i) => (
-              <li key={s.t}>
-                <span className="ra-step-n">{i + 1}</span>
-                <div><h3>{s.t}</h3><p>{s.d}</p></div>
-              </li>
-            ))}
-          </ol>
-
-          <div className="ra-enter">
-            <div>
-              <h2 className="ra-h2 ra-form-title">Submit your reel</h2>
-              <SubmitForm />
-            </div>
-            <aside className="ra-perks" aria-label="What you get">
-              <h3>What you get</h3>
-              <ul>
-                {PERKS.map((p) => (
-                  <li key={p.t}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-                    <div><strong>{p.t}</strong><p>{p.d}</p></div>
-                  </li>
-                ))}
-              </ul>
-            </aside>
-          </div>
-        </section>
-      </div>
-
-      {playing && <PlayerModal item={playing} caption={captionFor(playing)} special={Boolean(playing.award || rankOf(playing))} onClose={() => setPlaying(null)} />}
-    </main>
+        {playing && <PlayerModal item={playing} mode={mode} caption={captionFor(playing)} special={Boolean(playing.award || rankOf(playing))} onClose={() => setPlaying(null)} />}
+      </main>
+    </ModeContext.Provider>
   );
 }
 
@@ -568,7 +675,15 @@ const CSS = `
 .ra *, .ra *::before, .ra *::after { box-sizing: border-box; }
 .ra h1, .ra h2, .ra h3 { font-family: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif; margin: 0; letter-spacing: -.02em; }
 .ra :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
-.ra-page { position: relative; z-index: 1; padding: 64px clamp(18px, 5vw, 72px) 112px; }
+/* top padding leaves room for a fixed site navbar; raise 110px if the toggle still sits under it */
+.ra-page { position: relative; z-index: 1; padding: 110px clamp(18px, 5vw, 72px) 112px; }
+
+/* ---- Reels | Videos toggle ---- */
+.ra-toggle-wrap { position: relative; z-index: 20; max-width: 1280px; margin: 0 auto 44px; display: flex; }
+.ra-toggle { display: inline-flex; gap: 4px; padding: 5px; border-radius: 999px; background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(11,49,73,.08); }
+.ra-toggle button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border: 0; border-radius: 999px; background: transparent; color: var(--dim); font: 600 15px 'Instrument Sans', sans-serif; cursor: pointer; transition: background .2s, color .2s; }
+.ra-toggle button:hover:not(.on) { color: var(--ink); background: rgba(11,49,73,.06); }
+.ra-toggle button.on { background: var(--ink); color: #fff; }
 
 /* ---- animated background ---- */
 .ra-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
@@ -624,7 +739,7 @@ const CSS = `
 .ra-h2-sub { color: var(--dim); margin: 12px 0 44px; max-width: 56ch; }
 .ra-by { color: var(--dim); font-size: 14px; margin: 6px 0 0; }
 
-/* poster: every reel is 9:16 */
+/* poster: 9:16 for reels (16:9 for videos, see the is-video rules below) */
 .ra-poster { position: relative; display: block; width: 100%; aspect-ratio: 9 / 16; border: 0; padding: 0; cursor: pointer; overflow: hidden; border-radius: 16px; color: #fff;
   background: radial-gradient(120% 80% at 20% 10%, hsl(var(--hue) 60% 60%), transparent 60%), linear-gradient(170deg, hsl(var(--hue) 50% 42%), hsl(calc(var(--hue) + 30) 55% 26%)); }
 .ra-poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
@@ -679,7 +794,7 @@ const CSS = `
 .ra-marquee-track li { display: flex; align-items: center; gap: 12px; padding: 10px 22px 10px 12px; border-radius: 999px; background: var(--glass); backdrop-filter: blur(8px); border: 1px solid var(--line); }
 @keyframes ra-marq { to { transform: translateX(-50%); } }
 
-/* ---- more reels ---- */
+/* ---- more items ---- */
 .ra-reel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px 28px; }
 .ra-reel h3 { font-size: 18px; line-height: 1.2; font-weight: 600; margin-top: 16px; }
 
@@ -731,6 +846,18 @@ const CSS = `
 .ra-confetti.is-run i { animation-name: ra-fall; animation-timing-function: linear; animation-iteration-count: 1; animation-fill-mode: forwards; }
 @keyframes ra-fall { 0% { opacity: 1; transform: translate3d(0, -24px, 0) rotate(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate3d(var(--dx), 110vh, 0) rotate(calc(var(--rot) + 600deg)); } }
 
+/* ---- Videos mode: horizontal 16:9 ---- */
+.ra.is-video .ra-poster { aspect-ratio: 16 / 9; }
+.ra.is-video .ra-hero-reel { width: min(520px, 100%); }
+.ra.is-video .ra-modal-box { height: auto; width: min(92vw, calc(74vh * 16 / 9)); aspect-ratio: 16 / 9; }
+.ra.is-video .ra-play { width: 52px; height: 52px; }
+@media (min-width: 701px) {
+  .ra.is-video .ra-stage { grid-template-columns: minmax(0, 420px) 1fr; }
+}
+@media (min-width: 1101px) {
+  .ra.is-video .ra-reel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @media (max-width: 1100px) {
   .ra-awards, .ra-reel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -748,9 +875,12 @@ const CSS = `
   .ra-stage-media { max-width: 260px; margin: 18px auto 0; }
   .ra-grid2 { grid-template-columns: 1fr; }
   .ra-close { top: 8px; right: 8px; }
+  .ra.is-video .ra-podium { max-width: 420px; }
+  .ra.is-video .ra-stage-media { max-width: 100%; }
 }
 @media (max-width: 520px) {
   .ra-awards, .ra-reel-grid { grid-template-columns: 1fr; max-width: 300px; }
+  .ra.is-video .ra-awards, .ra.is-video .ra-reel-grid { max-width: 420px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ra *, .ra *::before, .ra *::after { animation: none !important; transition: none !important; }
