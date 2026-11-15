@@ -14,6 +14,7 @@ import {
   Trees,
   Map as MapIcon,
   Route as RouteIcon,
+  Film,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
@@ -27,6 +28,7 @@ import AdminHiddenPathsPanel from "../components/AdminHiddenPathsPanel";
 import AdminExploreVillagesPanel from "../components/AdminExploreVillagesPanel";
 import AdminItinerariesPanel from "../components/AdminItinerariesPanel";
 import AdminCircuitsPanel from "../components/AdminCircuitsPanel";
+import AdminMediaPanel from "../components/AdminMediaPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -253,6 +255,7 @@ export default function AdminDashboard() {
       items: [
         { key: "pendingSubmissions", label: "Pending Submissions", icon: Inbox, badge: pendingCount },
         { key: "hiddenPaths", label: "Hidden Paths", icon: RouteIcon, badge: pendingPathsCount },
+        { key: "reelsVideos", label: "Reels & Videos", icon: Film },
       ],
     },
     {
@@ -627,6 +630,8 @@ export default function AdminDashboard() {
             onPendingCountChange={setPendingPathsCount}
           />
         )}
+
+        {activeTab === "reelsVideos" && <AdminMediaPanel />}
 
         {activeTab === "addEditItineraries" && (
           <section>

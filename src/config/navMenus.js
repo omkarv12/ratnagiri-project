@@ -52,7 +52,7 @@ export const STORIES_MENU = {
   label: "Stories",
   route: "/stories",
   children: [
-    { label: "Reading Stories", route: "/stories" },
+    { label: "Read Stories", route: "/stories" },
     { label: "Video Stories", route: "/dashboard#stories" },
     { label: "Reels", route: "/stories/reels" },
   ],
