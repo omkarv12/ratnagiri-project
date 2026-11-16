@@ -565,10 +565,7 @@ export default function DashboardOverview() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
             <div className="max-w-3xl pb-16 sm:pb-12">
-              <p className="rt-hero-text animate-fade-up mb-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.28em] text-[#FBBF24] sm:text-xs">
-                <span className="h-px w-10 bg-[#FBBF24]" />
-                Explore &middot; Experience &middot; Support Local
-              </p>
+              
 
               <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[5.75rem]">
                 Discover
