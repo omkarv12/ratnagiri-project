@@ -6,6 +6,7 @@ import {
   Compass,
   BookOpen,
   PlayCircle,
+  Film,
   ShieldCheck,
   TrendingUp,
   Handshake,
@@ -91,6 +92,25 @@ const videosData = [
   { id: "BZWqwLF5mxI", title: "Agriculture and Water — Part 1" },
   { id: "tfi_WmqM6to", title: "Agriculture and Water — Part 2" },
 ];
+
+// Instagram Reels shown in the "Reels" carousel (3rd column of Stories & Videos).
+// Paste the public link of each reel below, newest first — e.g.
+//   { url: "https://www.instagram.com/reel/AbCdEfGhIjK/" },
+// Links must be PUBLIC reels (profile not private). Both /reel/ and /p/ links work.
+const REELS_PROFILE_URL = "https://www.instagram.com/";
+const reelsData = [
+  { url: "https://www.instagram.com/reel/DftR--Sit71/" },
+  { url: "https://www.instagram.com/reel/Dey9wwYoXCl/" },
+  { url: "https://www.instagram.com/reel/DeCRYtcttcp/" },
+];
+
+// Turns an Instagram post/reel link into its embeddable URL (null if invalid).
+function getInstagramEmbedUrl(url) {
+  const m = String(url).match(/instagram\.com\/(?:[^/]+\/)?(reels?|p|tv)\/([A-Za-z0-9_-]+)/);
+  if (!m) return null;
+  const type = m[1] === "reels" ? "reel" : m[1];
+  return `https://www.instagram.com/${type}/${m[2]}/embed`;
+}
 
 // Splits an array into fixed-size chunks — used to build "pages" of 2 for
 // the Stories and Videos carousels.
@@ -423,6 +443,17 @@ export default function DashboardOverview() {
     }, 6000);
     return () => clearInterval(interval);
   }, [videoAutoPaused, videoPages.length, playingVideoId]);
+
+  // ---- Reels: one reel at a time, arrows + dots to move through the rest ----
+  // Only the visible reel's embed is loaded, so six reels don't mean six
+  // heavy Instagram iframes on page load. No auto-advance: a reel that is
+  // playing shouldn't be swapped out from under the viewer.
+  const reels = reelsData
+    .map((r) => ({ ...r, embed: getInstagramEmbedUrl(r.url) }))
+    .filter((r) => r.embed);
+  const [reelIdx, setReelIdx] = useState(0);
+  const goToPrevReel = () => setReelIdx((i) => (i - 1 + reels.length) % reels.length);
+  const goToNextReel = () => setReelIdx((i) => (i + 1) % reels.length);
 
   // ---- About ---------------------------------------------------------------------
   const aboutPillars = [
@@ -923,7 +954,7 @@ export default function DashboardOverview() {
       >
         <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
 
-        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_17rem] xl:gap-8">
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <SectionHead
@@ -1181,6 +1212,110 @@ export default function DashboardOverview() {
               >
                 Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
               </a>
+            </div>
+          </div>
+
+          {/* Reels — one Instagram reel at a time, the rest in a carousel */}
+          <div className="w-full max-w-[17rem] lg:col-span-2 xl:col-span-1">
+            <SectionHead
+              compact
+              eyebrow="Follow"
+              title="Reels"
+              icon={Film}
+              iconClass="bg-fuchsia-100 text-fuchsia-600"
+            />
+
+            <div className="w-full">
+              {reels.length === 0 ? (
+                <div className="rt-card tint-rose flex h-[32rem] flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-50 p-8 text-center ring-1 ring-slate-200/60">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-fuchsia-600 shadow-md">
+                    <InstagramIcon size={26} />
+                  </span>
+                  <p className="t-h3 text-slate-900">Reels coming soon</p>
+                  <p className="t-small text-slate-600">
+                    Short clips from beaches, forts and villages across Ratnagiri.
+                  </p>
+                  <a
+                    href={REELS_PROFILE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#B4532A] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
+                  >
+                    Follow on Instagram
+                  </a>
+                </div>
+              ) : (
+                <>
+                  <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
+                    <div
+                      className="flex transition-transform duration-500 ease-out"
+                      style={{ transform: `translateX(-${reelIdx * 100}%)` }}
+                    >
+                      {reels.map((reel, i) => (
+                        <div key={reel.url} className="w-full shrink-0 pr-0.5">
+                          <div className="rt-card tint-rose relative h-[32rem] overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-50 ring-1 ring-slate-200/60">
+                            {i === reelIdx ? (
+                              <iframe
+                                className="absolute inset-0 h-full w-full bg-white"
+                                src={reel.embed}
+                                title={`Instagram reel ${i + 1} of ${reels.length}`}
+                                loading="lazy"
+                                scrolling="no"
+                                allow="encrypted-media; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/60">
+                                <InstagramIcon size={40} />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {reels.length > 1 && (
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        onClick={goToPrevReel}
+                        aria-label="Previous reel"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <div className="flex gap-1.5">
+                        {reels.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setReelIdx(i)}
+                            aria-label={`Go to reel ${i + 1}`}
+                            className={`h-1.5 rounded-full transition-all ${
+                              i === reelIdx ? "w-6 bg-fuchsia-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={goToNextReel}
+                        aria-label="Next reel"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  <a
+                    href={REELS_PROFILE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-fuchsia-600 hover:text-fuchsia-700"
+                  >
+                    Follow on Instagram <ExternalLink size={12} className="rt-cta-arrow" />
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
