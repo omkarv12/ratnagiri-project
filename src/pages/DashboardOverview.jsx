@@ -104,6 +104,20 @@ const reelsData = [
   { url: "https://www.instagram.com/reel/DeCRYtcttcp/" },
 ];
 
+// Stories, Videos and Reels cards all share this height (px) so the row lines up.
+// (The same number appears as h-[456px] in the markup below.)
+const MEDIA_CARD_H = 456;
+// Instagram's embed draws a profile header above the video and a like/comment bar
+// below it. We crop the embed down to just the video area using these measurements.
+// If Instagram ever changes its embed layout, tweak IG_HEADER_H / IG_EMBED_W.
+const IG_EMBED_W = 336; // embed width in px (Instagram's minimum is 326)
+const IG_HEADER_H = 56; // height of the profile header above the video
+const IG_MEDIA_H = IG_EMBED_W * 1.25; // the video sits in a 4:5 frame
+const IG_VIDEO_W = (IG_MEDIA_H * 9) / 16; // a 9:16 reel inside that frame
+const IG_SCALE = MEDIA_CARD_H / IG_MEDIA_H; // zoom so the reel fills the card
+const IG_OFFSET_X = Math.round(((IG_EMBED_W - IG_VIDEO_W) / 2) * IG_SCALE);
+const IG_OFFSET_Y = Math.round(IG_HEADER_H * IG_SCALE);
+
 // Turns an Instagram post/reel link into its embeddable URL (null if invalid).
 function getInstagramEmbedUrl(url) {
   const m = String(url).match(/instagram\.com\/(?:[^/]+\/)?(reels?|p|tv)\/([A-Za-z0-9_-]+)/);
@@ -420,29 +434,10 @@ export default function DashboardOverview() {
     if (storyPage >= storyPages.length) setStoryPage(0);
   }, [storyPages.length, storyPage]);
 
-  // ---- Videos: 2-per-page carousel, click a thumbnail to play that video --
-  const VIDEO_PAGE_SIZE = 2;
-  const videoPages = chunkArray(videosData, VIDEO_PAGE_SIZE);
-  const [videoPage, setVideoPage] = useState(0);
-  const [videoAutoPaused, setVideoAutoPaused] = useState(false);
+  // ---- Videos: one player on top, the playlist underneath ----------------
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
   const [playingVideoId, setPlayingVideoId] = useState(null);
-
-  const goToPrevVideoPage = () => {
-    setPlayingVideoId(null);
-    setVideoPage((p) => (p - 1 + videoPages.length) % videoPages.length);
-  };
-  const goToNextVideoPage = () => {
-    setPlayingVideoId(null);
-    setVideoPage((p) => (p + 1) % videoPages.length);
-  };
-
-  useEffect(() => {
-    if (videoAutoPaused || videoPages.length < 2 || playingVideoId) return;
-    const interval = setInterval(() => {
-      setVideoPage((p) => (p + 1) % videoPages.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [videoAutoPaused, videoPages.length, playingVideoId]);
+  const activeVideo = videosData[activeVideoIdx];
 
   // ---- Reels: one reel at a time, arrows + dots to move through the rest ----
   // Only the visible reel's embed is loaded, so six reels don't mean six
@@ -954,9 +949,7 @@ export default function DashboardOverview() {
       >
         <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
 
-        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-14 xl:grid-cols-[minmax(0,1fr)_21rem] xl:gap-x-10">
-          {/* Left column: Stories on top, Videos below */}
-          <div className="min-w-0 space-y-14">
+        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_256px] xl:gap-x-8">
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <SectionHead
@@ -1003,9 +996,9 @@ export default function DashboardOverview() {
                             <button
                               key={story.slug}
                               onClick={() => navigate(`/stories/${story.slug}`)}
-                              className="rt-card tint-teal group min-w-0 flex-1 overflow-hidden rounded-2xl bg-white text-left ring-1 ring-slate-200/60"
+                              className="rt-card tint-teal group flex h-[456px] min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white text-left ring-1 ring-slate-200/60"
                             >
-                              <div className="relative h-44 overflow-hidden bg-slate-100">
+                              <div className="relative min-h-0 flex-1 overflow-hidden bg-slate-100">
                                 {story.cover_image && (
                                   <div
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
@@ -1020,7 +1013,7 @@ export default function DashboardOverview() {
                                 )}
                               </div>
 
-                              <div className="p-5">
+                              <div className="shrink-0 p-5">
                                 <p className="t-h3 mb-1 line-clamp-2 text-slate-900">
                                   {story.title}
                                 </p>
@@ -1097,8 +1090,8 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Videos — 2 per page, sliding as a page; click a thumbnail to play it */}
-          <div>
+          {/* Videos — one player on top, the playlist underneath */}
+          <div className="min-w-0">
             <SectionHead
               compact
               eyebrow="Watch"
@@ -1107,120 +1100,100 @@ export default function DashboardOverview() {
               iconClass="bg-rose-100 text-rose-600"
             />
 
-            <div
-              className="w-full"
-              onMouseEnter={() => setVideoAutoPaused(true)}
-              onMouseLeave={() => setVideoAutoPaused(false)}
-            >
-              <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2 [mask-image:linear-gradient(to_right,transparent,#000_8px,#000_calc(100%-8px),transparent)]">
-                <div
-                  className="flex transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${videoPage * 100}%)` }}
-                >
-                  {videoPages.map((page, pageIdx) => (
-                    <div key={pageIdx} className="flex w-full shrink-0 gap-5 pr-0.5">
-                      {page.map((video) => (
-                        <div
-                          key={video.id}
-                          className="rt-card tint-rose min-w-0 flex-1 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60"
-                        >
-                          <div className="relative aspect-video bg-black">
-                            {playingVideoId === video.id ? (
-                              <iframe
-                                className="absolute inset-0 h-full w-full"
-                                src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0`}
-                                title={video.title}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            ) : (
-                              <button
-                                onClick={() => setPlayingVideoId(video.id)}
-                                aria-label={`Play ${video.title}`}
-                                className="group/video absolute inset-0 h-full w-full"
-                              >
-                                <div
-                                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover/video:scale-105"
-                                  style={{
-                                    backgroundImage: `url(https://img.youtube.com/vi/${video.id}/hqdefault.jpg)`,
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black/30 transition group-hover/video:bg-black/10" />
-                                <span className="absolute inset-0 flex items-center justify-center">
-                                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-lg ring-8 ring-white/25 transition-transform group-hover/video:scale-110">
-                                    <PlayCircle size={24} />
-                                  </span>
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                          <div className="p-4">
-                            <p className="t-small line-clamp-2 font-semibold text-slate-900">
-                              {video.title}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+            <div className="pb-6 pt-2">
+              <div className="rt-card tint-rose flex h-[456px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60">
+                <div className="relative aspect-video shrink-0 bg-black">
+                  {playingVideoId === activeVideo.id ? (
+                    <iframe
+                      className="absolute inset-0 h-full w-full"
+                      src={`https://www.youtube-nocookie.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
+                      title={activeVideo.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setPlayingVideoId(activeVideo.id)}
+                      aria-label={`Play ${activeVideo.title}`}
+                      className="group/video absolute inset-0 h-full w-full"
+                    >
+                      <div
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover/video:scale-105"
+                        style={{
+                          backgroundImage: `url(https://img.youtube.com/vi/${activeVideo.id}/hqdefault.jpg)`,
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/30 transition group-hover/video:bg-black/10" />
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-lg ring-8 ring-white/25 transition-transform group-hover/video:scale-110">
+                          <PlayCircle size={28} />
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                </div>
 
-                      {/* pad the last page so a lone card doesn't stretch full width */}
-                      {page.length < VIDEO_PAGE_SIZE &&
-                        Array.from({ length: VIDEO_PAGE_SIZE - page.length }).map((_, i) => (
-                          <div key={`video-pad-${i}`} className="flex-1" />
-                        ))}
-                    </div>
-                  ))}
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <p className="px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    Playlist · {videosData.length} video{videosData.length === 1 ? "" : "s"}
+                  </p>
+                  <ul className="rt-feed min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
+                    {videosData.map((v, i) => {
+                      const isActive = i === activeVideoIdx;
+                      return (
+                        <li key={v.id}>
+                          <button
+                            onClick={() => {
+                              setActiveVideoIdx(i);
+                              setPlayingVideoId(v.id);
+                            }}
+                            aria-current={isActive ? "true" : undefined}
+                            className={`flex w-full items-center gap-3 rounded-xl p-2 text-left transition ${
+                              isActive ? "bg-rose-50 ring-1 ring-rose-100" : "hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="relative h-12 w-[5.25rem] shrink-0 overflow-hidden rounded-lg bg-slate-200">
+                              <img
+                                src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                                alt=""
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                              />
+                              {isActive && (
+                                <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-white">
+                                  <PlayCircle size={18} />
+                                </span>
+                              )}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-[11px] font-bold text-rose-600">
+                                {isActive ? (playingVideoId === v.id ? "Now playing" : "Selected") : `Video ${i + 1}`}
+                              </span>
+                              <span className="line-clamp-2 block text-sm font-semibold leading-snug text-slate-900">
+                                {v.title}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               </div>
-
-              {videoPages.length > 1 && (
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={goToPrevVideoPage}
-                    aria-label="Previous videos"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-rose-600 hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)]"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <div className="flex gap-1.5">
-                    {videoPages.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setPlayingVideoId(null);
-                          setVideoPage(i);
-                        }}
-                        aria-label={`Go to videos page ${i + 1}`}
-                        className={`h-1.5 rounded-full transition-all ${
-                          i === videoPage ? "w-6 bg-rose-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <button
-                    onClick={goToNextVideoPage}
-                    aria-label="Next videos"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-rose-600 hover:shadow-[0_10px_25px_-8px_rgba(225,29,72,0.4)]"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              )}
-
-              <a
-                href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
-              >
-                Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
-              </a>
             </div>
+
+            <a
+              href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rt-cta t-small inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
+            >
+              Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
+            </a>
           </div>
 
-          </div>
-
-          {/* Reels — tall showcase column: one reel at a time, arrows + dots for the rest */}
-          <div className="flex min-w-0 flex-col">
+          {/* Reels — Instagram reels cropped to just the video, one at a time */}
+          <div className="mx-auto w-full min-w-0 max-w-[256px] xl:mx-0">
             <SectionHead
               compact
               eyebrow="Follow"
@@ -1229,103 +1202,119 @@ export default function DashboardOverview() {
               iconClass="bg-fuchsia-100 text-fuchsia-600"
             />
 
-            <div className="flex flex-1 flex-col">
-              {reels.length === 0 ? (
-                <div className="flex min-h-[42rem] flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 p-8 text-center ring-1 ring-slate-200/60">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-fuchsia-600 shadow-md">
-                    <InstagramIcon size={26} />
-                  </span>
-                  <p className="t-h3 text-slate-900">Reels coming soon</p>
-                  <p className="t-small max-w-xs text-slate-600">
-                    Short clips from beaches, forts and villages across Ratnagiri.
-                  </p>
-                  <a
-                    href={REELS_PROFILE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full bg-[#B4532A] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
-                  >
-                    Follow on Instagram
-                  </a>
-                </div>
-              ) : (
-                <>
-                  {/* stage: the embed sits centred on a soft gradient, so the
-                      column always lines up with the left side, whatever its height */}
-                  <div className="relative min-h-[42rem] flex-1 overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.28)] ring-1 ring-slate-200/60">
-                    <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-fuchsia-300/30 blur-3xl" />
-                    <span aria-hidden="true" className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />
-
+            {reels.length === 0 ? (
+              <div className="mb-6 mt-2 flex h-[456px] flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 p-6 text-center ring-1 ring-slate-200/60">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-fuchsia-600 shadow-md">
+                  <InstagramIcon size={26} />
+                </span>
+                <p className="t-h3 text-slate-900">Reels coming soon</p>
+                <p className="t-small text-slate-600">
+                  Short clips from beaches, forts and villages across Ratnagiri.
+                </p>
+                <a
+                  href={REELS_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-[#B4532A] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
+                >
+                  Follow on Instagram
+                </a>
+              </div>
+            ) : (
+              <>
+                <div className="pb-6 pt-2">
+                  <div className="relative h-[456px] w-full overflow-hidden rounded-2xl bg-black shadow-[0_12px_32px_-16px_rgba(15,23,42,0.35)] ring-1 ring-slate-200/60">
                     <div
                       className="absolute inset-0 flex transition-transform duration-500 ease-out"
                       style={{ transform: `translateX(-${reelIdx * 100}%)` }}
                     >
                       {reels.map((reel, i) => (
-                        <div key={reel.url} className="flex h-full w-full shrink-0 items-center justify-center p-4">
-                          <div className="relative h-[40rem] w-full max-w-[21rem] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
-                            {i === reelIdx ? (
+                        <div
+                          key={reel.url}
+                          className="relative h-full w-full shrink-0 overflow-hidden bg-gradient-to-br from-fuchsia-200 via-rose-100 to-amber-100"
+                        >
+                          {i === reelIdx ? (
+                            <>
+                              {/* The embed is drawn oversized and shifted so only the video shows */}
                               <iframe
-                                className="absolute inset-0 h-full w-full bg-white"
                                 src={reel.embed}
                                 title={`Instagram reel ${i + 1} of ${reels.length}`}
                                 loading="lazy"
                                 scrolling="no"
                                 allow="encrypted-media; picture-in-picture"
                                 allowFullScreen
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: IG_EMBED_W,
+                                  height: 760,
+                                  border: 0,
+                                  transformOrigin: "0 0",
+                                  transform: `translate(-${IG_OFFSET_X}px, -${IG_OFFSET_Y}px) scale(${IG_SCALE})`,
+                                }}
                               />
-                            ) : (
-                              <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/50">
-                                <InstagramIcon size={40} />
-                              </span>
-                            )}
-                          </div>
+                              <a
+                                href={reel.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition hover:bg-black/75"
+                              >
+                                <InstagramIcon size={11} /> Watch on Instagram
+                              </a>
+                            </>
+                          ) : (
+                            <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/50">
+                              <InstagramIcon size={40} />
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
+                </div>
 
-                  {reels.length > 1 && (
-                    <div className="mt-5 flex items-center justify-center gap-3">
-                      <button
-                        onClick={goToPrevReel}
-                        aria-label="Previous reel"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      <div className="flex gap-1.5">
-                        {reels.map((_, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setReelIdx(i)}
-                            aria-label={`Go to reel ${i + 1}`}
-                            className={`h-1.5 rounded-full transition-all ${
-                              i === reelIdx ? "w-6 bg-fuchsia-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <button
-                        onClick={goToNextReel}
-                        aria-label="Next reel"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
+                {reels.length > 1 && (
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={goToPrevReel}
+                      aria-label="Previous reel"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div className="flex gap-1.5">
+                      {reels.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setReelIdx(i)}
+                          aria-label={`Go to reel ${i + 1}`}
+                          className={`h-1.5 rounded-full transition-all ${
+                            i === reelIdx ? "w-6 bg-fuchsia-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                          }`}
+                        />
+                      ))}
                     </div>
-                  )}
+                    <button
+                      onClick={goToNextReel}
+                      aria-label="Next reel"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
 
-                  <a
-                    href={REELS_PROFILE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-fuchsia-600 hover:text-fuchsia-700"
-                  >
-                    Follow on Instagram <ExternalLink size={12} className="rt-cta-arrow" />
-                  </a>
-                </>
-              )}
-            </div>
+                <a
+                  href={REELS_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-fuchsia-600 hover:text-fuchsia-700"
+                >
+                  Follow on Instagram <ExternalLink size={12} className="rt-cta-arrow" />
+                </a>
+              </>
+            )}
           </div>
         </div>
       </section>
