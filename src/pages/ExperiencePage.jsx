@@ -349,7 +349,7 @@ function DetailModal({ item, config, onClose }) {
             <div className="mt-7 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 p-4">
               <Phone size={16} className="text-[#B4532A] shrink-0" />
               <p className="text-sm text-slate-700">
-                To book or ask questions, contact{" "}
+                To book, contact{" "}
                 <span className="font-semibold text-slate-900">{item.contact}</span>
               </p>
             </div>
