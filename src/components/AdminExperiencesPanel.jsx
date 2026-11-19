@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ImagePlus, ExternalLink } from "lucide-react";
+import { ImagePlus, ExternalLink, X, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EXPERIENCE_LIST, EXPERIENCES } from "../config/experienceConfig";
-import { experiencesApi, toHighlightList } from "../api/experiencesApi";
+import { experiencesApi, toHighlightList, toImageList } from "../api/experiencesApi";
 
 const EMPTY = {
   title: "",
   summary: "",
   description: "",
-  image_url: "",
+  images: [],
   location: "",
   duration: "",
   price: "",
@@ -45,6 +45,7 @@ export default function AdminExperiencesPanel() {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
   const fileRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -62,40 +63,80 @@ export default function AdminExperiencesPanel() {
 
   useEffect(() => {
     setForm(null);
+    setUrlDraft("");
     load();
   }, [load]);
 
   const setField = (key, value) =>
     setForm((f) => ({ ...f, data: { ...f.data, [key]: value } }));
 
-  const openNew = () =>
-    setForm({ data: { ...EMPTY, display_order: items.length + 1 } });
+  const openNew = () => {
+    setUrlDraft("");
+    setForm({ data: { ...EMPTY, images: [], display_order: items.length + 1 } });
+  };
 
-  const openEdit = (item) =>
+  const openEdit = (item) => {
+    setUrlDraft("");
     setForm({
       id: item.id,
       data: {
         ...EMPTY,
         ...item,
         highlights: toHighlightList(item.highlights).join("\n"),
+        images: toImageList(item.images, item.image_url),
       },
     });
+  };
+
+  /* ---------- photo helpers ---------- */
+
+  const addImages = (urls) =>
+    setForm((f) => ({
+      ...f,
+      data: { ...f.data, images: [...f.data.images, ...urls] },
+    }));
+
+  const removeImage = (idx) =>
+    setForm((f) => ({
+      ...f,
+      data: { ...f.data, images: f.data.images.filter((_, i) => i !== idx) },
+    }));
+
+  const makeCover = (idx) =>
+    setForm((f) => {
+      const imgs = [...f.data.images];
+      const [picked] = imgs.splice(idx, 1);
+      return { ...f, data: { ...f.data, images: [picked, ...imgs] } };
+    });
+
+  const addUrl = () => {
+    const url = urlDraft.trim();
+    if (!url) return;
+    addImages([url]);
+    setUrlDraft("");
+  };
 
   const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setUploading(true);
     setError(null);
+    const urls = [];
     try {
-      const { url } = await experiencesApi.uploadImage(file);
-      setField("image_url", url);
+      for (const file of files) {
+        const { url } = await experiencesApi.uploadImage(file);
+        urls.push(url);
+      }
     } catch (err) {
       setError(`Image upload failed: ${err.message}`);
     } finally {
+      if (urls.length) addImages(urls);
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   };
+
+  /* ---------- save / status / delete ---------- */
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -110,6 +151,8 @@ export default function AdminExperiencesPanel() {
       category,
       title: form.data.title.trim(),
       highlights: toHighlightList(form.data.highlights),
+      images: form.data.images,
+      image_url: form.data.images[0] || "",
       display_order: Number(form.data.display_order) || 0,
     };
     try {
@@ -223,40 +266,91 @@ export default function AdminExperiencesPanel() {
             />
           </Field>
 
-          {/* image */}
+          {/* photos */}
           <div>
-            <span className="block text-sm font-semibold text-gray-700 mb-1">Photo</span>
-            <div className="flex gap-3 items-start flex-wrap">
-              <div
-                className="h-24 w-36 shrink-0 rounded bg-gray-100 bg-cover bg-center border border-gray-200"
-                style={form.data.image_url ? { backgroundImage: `url(${form.data.image_url})` } : undefined}
-                aria-label="Photo preview"
-              />
-              <div className="flex-1 min-w-[220px] space-y-2">
-                <input
-                  className={inputCls}
-                  placeholder="Paste an image URL, or upload below"
-                  value={form.data.image_url}
-                  onChange={(e) => setField("image_url", e.target.value)}
-                />
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUpload}
-                  className="hidden"
-                  id="exp-image-upload"
-                />
-                <label
-                  htmlFor="exp-image-upload"
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-300 text-sm font-semibold cursor-pointer hover:bg-gray-50 ${
-                    uploading ? "opacity-60 pointer-events-none" : ""
-                  }`}
-                >
-                  <ImagePlus size={15} />
-                  {uploading ? "Uploading..." : "Upload photo"}
-                </label>
+            <span className="block text-sm font-semibold text-gray-700 mb-1">
+              Photos <span className="font-normal text-gray-400">(first photo is the cover)</span>
+            </span>
+
+            {form.data.images.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                {form.data.images.map((src, idx) => (
+                  <div key={`${src}-${idx}`} className="relative">
+                    <div
+                      className="h-24 rounded bg-gray-100 bg-cover bg-center border border-gray-200"
+                      style={{ backgroundImage: `url(${src})` }}
+                      aria-label={`Photo ${idx + 1}`}
+                    />
+                    {idx === 0 && (
+                      <span className="absolute left-1 top-1 text-[10px] font-bold uppercase bg-teal-700 text-white px-1.5 py-0.5 rounded">
+                        Cover
+                      </span>
+                    )}
+                    <div className="absolute right-1 top-1 flex gap-1">
+                      {idx !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => makeCover(idx)}
+                          title="Make cover"
+                          aria-label={`Make photo ${idx + 1} the cover`}
+                          className="w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center"
+                        >
+                          <ArrowLeft size={12} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        title="Remove"
+                        aria-label={`Remove photo ${idx + 1}`}
+                        className="w-6 h-6 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
+            )}
+
+            <div className="flex gap-2 flex-wrap items-center">
+              <input
+                className={`${inputCls} flex-1 min-w-[220px]`}
+                placeholder="Paste an image URL and press Add"
+                value={urlDraft}
+                onChange={(e) => setUrlDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addUrl();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={addUrl}
+                className="px-3 py-2 rounded border border-gray-300 text-sm font-semibold hover:bg-gray-50"
+              >
+                Add
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleUpload}
+                className="hidden"
+                id="exp-image-upload"
+              />
+              <label
+                htmlFor="exp-image-upload"
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 text-sm font-semibold cursor-pointer hover:bg-gray-50 ${
+                  uploading ? "opacity-60 pointer-events-none" : ""
+                }`}
+              >
+                <ImagePlus size={15} />
+                {uploading ? "Uploading..." : "Upload photos"}
+              </label>
             </div>
           </div>
 
@@ -348,40 +442,50 @@ export default function AdminExperiencesPanel() {
         </p>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="bg-white p-3 rounded shadow flex items-center gap-4 flex-wrap">
-              <div
-                className="h-16 w-24 shrink-0 rounded bg-gray-100 bg-cover bg-center"
-                style={{ backgroundImage: `url(${item.image_url || config.cover})` }}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-semibold truncate">{item.title}</h4>
-                  <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
-                      item.status === "published" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
+          {items.map((item) => {
+            const imgs = toImageList(item.images, item.image_url);
+            return (
+              <div key={item.id} className="bg-white p-3 rounded shadow flex items-center gap-4 flex-wrap">
+                <div className="relative h-16 w-24 shrink-0">
+                  <div
+                    className="h-full w-full rounded bg-gray-100 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${imgs[0] || config.cover})` }}
+                  />
+                  {imgs.length > 1 && (
+                    <span className="absolute bottom-1 right-1 text-[10px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded">
+                      {imgs.length} photos
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-500 truncate">
-                  {[item.location, item.duration, item.price].filter(Boolean).join(" · ") || "No details added"}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-semibold truncate">{item.title}</h4>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
+                        item.status === "published" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 truncate">
+                    {[item.location, item.duration, item.price].filter(Boolean).join(" · ") || "No details added"}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => openEdit(item)} className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">
+                    Edit
+                  </button>
+                  <button onClick={() => toggleStatus(item)} className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                    {item.status === "published" ? "Unpublish" : "Publish"}
+                  </button>
+                  <button onClick={() => handleDelete(item)} className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2 shrink-0">
-                <button onClick={() => openEdit(item)} className="px-3 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">
-                  Edit
-                </button>
-                <button onClick={() => toggleStatus(item)} className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-                  {item.status === "published" ? "Unpublish" : "Publish"}
-                </button>
-                <button onClick={() => handleDelete(item)} className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

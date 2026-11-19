@@ -1,8 +1,19 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Clock, Wallet, CalendarDays, Phone, X, Check, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Wallet,
+  CalendarDays,
+  Phone,
+  X,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Images,
+} from "lucide-react";
 import { EXPERIENCES, EXPERIENCE_LIST } from "../config/experienceConfig";
-import { experiencesApi, toHighlightList } from "../api/experiencesApi";
+import { experiencesApi, toHighlightList, toImageList } from "../api/experiencesApi";
 
 // Which meta fields to show, in order, with their icon.
 const META = [
@@ -245,6 +256,8 @@ function MetaRow({ item, config, size = "sm" }) {
 }
 
 function ItemCard({ item, config, onOpen }) {
+  const imgs = toImageList(item.images, item.image_url);
+
   return (
     <button
       onClick={onOpen}
@@ -253,9 +266,16 @@ function ItemCard({ item, config, onOpen }) {
       <div className="relative h-52 bg-slate-100 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage: `url(${item.image_url || config.cover})` }}
+          style={{ backgroundImage: `url(${imgs[0] || config.cover})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        {imgs.length > 1 && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/55 text-white text-xs font-semibold px-2 py-1">
+            <Images size={12} aria-hidden="true" />
+            <span className="sr-only">Photos: </span>
+            {imgs.length}
+          </span>
+        )}
       </div>
       <div className="p-5 flex-1 flex flex-col">
         <h3 className="font-display text-lg text-slate-900 leading-snug mb-1.5">{item.title}</h3>
@@ -274,41 +294,118 @@ function ItemCard({ item, config, onOpen }) {
   );
 }
 
-function DetailModal({ item, config, onClose }) {
-  const highlights = toHighlightList(item.highlights);
-  const metaRows = META.filter((m) => item[m.key]);
+/* ------------------------------------------------------------------ */
+
+/** Sliding photo carousel that fills its (relatively positioned) parent. */
+function Carousel({ images, title }) {
+  const n = images.length;
+  const [i, setI] = useState(0);
+  const touchX = useRef(null);
+  const go = useCallback((d) => setI((c) => (c + d + n) % n), [n]);
+
+  useEffect(() => {
+    if (n < 2) return;
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowLeft") go(-1);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [n, go]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      className="absolute inset-0 overflow-hidden"
+      onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        if (touchX.current == null || n < 2) return;
+        const dx = e.changedTouches[0].clientX - touchX.current;
+        if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+        touchX.current = null;
+      }}
     >
+      <div
+        className="flex h-full transition-transform duration-500 ease-out motion-reduce:transition-none"
+        style={{ transform: `translateX(-${i * 100}%)` }}
+      >
+        {images.map((src, idx) => (
+          <div
+            key={`${src}-${idx}`}
+            role="img"
+            aria-label={`${title}, photo ${idx + 1} of ${n}`}
+            className="h-full w-full shrink-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${src})` }}
+          />
+        ))}
+      </div>
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+      {n > 1 && (
+        <>
+          <button
+            onClick={() => go(-1)}
+            aria-label="Previous photo"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => go(1)}
+            aria-label="Next photo"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <ChevronRight size={18} />
+          </button>
+          <div className="absolute bottom-4 right-5 flex gap-1.5">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setI(idx)}
+                aria-label={`Go to photo ${idx + 1}`}
+                aria-current={idx === i}
+                className={`h-2 rounded-full transition-all ${
+                  idx === i ? "w-5 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DetailModal({ item, config, onClose }) {
+  const highlights = toHighlightList(item.highlights);
+  const metaRows = META.filter((m) => item[m.key]);
+  const images = toImageList(item.images, item.image_url);
+  const slides = images.length ? images : [config.cover];
+
+  return (
+    <div className="fixed inset-0 z-50 bg-white">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={item.title}
-        className="xp-modal relative w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
+        className="xp-modal relative h-full w-full overflow-y-auto"
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 text-white flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="fixed top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/55 hover:bg-black/75 text-white flex items-center justify-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
-          <X size={18} />
+          <X size={20} />
         </button>
 
-        <div className="relative h-56 sm:h-72 bg-slate-100">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${item.image_url || config.cover})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <h2 className="absolute bottom-4 left-5 right-14 font-display text-2xl sm:text-3xl text-white leading-tight">
+        <div className="relative h-[50vh] min-h-[300px] sm:h-[60vh] bg-slate-100">
+          <Carousel images={slides} title={item.title} />
+          <h2 className="absolute bottom-6 left-5 sm:left-12 right-24 font-display text-3xl sm:text-5xl text-white leading-tight pointer-events-none">
             {item.title}
           </h2>
         </div>
 
-        <div className="p-5 sm:p-8">
+        <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 sm:py-12">
           {metaRows.length > 0 && (
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-6 mb-6 border-b border-slate-100">
               {metaRows.map(({ key, icon: Icon }) => (

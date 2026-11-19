@@ -44,3 +44,21 @@ export const experiencesApi = {
 // highlights can arrive as an array or a newline-separated string
 export const toHighlightList = (h) =>
   Array.isArray(h) ? h : String(h || "").split("\n").map((s) => s.trim()).filter(Boolean);
+
+// Photos can arrive as an array, a JSON string, or newline-separated text.
+// Falls back to a single URL (the old image_url) when there is no list.
+export function toImageList(value, fallback) {
+  let list = [];
+  if (Array.isArray(value)) list = value;
+  else if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      list = Array.isArray(parsed) ? parsed : [value];
+    } catch {
+      list = value.split("\n");
+    }
+  }
+  list = list.map((s) => String(s).trim()).filter(Boolean);
+  if (!list.length && fallback) list = [fallback];
+  return list;
+}
