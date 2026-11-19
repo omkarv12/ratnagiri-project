@@ -954,7 +954,9 @@ export default function DashboardOverview() {
       >
         <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
 
-        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_17rem] xl:gap-8">
+        <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-14 xl:grid-cols-[minmax(0,1fr)_21rem] xl:gap-x-10">
+          {/* Left column: Stories on top, Videos below */}
+          <div className="min-w-0 space-y-14">
           {/* Stories — 2 published stories per page, sliding as a page */}
           <div>
             <SectionHead
@@ -990,7 +992,7 @@ export default function DashboardOverview() {
 
               {!storiesLoading && !storiesError && stories.length > 0 && (
                 <>
-                  <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
+                  <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2 [mask-image:linear-gradient(to_right,transparent,#000_8px,#000_calc(100%-8px),transparent)]">
                     <div
                       className="flex transition-transform duration-500 ease-out"
                       style={{ transform: `translateX(-${storyPage * 100}%)` }}
@@ -1110,7 +1112,7 @@ export default function DashboardOverview() {
               onMouseEnter={() => setVideoAutoPaused(true)}
               onMouseLeave={() => setVideoAutoPaused(false)}
             >
-              <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
+              <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2 [mask-image:linear-gradient(to_right,transparent,#000_8px,#000_calc(100%-8px),transparent)]">
                 <div
                   className="flex transition-transform duration-500 ease-out"
                   style={{ transform: `translateX(-${videoPage * 100}%)` }}
@@ -1215,8 +1217,10 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Reels — one Instagram reel at a time, the rest in a carousel */}
-          <div className="w-full max-w-[17rem] lg:col-span-2 xl:col-span-1">
+          </div>
+
+          {/* Reels — tall showcase column: one reel at a time, arrows + dots for the rest */}
+          <div className="flex min-w-0 flex-col">
             <SectionHead
               compact
               eyebrow="Follow"
@@ -1225,14 +1229,14 @@ export default function DashboardOverview() {
               iconClass="bg-fuchsia-100 text-fuchsia-600"
             />
 
-            <div className="w-full">
+            <div className="flex flex-1 flex-col">
               {reels.length === 0 ? (
-                <div className="rt-card tint-rose flex h-[32rem] flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-50 p-8 text-center ring-1 ring-slate-200/60">
+                <div className="flex min-h-[42rem] flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 p-8 text-center ring-1 ring-slate-200/60">
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-fuchsia-600 shadow-md">
                     <InstagramIcon size={26} />
                   </span>
                   <p className="t-h3 text-slate-900">Reels coming soon</p>
-                  <p className="t-small text-slate-600">
+                  <p className="t-small max-w-xs text-slate-600">
                     Short clips from beaches, forts and villages across Ratnagiri.
                   </p>
                   <a
@@ -1246,14 +1250,19 @@ export default function DashboardOverview() {
                 </div>
               ) : (
                 <>
-                  <div className="-mx-2 overflow-hidden px-2 pb-6 pt-2">
+                  {/* stage: the embed sits centred on a soft gradient, so the
+                      column always lines up with the left side, whatever its height */}
+                  <div className="relative min-h-[42rem] flex-1 overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.28)] ring-1 ring-slate-200/60">
+                    <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-fuchsia-300/30 blur-3xl" />
+                    <span aria-hidden="true" className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />
+
                     <div
-                      className="flex transition-transform duration-500 ease-out"
+                      className="absolute inset-0 flex transition-transform duration-500 ease-out"
                       style={{ transform: `translateX(-${reelIdx * 100}%)` }}
                     >
                       {reels.map((reel, i) => (
-                        <div key={reel.url} className="w-full shrink-0 pr-0.5">
-                          <div className="rt-card tint-rose relative h-[32rem] overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-50 ring-1 ring-slate-200/60">
+                        <div key={reel.url} className="flex h-full w-full shrink-0 items-center justify-center p-4">
+                          <div className="relative h-[40rem] w-full max-w-[21rem] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
                             {i === reelIdx ? (
                               <iframe
                                 className="absolute inset-0 h-full w-full bg-white"
@@ -1265,7 +1274,7 @@ export default function DashboardOverview() {
                                 allowFullScreen
                               />
                             ) : (
-                              <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/60">
+                              <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/50">
                                 <InstagramIcon size={40} />
                               </span>
                             )}
@@ -1276,7 +1285,7 @@ export default function DashboardOverview() {
                   </div>
 
                   {reels.length > 1 && (
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="mt-5 flex items-center justify-center gap-3">
                       <button
                         onClick={goToPrevReel}
                         aria-label="Previous reel"
