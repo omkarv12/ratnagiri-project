@@ -35,6 +35,18 @@ import VisitorCounter from "../components/VisitorCounter";
 // NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
 // App.jsx so it opens as soon as the website starts, even during loading.
 
+/*
+  COLOURS
+  All colours come from the palette tokens defined in DashboardLayout's
+  THEME_CSS (--rt-ink, --rt-teal, --rt-laterite, --rt-gold, --rt-kokum,
+  --rt-mist, --rt-sand and their -tint / -dark variants).
+  To change the look of this page, change the tokens there.
+
+  Tailwind needs a type hint on CSS variables, so write
+    text-[color:var(--rt-teal)]   bg-[color:var(--rt-teal-tint)]
+    border-[color:var(--rt-teal-line)]   ring-[color:var(--rt-kokum-line)]
+*/
+
 // Hero background video. Put your file in the project's `public/` folder
 // (e.g. public/hero-video.mp4) and it will be served from "/hero-video.mp4".
 // Optional: add a poster image in public/ and set HERO_POSTER to its path.
@@ -57,7 +69,8 @@ const MONTH_NAMES = [
 ];
 const CAL_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
-// Same category colours as the full EventsCalendar page
+// Same category colours as the full EventsCalendar page (data colours, kept
+// identical on both pages so a category looks the same everywhere)
 const CAL_CATEGORY_COLORS = {
   beaches: "#f7a072",
   forts: "#64b5f6",
@@ -223,8 +236,8 @@ function Reveal({ children, className = "" }) {
 function SectionHead({ eyebrow, title, lead, icon: Icon, iconClass = "", compact = false }) {
   return (
     <Reveal className={compact ? "mb-6" : "mb-10 max-w-3xl"}>
-      <p className="mb-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#B4532A]">
-        <span className="h-px w-8 bg-[#B4532A]" />
+      <p className="mb-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--rt-laterite)]">
+        <span className="h-px w-8 bg-[color:var(--rt-laterite)]" />
         {eyebrow}
       </p>
       <h2 className="t-h2 flex items-center gap-3">
@@ -451,12 +464,14 @@ export default function DashboardOverview() {
   const goToNextReel = () => setReelIdx((i) => (i + 1) % reels.length);
 
   // ---- About ---------------------------------------------------------------------
+  // Society = teal, Economy = laterite, Governance = ink. `tint` picks the
+  // hover glow (see .rt-card.tint-* in the style block below).
   const aboutPillars = [
     {
       title: "Society",
       icon: Handshake,
-      color: "text-teal-700",
-      bg: "bg-teal-50",
+      color: "text-[color:var(--rt-teal)]",
+      bg: "bg-[color:var(--rt-teal-tint)]",
       tint: "tint-teal",
       image: SocietyImg,
       route: "/society",
@@ -466,9 +481,9 @@ export default function DashboardOverview() {
     {
       title: "Economy",
       icon: TrendingUp,
-      color: "text-amber-700",
-      bg: "bg-amber-50",
-      tint: "tint-amber",
+      color: "text-[color:var(--rt-laterite)]",
+      bg: "bg-[color:var(--rt-laterite-tint)]",
+      tint: "tint-laterite",
       image: EconomyImg,
       route: "/economy",
       description:
@@ -477,9 +492,9 @@ export default function DashboardOverview() {
     {
       title: "Good Governance",
       icon: ShieldCheck,
-      color: "text-emerald-700",
-      bg: "bg-emerald-50",
-      tint: "tint-navy",
+      color: "text-[color:var(--rt-ink)]",
+      bg: "bg-[color:var(--rt-ink-tint)]",
+      tint: "tint-ink",
       image: GoodGovernanceImg,
       route: "/good-governance",
       description:
@@ -560,16 +575,17 @@ export default function DashboardOverview() {
         .rt-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* Card treatment: a soft resting shadow that deepens and tints toward
-           the section accent on hover, with a gentle lift. */
+           the card's colour on hover, with a gentle lift.
+           tint-laterite / tint-teal / tint-kokum / tint-ink */
         .rt-card {
           box-shadow: 0 12px 32px -16px rgba(15, 23, 42, 0.28);
           transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
         }
         .rt-card:hover { transform: translateY(-6px); }
-        .rt-card.tint-amber:hover { box-shadow: 0 32px 56px -20px rgba(180, 83, 42, 0.45); }
-        .rt-card.tint-teal:hover  { box-shadow: 0 32px 56px -20px rgba(15, 118, 110, 0.4); }
-        .rt-card.tint-rose:hover  { box-shadow: 0 32px 56px -20px rgba(225, 29, 72, 0.35); }
-        .rt-card.tint-navy:hover  { box-shadow: 0 32px 56px -20px rgba(11, 49, 73, 0.45); }
+        .rt-card.tint-laterite:hover { box-shadow: 0 32px 56px -20px rgba(180, 83, 42, 0.45); }
+        .rt-card.tint-teal:hover     { box-shadow: 0 32px 56px -20px rgba(15, 107, 104, 0.42); }
+        .rt-card.tint-kokum:hover    { box-shadow: 0 32px 56px -20px rgba(142, 47, 74, 0.4); }
+        .rt-card.tint-ink:hover      { box-shadow: 0 32px 56px -20px rgba(10, 42, 60, 0.45); }
 
         /* Photo cards: description + "explore" row slide up on hover */
         .rt-reveal-row {
@@ -598,7 +614,7 @@ export default function DashboardOverview() {
       `}</style>
 
       {/* ================= Hero — full-bleed, edge to edge ================= */}
-      <section className="relative h-[calc(100svh-5rem)] max-h-[940px] min-h-[580px] w-full overflow-hidden bg-[#06141f]">
+      <section className="relative h-[calc(100svh-5rem)] max-h-[940px] min-h-[580px] w-full overflow-hidden bg-[color:var(--rt-ink-deep)]">
         {/* background video: muted + looping + playsInline so it autoplays */}
         <video
           className="absolute inset-0 h-full w-full object-cover"
@@ -613,21 +629,21 @@ export default function DashboardOverview() {
         />
 
         {/* scrims: darker at the left (text) and bottom (controls) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#04121c]/80 via-[#04121c]/35 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/85 via-transparent to-[#04121c]/40" />
+        <div className="rt-scrim-hero-x absolute inset-0" />
+        <div className="rt-scrim-hero-y absolute inset-0" />
 
         {/* content */}
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
             <div className="max-w-3xl pb-16 sm:pb-12">
-              <p className="rt-hero-text animate-fade-up mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-[#FBBF24] sm:text-xs">
-                <span className="h-px w-10 bg-[#FBBF24]" />
+              <p className="rt-hero-text animate-fade-up mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-[color:var(--rt-gold)] sm:text-xs">
+                <span className="h-px w-10 bg-[color:var(--rt-gold)]" />
                 Konkan Coast, Maharashtra
               </p>
 
               <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-7xl lg:text-[5.5rem]">
                 Explore{" "}
-                <span className="bg-gradient-to-r from-[#FBBF24] via-[#fcd34d] to-[#f59e0b] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[color:var(--rt-gold)] via-[color:var(--rt-gold-soft)] to-[color:var(--rt-gold-deep)] bg-clip-text text-transparent">
                   Ratnagiri
                 </span>
               </h1>
@@ -635,7 +651,7 @@ export default function DashboardOverview() {
               <div className="animate-fade-up-4 mt-8 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate("/plan-your-trip")}
-                  className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[#FBBF24] px-7 py-3.5 text-sm font-bold text-[#0b3149] shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:-translate-y-0.5 hover:bg-[#fcc934]"
+                  className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[color:var(--rt-gold)] px-7 py-3.5 text-sm font-bold text-[color:var(--rt-ink)] shadow-[0_18px_40px_-12px_rgba(242,178,51,0.7)] transition hover:-translate-y-0.5 hover:bg-[color:var(--rt-gold-soft)]"
                 >
                   Plan your trip
                   <ArrowRight size={16} className="rt-cta-arrow" />
@@ -663,17 +679,17 @@ export default function DashboardOverview() {
         </div>
       </section>
 
-      {/* ================= Experiences ================= */}
-      <section id="experiences" className="relative scroll-mt-24 overflow-hidden px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full bg-amber-200/30 blur-3xl" />
-        <span aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
+      {/* ================= Experiences (the one warm "sand" band) ================= */}
+      <section id="experiences" className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-sand)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full bg-[color:var(--rt-laterite-tint)] blur-3xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-96 w-96 rounded-full bg-[color:var(--rt-teal-tint)] blur-3xl" />
 
         <div className="relative mx-auto max-w-[1680px]">
           <SectionHead
             eyebrow="Experience"
             title="Local Experiences"
             icon={Compass}
-            iconClass="bg-amber-100 text-[#B4532A]"
+            iconClass="bg-[color:var(--rt-laterite-tint)] text-[color:var(--rt-laterite)]"
             lead="Walks, meals and encounters that go beyond the sightseeing list."
           />
 
@@ -682,13 +698,13 @@ export default function DashboardOverview() {
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="rt-card tint-amber group relative h-[30rem] overflow-hidden rounded-3xl text-left"
+                className="rt-card tint-laterite group relative h-[30rem] overflow-hidden rounded-3xl text-left"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/90 via-[#04121c]/20 to-transparent" />
+                <div className="rt-scrim-card absolute inset-0" />
                 <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
 
                 <span className="absolute left-5 top-5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold tracking-widest text-white ring-1 ring-white/30 backdrop-blur">
@@ -699,7 +715,7 @@ export default function DashboardOverview() {
                   <p className="t-h3 text-white">{title}</p>
                   <p className="t-small mt-1 text-white/80">{description}</p>
                   <div className="rt-reveal-row">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#FBBF24]">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[color:var(--rt-gold)]">
                       Explore <ArrowRight size={14} />
                     </span>
                   </div>
@@ -710,9 +726,9 @@ export default function DashboardOverview() {
             {/* Mini calendar. Tap a dotted day to see its events; use the arrows
                 under the grid to step through upcoming events without leaving
                 the page. Buttons open the full calendar page / contribute form. */}
-            <div className="rt-card tint-amber flex h-[30rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
+            <div className="rt-card tint-teal flex h-[30rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
               {/* month header + prev/next */}
-              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[#B4532A] to-[#8f3f1f] px-3 py-2.5 text-white">
+              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[color:var(--rt-ink)] to-[color:var(--rt-teal)] px-3 py-2.5 text-white">
                 <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full border border-white/15" />
                 <button
                   onClick={() => shiftCalMonth(-1)}
@@ -729,7 +745,7 @@ export default function DashboardOverview() {
                     onClick={calGoToday}
                     tabIndex={calIsCurrentMonth ? -1 : 0}
                     aria-hidden={calIsCurrentMonth}
-                    className={`mx-auto mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-white/80 underline-offset-2 hover:text-white hover:underline ${
+                    className={`mx-auto mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-[color:var(--rt-gold)] underline-offset-2 hover:underline ${
                       calIsCurrentMonth ? "invisible" : ""
                     }`}
                   >
@@ -768,9 +784,9 @@ export default function DashboardOverview() {
                       <span
                         className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
                           isToday
-                            ? "bg-[#173b45] text-white"
+                            ? "bg-[color:var(--rt-ink)] text-white"
                             : isSelected
-                            ? "bg-[#B4532A] text-white"
+                            ? "bg-[color:var(--rt-teal)] text-white"
                             : "text-slate-600"
                         }`}
                       >
@@ -798,8 +814,8 @@ export default function DashboardOverview() {
                       aria-pressed={isSelected}
                       aria-label={`${day} ${MONTH_NAMES[calMonth]}: ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
                       title={dayEvents.map((e) => e.title).join(", ")}
-                      className={`flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-amber-50 ${
-                        isSelected ? "bg-amber-50 ring-1 ring-[#B4532A]/40" : ""
+                      className={`flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-[color:var(--rt-teal-tint)] ${
+                        isSelected ? "bg-[color:var(--rt-teal-tint)] ring-1 ring-[color:var(--rt-teal-line)]" : ""
                       }`}
                     >
                       {inner}
@@ -816,14 +832,14 @@ export default function DashboardOverview() {
               <div className="min-h-0 flex-1 px-3 pt-2">
                 <div className="border-t border-slate-100 pt-2">
                   <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <p className="truncate text-[11px] font-bold uppercase tracking-wide text-[#B4532A]">
+                    <p className="truncate text-[11px] font-bold uppercase tracking-wide text-[color:var(--rt-teal)]">
                       {calListLabel}
                     </p>
                     <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-slate-400">
                       {calSelected && (
                         <button
                           onClick={() => setCalSelected(null)}
-                          className="text-slate-500 underline-offset-2 hover:text-[#B4532A] hover:underline"
+                          className="text-slate-500 underline-offset-2 hover:text-[color:var(--rt-teal)] hover:underline"
                         >
                           Show all
                         </button>
@@ -849,14 +865,14 @@ export default function DashboardOverview() {
                             onClick={goToPrevCalEvent}
                             disabled={calList.length < 2}
                             aria-label="Previous event"
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[#B4532A] hover:ring-[#B4532A]/40 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[color:var(--rt-teal)] hover:ring-[color:var(--rt-teal-line)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
                           >
                             <ChevronLeft size={15} />
                           </button>
 
                           <button
                             onClick={() => navigate(CALENDAR_ROUTE)}
-                            className="group/ev flex min-w-0 flex-1 items-center gap-2.5 rounded-xl bg-amber-50/70 p-2 text-left ring-1 ring-amber-100 transition hover:bg-amber-50 hover:ring-amber-200"
+                            className="group/ev flex min-w-0 flex-1 items-center gap-2.5 rounded-xl bg-[color:var(--rt-teal-tint)] p-2 text-left ring-1 ring-[color:var(--rt-teal-line)] transition hover:ring-[color:var(--rt-teal)]"
                           >
                             <span className="flex w-11 shrink-0 flex-col items-center overflow-hidden rounded-lg bg-white text-center shadow-sm ring-1 ring-slate-200/80">
                               <span className="h-1 w-full" style={{ background: color }} />
@@ -878,7 +894,7 @@ export default function DashboardOverview() {
                                   <span
                                     className={`rounded-full px-1.5 py-px text-[9px] font-bold ${
                                       rel.strong
-                                        ? "bg-[#B4532A] text-white"
+                                        ? "bg-[color:var(--rt-teal)] text-white"
                                         : "bg-white text-slate-500 ring-1 ring-slate-200"
                                     }`}
                                   >
@@ -902,7 +918,7 @@ export default function DashboardOverview() {
                             onClick={goToNextCalEvent}
                             disabled={calList.length < 2}
                             aria-label="Next event"
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[#B4532A] hover:ring-[#B4532A]/40 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[color:var(--rt-teal)] hover:ring-[color:var(--rt-teal-line)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
                           >
                             <ChevronRight size={15} />
                           </button>
@@ -922,17 +938,17 @@ export default function DashboardOverview() {
                 </div>
               </div>
 
-              {/* buttons */}
+              {/* buttons: laterite = actions */}
               <div className="flex shrink-0 gap-2 px-3 pb-3 pt-2">
                 <button
                   onClick={() => navigate(`${CALENDAR_ROUTE}#contribute`)}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full border border-[#B4532A] py-2 text-xs font-semibold text-[#B4532A] transition hover:bg-amber-50"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-full border border-[color:var(--rt-laterite)] py-2 text-xs font-semibold text-[color:var(--rt-laterite)] transition hover:bg-[color:var(--rt-laterite-tint)]"
                 >
                   <PlusCircle size={13} /> Contribute
                 </button>
                 <button
                   onClick={() => navigate(CALENDAR_ROUTE)}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[#B4532A] py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[color:var(--rt-laterite)] py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[color:var(--rt-laterite-dark)]"
                 >
                   <CalendarDays size={13} /> View Calendar
                 </button>
@@ -945,9 +961,9 @@ export default function DashboardOverview() {
       {/* ================= Stories & Videos ================= */}
       <section
         id="stories"
-        className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-[#eaf4f7] via-[#f1f8fa] to-white px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
+        className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-[color:var(--rt-mist)] to-white px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
       >
-        <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-[color:var(--rt-teal-tint)] blur-3xl" />
 
         <div className="relative mx-auto grid max-w-[1680px] grid-cols-1 gap-12 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_256px] xl:gap-x-8">
           {/* Stories — 2 published stories per page, sliding as a page */}
@@ -957,7 +973,7 @@ export default function DashboardOverview() {
               eyebrow="Read"
               title="Stories from Ratnagiri"
               icon={BookOpen}
-              iconClass="bg-teal-100 text-teal-700"
+              iconClass="bg-[color:var(--rt-teal-tint)] text-[color:var(--rt-teal)]"
             />
 
             <div
@@ -1007,7 +1023,7 @@ export default function DashboardOverview() {
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                                 {story.category?.name && (
-                                  <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-teal-700 shadow-sm">
+                                  <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--rt-teal)] shadow-sm">
                                     {story.category.name}
                                   </span>
                                 )}
@@ -1037,7 +1053,7 @@ export default function DashboardOverview() {
                                   {story.excerpt || "Read the full story to find out more."}
                                 </p>
 
-                                <span className="t-small inline-flex items-center gap-1 font-semibold text-teal-700">
+                                <span className="t-small inline-flex items-center gap-1 font-semibold text-[color:var(--rt-teal)]">
                                   Read story
                                   <ChevronRight size={11} className="transition-transform duration-300 group-hover:translate-x-1" />
                                 </span>
@@ -1060,7 +1076,7 @@ export default function DashboardOverview() {
                       <button
                         onClick={goToPrevStoryPage}
                         aria-label="Previous stories"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-teal-700 hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-[color:var(--rt-teal)] hover:shadow-[0_10px_25px_-8px_rgba(15,107,104,0.45)]"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -1071,7 +1087,7 @@ export default function DashboardOverview() {
                             onClick={() => setStoryPage(i)}
                             aria-label={`Go to stories page ${i + 1}`}
                             className={`h-1.5 rounded-full transition-all ${
-                              i === storyPage ? "w-6 bg-teal-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                              i === storyPage ? "w-6 bg-[color:var(--rt-teal)]" : "w-1.5 bg-slate-300 hover:bg-slate-400"
                             }`}
                           />
                         ))}
@@ -1079,7 +1095,7 @@ export default function DashboardOverview() {
                       <button
                         onClick={goToNextStoryPage}
                         aria-label="Next stories"
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-teal-700 hover:shadow-[0_10px_25px_-8px_rgba(15,118,110,0.45)]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-[color:var(--rt-teal)] hover:shadow-[0_10px_25px_-8px_rgba(15,107,104,0.45)]"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -1090,18 +1106,18 @@ export default function DashboardOverview() {
             </div>
           </div>
 
-          {/* Videos — one player on top, the playlist underneath */}
+          {/* Videos — kokum. One player on top, the playlist underneath */}
           <div className="min-w-0">
             <SectionHead
               compact
               eyebrow="Watch"
               title="Videos"
               icon={PlayCircle}
-              iconClass="bg-rose-100 text-rose-600"
+              iconClass="bg-[color:var(--rt-kokum-tint)] text-[color:var(--rt-kokum)]"
             />
 
             <div className="pb-6 pt-2">
-              <div className="rt-card tint-rose flex h-[456px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60">
+              <div className="rt-card tint-kokum flex h-[456px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/60">
                 <div className="relative aspect-video shrink-0 bg-black">
                   {playingVideoId === activeVideo.id ? (
                     <iframe
@@ -1125,7 +1141,7 @@ export default function DashboardOverview() {
                       />
                       <div className="absolute inset-0 bg-black/30 transition group-hover/video:bg-black/10" />
                       <span className="absolute inset-0 flex items-center justify-center">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-lg ring-8 ring-white/25 transition-transform group-hover/video:scale-110">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-[color:var(--rt-kokum)] shadow-lg ring-8 ring-white/25 transition-transform group-hover/video:scale-110">
                           <PlayCircle size={28} />
                         </span>
                       </span>
@@ -1149,7 +1165,9 @@ export default function DashboardOverview() {
                             }}
                             aria-current={isActive ? "true" : undefined}
                             className={`flex w-full items-center gap-3 rounded-xl p-2 text-left transition ${
-                              isActive ? "bg-rose-50 ring-1 ring-rose-100" : "hover:bg-slate-50"
+                              isActive
+                                ? "bg-[color:var(--rt-kokum-tint)] ring-1 ring-[color:var(--rt-kokum-line)]"
+                                : "hover:bg-slate-50"
                             }`}
                           >
                             <span className="relative h-12 w-[5.25rem] shrink-0 overflow-hidden rounded-lg bg-slate-200">
@@ -1166,7 +1184,7 @@ export default function DashboardOverview() {
                               )}
                             </span>
                             <span className="min-w-0">
-                              <span className="block text-[11px] font-bold text-rose-600">
+                              <span className="block text-[11px] font-bold text-[color:var(--rt-kokum)]">
                                 {isActive ? (playingVideoId === v.id ? "Now playing" : "Selected") : `Video ${i + 1}`}
                               </span>
                               <span className="line-clamp-2 block text-sm font-semibold leading-snug text-slate-900">
@@ -1186,25 +1204,25 @@ export default function DashboardOverview() {
               href={`https://www.youtube.com/playlist?list=${VIDEOS_PLAYLIST_ID}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rt-cta t-small inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700"
+              className="rt-cta t-small inline-flex items-center gap-1 font-semibold text-[color:var(--rt-kokum)] hover:text-[color:var(--rt-kokum-dark)]"
             >
               Open full playlist <ExternalLink size={12} className="rt-cta-arrow" />
             </a>
           </div>
 
-          {/* Reels — Instagram reels cropped to just the video, one at a time */}
+          {/* Reels — kokum. Instagram reels cropped to just the video, one at a time */}
           <div className="mx-auto w-full min-w-0 max-w-[256px] xl:mx-0">
             <SectionHead
               compact
               eyebrow="Follow"
               title="Reels"
               icon={Film}
-              iconClass="bg-fuchsia-100 text-fuchsia-600"
+              iconClass="bg-[color:var(--rt-kokum-tint)] text-[color:var(--rt-kokum)]"
             />
 
             {reels.length === 0 ? (
-              <div className="mb-6 mt-2 flex h-[456px] flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-100 via-rose-50 to-amber-100 p-6 text-center ring-1 ring-slate-200/60">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-fuchsia-600 shadow-md">
+              <div className="mb-6 mt-2 flex h-[456px] flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl bg-[color:var(--rt-kokum-tint)] p-6 text-center ring-1 ring-[color:var(--rt-kokum-line)]">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[color:var(--rt-kokum)] shadow-md">
                   <InstagramIcon size={26} />
                 </span>
                 <p className="t-h3 text-slate-900">Reels coming soon</p>
@@ -1215,7 +1233,7 @@ export default function DashboardOverview() {
                   href={REELS_PROFILE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full bg-[#B4532A] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[#9c4522]"
+                  className="rounded-full bg-[color:var(--rt-laterite)] px-5 py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[color:var(--rt-laterite-dark)]"
                 >
                   Follow on Instagram
                 </a>
@@ -1231,7 +1249,7 @@ export default function DashboardOverview() {
                       {reels.map((reel, i) => (
                         <div
                           key={reel.url}
-                          className="relative h-full w-full shrink-0 overflow-hidden bg-gradient-to-br from-fuchsia-200 via-rose-100 to-amber-100"
+                          className="relative h-full w-full shrink-0 overflow-hidden bg-[color:var(--rt-kokum-tint)]"
                         >
                           {i === reelIdx ? (
                             <>
@@ -1264,7 +1282,7 @@ export default function DashboardOverview() {
                               </a>
                             </>
                           ) : (
-                            <span className="absolute inset-0 flex items-center justify-center text-fuchsia-500/50">
+                            <span className="absolute inset-0 flex items-center justify-center text-[color:var(--rt-kokum)] opacity-40">
                               <InstagramIcon size={40} />
                             </span>
                           )}
@@ -1279,7 +1297,7 @@ export default function DashboardOverview() {
                     <button
                       onClick={goToPrevReel}
                       aria-label="Previous reel"
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-[color:var(--rt-kokum)] hover:shadow-[0_10px_25px_-8px_rgba(142,47,74,0.4)]"
                     >
                       <ChevronLeft size={16} />
                     </button>
@@ -1290,7 +1308,7 @@ export default function DashboardOverview() {
                           onClick={() => setReelIdx(i)}
                           aria-label={`Go to reel ${i + 1}`}
                           className={`h-1.5 rounded-full transition-all ${
-                            i === reelIdx ? "w-6 bg-fuchsia-600" : "w-1.5 bg-slate-300 hover:bg-slate-400"
+                            i === reelIdx ? "w-6 bg-[color:var(--rt-kokum)]" : "w-1.5 bg-slate-300 hover:bg-slate-400"
                           }`}
                         />
                       ))}
@@ -1298,7 +1316,7 @@ export default function DashboardOverview() {
                     <button
                       onClick={goToNextReel}
                       aria-label="Next reel"
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-fuchsia-600 hover:shadow-[0_10px_25px_-8px_rgba(192,38,211,0.4)]"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:scale-105 hover:text-[color:var(--rt-kokum)] hover:shadow-[0_10px_25px_-8px_rgba(142,47,74,0.4)]"
                     >
                       <ChevronRight size={16} />
                     </button>
@@ -1309,7 +1327,7 @@ export default function DashboardOverview() {
                   href={REELS_PROFILE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-fuchsia-600 hover:text-fuchsia-700"
+                  className="rt-cta t-small mt-5 inline-flex items-center gap-1 font-semibold text-[color:var(--rt-kokum)] hover:text-[color:var(--rt-kokum-dark)]"
                 >
                   Follow on Instagram <ExternalLink size={12} className="rt-cta-arrow" />
                 </a>
@@ -1321,14 +1339,14 @@ export default function DashboardOverview() {
 
       {/* ================= About (Society / Economy / Governance) ================= */}
       <section id="about" className="relative scroll-mt-24 overflow-hidden bg-white px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-slate-200/50 blur-3xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-[color:var(--rt-ink-tint)] blur-3xl" />
 
         <div className="relative mx-auto max-w-[1680px]">
           <SectionHead
             eyebrow="Know the district"
             title="Society, Economy and Governance"
             icon={Landmark}
-            iconClass="bg-slate-200 text-[#0b3149]"
+            iconClass="bg-[color:var(--rt-ink-tint)] text-[color:var(--rt-ink)]"
             lead="A quick look at what keeps Ratnagiri running, beyond the tourist trail."
           />
 
@@ -1343,7 +1361,7 @@ export default function DashboardOverview() {
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#04121c]/90 via-[#04121c]/25 to-transparent" />
+                <div className="rt-scrim-card absolute inset-0" />
                 <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
 
                 <span
@@ -1359,7 +1377,7 @@ export default function DashboardOverview() {
                   <p className="t-h3 text-white">{title}</p>
                   <p className="t-small mt-1 text-white/80">{description}</p>
                   <div className="rt-reveal-row">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#FBBF24]">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[color:var(--rt-gold)]">
                       Learn more <ArrowRight size={14} />
                     </span>
                   </div>

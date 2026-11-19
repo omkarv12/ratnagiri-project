@@ -21,20 +21,58 @@ import Breadcrumb from "../components/Breadcrumb";
 
 /* ------------------------------------------------------------------ */
 /*  Theme: fonts, colour tokens, animations                            */
-/*  Header palette = Arabian Sea: deep navy -> teal, mango accent.     */
+/*                                                                     */
+/*  PALETTE  (change the colours of the whole site here)               */
+/*    ink       header, dark bands, dark text on gold                  */
+/*    teal      links, stories, info, focus, selected states           */
+/*    laterite  buttons and actions only                               */
+/*    gold      highlights on DARK backgrounds only                    */
+/*    kokum     videos and reels                                       */
+/*    mist      page background                                        */
+/*    sand      one warm band (Experiences)                            */
+/*                                                                     */
+/*  The tokens live on :root so every page can use them, e.g.          */
+/*    text-[color:var(--rt-laterite)]   bg-[color:var(--rt-teal-tint)] */
 /* ------------------------------------------------------------------ */
 const THEME_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 
-.rt-root {
-  --rt-deep: #082638;
-  --rt-navy: #0b3149;
-  --rt-teal: #0f766e;
-  --rt-sea: #0f5f5c;
-  --rt-laterite: #B4532A;
-  --rt-mango: #FBBF24;
-  --rt-mist: #F4F8F9;
+:root, .rt-root {
+  /* ink: header and dark bands */
+  --rt-ink-deep: #061A27;
+  --rt-ink: #0A2A3C;
+  --rt-ink-tint: #E4ECF0;
 
+  /* teal: links, stories, info */
+  --rt-teal-bright: #1A8F8A;
+  --rt-teal: #0F6B68;
+  --rt-teal-dark: #0B5754;
+  --rt-teal-tint: #E6F2F1;
+  --rt-teal-line: #CFE4E2;
+
+  /* laterite: actions */
+  --rt-laterite-bright: #CC6232;
+  --rt-laterite: #B4532A;
+  --rt-laterite-dark: #9A4421;
+  --rt-laterite-tint: #F8EBE4;
+
+  /* gold: on dark only */
+  --rt-gold: #F2B233;
+  --rt-gold-soft: #F8CB6B;
+  --rt-gold-deep: #E39A14;
+
+  /* kokum: videos and reels */
+  --rt-kokum: #8E2F4A;
+  --rt-kokum-dark: #702339;
+  --rt-kokum-tint: #F6E8EC;
+  --rt-kokum-line: #EBCDD5;
+
+  /* neutrals */
+  --rt-mist: #F3F7F7;
+  --rt-sand: #F8F3EA;
+}
+
+.rt-root {
   font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
   line-height: 1.65;
   color: #0f172a;
@@ -46,8 +84,32 @@ const THEME_CSS = `
   text-wrap: balance;
 }
 .rt-root :focus-visible {
-  outline: 2px solid #5EEAD4;
+  outline: 2px solid var(--rt-teal);
   outline-offset: 2px;
+}
+/* On the dark header the focus ring is gold so it stays visible */
+.rt-header :focus-visible {
+  outline-color: var(--rt-gold);
+}
+
+/* ---------- Shared image scrims (text on photos) ---------- */
+.rt-scrim-hero-x {
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--rt-ink-deep) 80%, transparent),
+    color-mix(in srgb, var(--rt-ink-deep) 35%, transparent),
+    transparent);
+}
+.rt-scrim-hero-y {
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--rt-ink-deep) 85%, transparent),
+    transparent,
+    color-mix(in srgb, var(--rt-ink-deep) 40%, transparent));
+}
+.rt-scrim-card {
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--rt-ink-deep) 90%, transparent),
+    color-mix(in srgb, var(--rt-ink-deep) 22%, transparent),
+    transparent);
 }
 
 /* ---------- Header shell ---------- */
@@ -64,7 +126,7 @@ const THEME_CSS = `
   pointer-events: auto;
   border: 1px solid transparent;
   border-radius: 0;
-  background-color: rgba(8, 38, 56, 1);
+  background-color: rgba(10, 42, 60, 1);
   box-shadow: 0 1px 0 rgba(255,255,255,.08), 0 8px 20px -10px rgba(2,20,32,.55);
   transition: border-radius .35s ease, background-color .35s ease,
               box-shadow .35s ease, border-color .35s ease;
@@ -73,21 +135,21 @@ const THEME_CSS = `
   content: "";
   position: absolute; inset: 0;
   border-radius: inherit;
-  background: linear-gradient(100deg, #082638 0%, #0b3149 40%, #0f5f5c 100%);
+  background: linear-gradient(100deg, var(--rt-ink-deep) 0%, var(--rt-ink) 45%, var(--rt-teal) 100%);
   opacity: 1;
   transition: opacity .35s ease;
   pointer-events: none;
 }
-.rt-header::after {             /* thin mango hairline along the top edge */
+.rt-header::after {             /* thin gold hairline along the top edge */
   content: "";
   position: absolute; left: 1.25rem; right: 1.25rem; top: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(251,191,36,.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(242,178,51,.55), transparent);
   pointer-events: none;
 }
 .rt-header-float {
   border-radius: 1.5rem;
-  background-color: rgba(8, 38, 56, .78);
+  background-color: rgba(10, 42, 60, .78);
   border-color: rgba(255,255,255,.14);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
@@ -101,7 +163,7 @@ const THEME_CSS = `
   left: 1.5rem; right: 1.5rem; bottom: 3px;
   height: 3px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #FDE68A, #FBBF24, #F59E0B);
+  background: linear-gradient(90deg, var(--rt-gold-soft), var(--rt-gold), var(--rt-gold-deep));
   transform-origin: left center;
   transform: scaleX(0);
   opacity: 0;
@@ -121,7 +183,7 @@ const THEME_CSS = `
   left: .6rem; right: .6rem; bottom: .22rem;
   height: 2px;
   border-radius: 2px;
-  background: var(--rt-mango);
+  background: var(--rt-gold);
   transform: scaleX(0);
   transform-origin: center;
   transition: transform .25s ease;
@@ -145,8 +207,8 @@ const THEME_CSS = `
   transition: background-color .2s, transform .2s;
 }
 .rt-dd-item:hover {
-  background-color: #f0fdfa;
-  color: #115e59;
+  background-color: var(--rt-teal-tint);
+  color: var(--rt-teal-dark);
   transform: translateX(2px);
 }
 .rt-dd-item:hover .rt-dot { background: var(--rt-laterite); transform: scale(1.5); }
@@ -180,23 +242,23 @@ const THEME_CSS = `
 .rt-btn:hover  { transform: translateY(-3px) scale(1.04); }
 .rt-btn:active { transform: translateY(0) scale(.97); }
 
-/* Interactive Map */
+/* Interactive Map: teal */
 @keyframes rt-glow-teal {
-  0%   { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 0 rgba(45,212,191,.7); }
-  70%  { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 14px rgba(45,212,191,0); }
-  100% { box-shadow: 0 10px 22px -6px rgba(13,148,136,.85), 0 0 0 0 rgba(45,212,191,0); }
+  0%   { box-shadow: 0 10px 22px -6px rgba(26,143,138,.85), 0 0 0 0 rgba(26,143,138,.7); }
+  70%  { box-shadow: 0 10px 22px -6px rgba(26,143,138,.85), 0 0 0 14px rgba(26,143,138,0); }
+  100% { box-shadow: 0 10px 22px -6px rgba(26,143,138,.85), 0 0 0 0 rgba(26,143,138,0); }
 }
 .rt-btn-map {
-  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 45%, #0d9488 100%);
+  background: linear-gradient(135deg, #2AA6A0 0%, var(--rt-teal-bright) 50%, var(--rt-teal) 100%);
   color: #fff;
   border: 2px solid #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,.25);
   animation: rt-glow-teal 2.2s ease-out 1.1s infinite;
 }
 .rt-btn-map:hover {
-  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 45%, #14b8a6 100%);
+  background: linear-gradient(135deg, #3CBAB4 0%, #2AA6A0 50%, var(--rt-teal-bright) 100%);
   animation-play-state: paused;
-  box-shadow: 0 18px 30px -8px rgba(13,148,136,.9), 0 0 24px rgba(45,212,191,.7);
+  box-shadow: 0 18px 30px -8px rgba(26,143,138,.9), 0 0 24px rgba(26,143,138,.6);
 }
 @keyframes rt-hop {
   0%, 60%, 100% { transform: translateY(0); }
@@ -206,22 +268,23 @@ const THEME_CSS = `
 }
 .rt-mapplus { animation: rt-hop 2.4s ease-in-out infinite; }
 
-/* Contribute: the hero button */
+/* Contribute: the hero button, laterite (actions) */
 @keyframes rt-glow {
-  0%   { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 0 rgba(251,191,36,.7); }
-  70%  { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 14px rgba(251,191,36,0); }
-  100% { box-shadow: 0 10px 22px -6px rgba(245,158,11,.8), 0 0 0 0 rgba(251,191,36,0); }
+  0%   { box-shadow: 0 10px 22px -6px rgba(204,98,50,.8), 0 0 0 0 rgba(204,98,50,.7); }
+  70%  { box-shadow: 0 10px 22px -6px rgba(204,98,50,.8), 0 0 0 14px rgba(204,98,50,0); }
+  100% { box-shadow: 0 10px 22px -6px rgba(204,98,50,.8), 0 0 0 0 rgba(204,98,50,0); }
 }
 .rt-btn-give {
-  background: linear-gradient(135deg, #FFE066 0%, #FBBF24 45%, #F59E0B 100%);
-  color: #0b3149;
+  background: linear-gradient(135deg, #D86F3F 0%, var(--rt-laterite-bright) 45%, var(--rt-laterite) 100%);
+  color: #fff;
   border: 2px solid #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.25);
   animation: rt-glow 2.2s ease-out infinite;
 }
 .rt-btn-give:hover {
-  background: linear-gradient(135deg, #FFEA8A 0%, #FCC93A 45%, #F7A91B 100%);
+  background: linear-gradient(135deg, #E48152 0%, #D86F3F 45%, var(--rt-laterite-bright) 100%);
   animation-play-state: paused;
-  box-shadow: 0 18px 30px -8px rgba(245,158,11,.9), 0 0 24px rgba(251,191,36,.7);
+  box-shadow: 0 18px 30px -8px rgba(204,98,50,.9), 0 0 24px rgba(204,98,50,.6);
 }
 @keyframes rt-beat {
   0%, 100% { transform: scale(1); }
@@ -242,7 +305,7 @@ const THEME_CSS = `
 }
 .rt-btn-admin:hover {
   background: rgba(255,255,255,.22);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 14px 26px -10px rgba(0,0,0,.6), 0 0 22px rgba(94,234,212,.35);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 14px 26px -10px rgba(0,0,0,.6), 0 0 22px rgba(255,255,255,.22);
 }
 
 /* ---------- Utility buttons: search, theme, language ---------- */
@@ -274,7 +337,7 @@ iframe.skiptranslate, .goog-te-banner-frame { display: none !important; }
 .goog-tooltip, .goog-tooltip:hover { display: none !important; }
 .goog-text-highlight { background: none !important; box-shadow: none !important; }
 
-/* "NEW" tag on the Interactive Map button */
+/* "NEW" tag on the Interactive Map button: gold on the dark header */
 .rt-badge {
   position: absolute;
   top: -.5rem;
@@ -282,8 +345,8 @@ iframe.skiptranslate, .goog-te-banner-frame { display: none !important; }
   z-index: 2;
   padding: .06rem .32rem;
   border-radius: 9999px;
-  background: #ef4444;
-  color: #fff;
+  background: var(--rt-gold);
+  color: var(--rt-ink);
   border: 1.5px solid #fff;
   font-size: .5625rem;
   line-height: 1.15;
@@ -349,7 +412,7 @@ function Caret() {
 
 function DropdownPanel({ items, navigate, flyLeft = false }) {
   return (
-    <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-xl shadow-slate-900/20 border border-slate-100 border-t-2 border-t-teal-600 py-2">
+    <div className="w-72 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-xl shadow-slate-900/20 border border-slate-100 border-t-2 border-t-[color:var(--rt-teal)] py-2">
       {items.map((child) =>
         child.children ? (
           <div key={child.label} className="relative group/sub">
@@ -638,7 +701,7 @@ function LanguageMenu({ lang, onSelect }) {
       >
         <Globe size={17} />
         {lang !== "en" && (
-          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-amber-400" />
+          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-[color:var(--rt-gold)]" />
         )}
       </button>
 
@@ -657,10 +720,10 @@ function LanguageMenu({ lang, onSelect }) {
                 setOpen(false);
                 if (l.code !== lang) onSelect(l.code);
               }}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[15px] font-medium text-slate-800 hover:bg-teal-50 hover:text-teal-800"
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[15px] font-medium text-slate-800 hover:bg-[color:var(--rt-teal-tint)] hover:text-[color:var(--rt-teal-dark)]"
             >
               {l.native}
-              {l.code === lang && <Check size={16} className="text-teal-600" />}
+              {l.code === lang && <Check size={16} className="text-[color:var(--rt-teal)]" />}
             </button>
           ))}
         </div>
@@ -791,7 +854,9 @@ function CommandPalette({ open, onClose, pages, navigate, lang, onLang }) {
                 onMouseMove={() => setIndex(i)}
                 onClick={() => choose(item)}
                 className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left ${
-                  i === index ? "bg-teal-50 text-teal-900" : "text-slate-800"
+                  i === index
+                    ? "bg-[color:var(--rt-teal-tint)] text-[color:var(--rt-teal-dark)]"
+                    : "text-slate-800"
                 }`}
               >
                 <span className="min-w-0">
@@ -804,7 +869,7 @@ function CommandPalette({ open, onClose, pages, navigate, lang, onLang }) {
                   <span className="shrink-0 text-xs text-slate-500">{item.hint}</span>
                 )}
                 {i === index && item.type === "Pages" && (
-                  <CornerDownLeft size={15} className="shrink-0 text-teal-700" />
+                  <CornerDownLeft size={15} className="shrink-0 text-[color:var(--rt-teal)]" />
                 )}
               </button>
             </div>
@@ -899,7 +964,7 @@ export default function DashboardLayout() {
     (item.exact ? location.pathname === item.route : location.pathname.startsWith(item.route));
 
   return (
-    <div className="rt-root flex min-h-screen bg-[#F4F8F9]">
+    <div className="rt-root flex min-h-screen bg-[color:var(--rt-mist)]">
       <style>{THEME_CSS}</style>
 
       <a
@@ -999,7 +1064,7 @@ export default function DashboardLayout() {
                   className="rt-btn rt-btn-give"
                 >
                   <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                  <HeartHandshake size={18} className="rt-heart relative text-[#0b3149]" />
+                  <HeartHandshake size={18} className="rt-heart relative text-white" />
                   <span className="relative hidden 2xl:inline">Contribute</span>
                 </button>
 
