@@ -21,12 +21,6 @@ import { useLocations } from "../context/LocationsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { blogApi } from "../api/blogApi";
 import API_BASE_URL from "../config";
-import Slider1 from "../assets/Slider1.jpg";
-import Slider2 from "../assets/Slider2.jpg";
-import Slider3 from "../assets/Slider3.jpg";
-import Slider4 from "../assets/Slider4.jpg";
-import Slider5 from "../assets/Slider5.jpg";
-import Slider6 from "../assets/Slider6.jpg";
 import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
@@ -40,10 +34,11 @@ import VisitorCounter from "../components/VisitorCounter";
 // NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
 // App.jsx so it opens as soon as the website starts, even during loading.
 
-const heroImages = [Slider1, Slider2, Slider3, Slider4, Slider5, Slider6];
-
-// How long each hero photo stays on screen (ms). Also drives the progress bar.
-const HERO_SLIDE_MS = 6000;
+// Hero background video. Put your file in the project's `public/` folder
+// (e.g. public/hero-video.mp4) and it will be served from "/hero-video.mp4".
+// Optional: add a poster image in public/ and set HERO_POSTER to its path.
+const HERO_VIDEO = "/hero-video.mp4";
+const HERO_POSTER = "";
 
 // The loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
@@ -223,8 +218,6 @@ export default function DashboardOverview() {
     }
   }, [location]);
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-
   // Keeps the cinematic loader on screen for a minimum time.
   const [minTimeDone, setMinTimeDone] = useState(MIN_LOADER_MS === 0);
   useEffect(() => {
@@ -232,21 +225,6 @@ export default function DashboardOverview() {
     const t = setTimeout(() => setMinTimeDone(true), MIN_LOADER_MS);
     return () => clearTimeout(t);
   }, []);
-
-  // Restarts whenever the slide changes, so the progress bar and the slide
-  // always stay in step (also after a manual click).
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, HERO_SLIDE_MS);
-    return () => clearTimeout(t);
-  }, [currentSlide]);
-
-  // Manual carousel controls for the hero.
-  const goToPrevSlide = () =>
-    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
-  const goToNextSlide = () =>
-    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
 
   // ---- Experiences -----------------------------------------------------------
   // Each card opens its own page (ExperiencePage), whose content is managed in
@@ -482,10 +460,6 @@ export default function DashboardOverview() {
         .animate-fade-up-3 { animation: fadeUp 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .animate-fade-up-4 { animation: fadeUp 0.8s 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-        /* Hero progress segment fills over exactly one slide's duration */
-        @keyframes rt-fill { from { width: 0; } to { width: 100%; } }
-        .rt-seg-fill { animation: rt-fill ${HERO_SLIDE_MS}ms linear both; }
-
         /* "Scroll" cue: a line that keeps travelling down */
         @keyframes rt-scrolldown {
           0%   { transform: translateY(-100%); }
@@ -533,7 +507,6 @@ export default function DashboardOverview() {
 
         @media (prefers-reduced-motion: reduce) {
           .animate-fade-up, .animate-fade-up-2, .animate-fade-up-3, .animate-fade-up-4 { animation: none; }
-          .rt-seg-fill { animation: none; width: 100%; }
           .rt-scroll-line { animation: none; }
           .rt-card, .rt-card:hover { transition: none; transform: none; }
         }
@@ -541,21 +514,18 @@ export default function DashboardOverview() {
 
       {/* ================= Hero — full-bleed, edge to edge ================= */}
       <section className="relative h-[calc(100svh-5rem)] max-h-[940px] min-h-[580px] w-full overflow-hidden bg-[#06141f]">
-        {/* slides: crossfade + slow zoom on the active photo */}
-        {heroImages.map((img, index) => (
-          <div
-            key={index}
-            aria-hidden={index !== currentSlide}
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url('${img}')`,
-              opacity: index === currentSlide ? 1 : 0,
-              transform: index === currentSlide ? "scale(1.1)" : "scale(1)",
-              transition: "opacity 1.4s ease-in-out, transform 8s ease-out",
-              willChange: "opacity, transform",
-            }}
-          />
-        ))}
+        {/* background video: muted + looping + playsInline so it autoplays */}
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src={HERO_VIDEO}
+          poster={HERO_POSTER || undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        />
 
         {/* scrims: darker at the left (text) and bottom (controls) */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#04121c]/80 via-[#04121c]/35 to-transparent" />
@@ -565,20 +535,7 @@ export default function DashboardOverview() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
             <div className="max-w-3xl pb-16 sm:pb-12">
-              
-
-              <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[5.75rem]">
-                Discover
-                <br />
-                <span className="text-[#FBBF24]">Ratnagiri</span>
-              </h1>
-
-              <p className="rt-hero-text animate-fade-up-3 mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
-                Where the Sahyadri hills meet the Arabian Sea. Beaches, forts,
-                homestays and Konkan flavours, all in one place.
-              </p>
-
-              <div className="animate-fade-up-4 mt-9 flex flex-wrap items-center gap-3">
+              <div className="animate-fade-up-4 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate("/plan-your-trip")}
                   className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[#FBBF24] px-7 py-3.5 text-sm font-bold text-[#0b3149] shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:-translate-y-0.5 hover:bg-[#fcc934]"
@@ -594,52 +551,6 @@ export default function DashboardOverview() {
                   Explore the map
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* bottom row: progress segments · counter · arrows */}
-        <div className="absolute inset-x-0 bottom-0 pb-8 sm:pb-10">
-          <div className="mx-auto flex w-full max-w-[1680px] items-center gap-5 px-6 sm:px-10 lg:px-16">
-            <div className="flex flex-1 items-center gap-2 sm:max-w-xl">
-              {heroImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  aria-label={`Go to slide ${index + 1}`}
-                  className="group relative h-6 flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                >
-                  <span className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-white/30 transition-all group-hover:h-[5px]">
-                    {index < currentSlide && <span className="block h-full w-full bg-white" />}
-                    {index === currentSlide && (
-                      <span key={currentSlide} className="rt-seg-fill block h-full bg-white" />
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <p className="hidden text-sm font-semibold tabular-nums text-white/80 sm:block">
-              {String(currentSlide + 1).padStart(2, "0")}
-              <span className="mx-1.5 text-white/40">/</span>
-              {String(heroImages.length).padStart(2, "0")}
-            </p>
-
-            <div className="ml-auto flex gap-2">
-              <button
-                onClick={goToPrevSlide}
-                aria-label="Previous photo"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white hover:text-[#0b3149] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={goToNextSlide}
-                aria-label="Next photo"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/30 backdrop-blur-md transition hover:bg-white hover:text-[#0b3149] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <ChevronRight size={20} />
-              </button>
             </div>
           </div>
         </div>
@@ -1147,6 +1058,5 @@ export default function DashboardOverview() {
         </div>
       </section>
     </div>
-     
   );
 }
