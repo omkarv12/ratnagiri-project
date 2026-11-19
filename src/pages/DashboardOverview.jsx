@@ -64,6 +64,13 @@ const CAL_CATEGORY_COLORS = {
   waterfalls: "#4dd0e1",
   mangoes: "#ffd54f",
 };
+const CAL_CATEGORY_LABELS = {
+  beaches: "Beaches",
+  forts: "Forts",
+  temples: "Temples",
+  waterfalls: "Waterfalls",
+  mangoes: "Mango season",
+};
 
 const toDateKey = (y, m, d) =>
   `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -257,6 +264,8 @@ export default function DashboardOverview() {
   const [calYear, setCalYear] = useState(calNow.getFullYear());
   const [calMonth, setCalMonth] = useState(calNow.getMonth());
   const [calEvents, setCalEvents] = useState([]);
+  const [calSelected, setCalSelected] = useState(null); // "YYYY-MM-DD" of a tapped day
+  const [calEventIdx, setCalEventIdx] = useState(0); // which event the arrows are showing
 
   useEffect(() => {
     let cancelled = false;
@@ -273,6 +282,13 @@ export default function DashboardOverview() {
     const d = new Date(calYear, calMonth + delta, 1);
     setCalYear(d.getFullYear());
     setCalMonth(d.getMonth());
+    setCalSelected(null);
+  };
+
+  const calGoToday = () => {
+    setCalYear(calNow.getFullYear());
+    setCalMonth(calNow.getMonth());
+    setCalSelected(null);
   };
 
   // events grouped by YYYY-MM-DD
@@ -290,15 +306,58 @@ export default function DashboardOverview() {
     ...Array.from({ length: calDaysInMonth }, (_, i) => i + 1),
   ];
 
-  // next event to highlight under the grid: first on/after today, else the
-  // first event of the visible month
+  // ---- Event list shown under the grid --------------------------------------
+  // Default: upcoming events of the visible month. Tapping a day with events
+  // narrows the list to that day. The arrows step through the list.
   const calSorted = [...calEvents].sort((a, b) =>
     String(a.event_date).localeCompare(String(b.event_date))
   );
-  const calFeatured =
-    calSorted.find((e) => String(e.event_date).slice(0, 10) >= calTodayKey) ||
-    calSorted[0] ||
-    null;
+  const calIsCurrentMonth =
+    calYear === calNow.getFullYear() && calMonth === calNow.getMonth();
+  const calUpcoming = calSorted.filter(
+    (e) => String(e.event_date).slice(0, 10) >= calTodayKey
+  );
+
+  let calList;
+  let calListLabel;
+  if (calSelected) {
+    calList = calEventsByDate[calSelected] || [];
+    calListLabel = `On ${formatShortDate(calSelected)}`;
+  } else if (calIsCurrentMonth && calUpcoming.length > 0) {
+    calList = calUpcoming;
+    calListLabel = "Upcoming events";
+  } else if (calIsCurrentMonth) {
+    calList = calSorted;
+    calListLabel = "Earlier this month";
+  } else {
+    calList = calSorted;
+    calListLabel = `Events in ${MONTH_NAMES[calMonth]}`;
+  }
+
+  // jump back to the first event whenever the list changes
+  const calListKey = `${calYear}-${calMonth}-${calSelected}`;
+  useEffect(() => {
+    setCalEventIdx(0);
+  }, [calListKey, calEvents]);
+
+  const calSafeIdx = Math.min(calEventIdx, Math.max(calList.length - 1, 0));
+  const calCurrent = calList[calSafeIdx] || null;
+  const goToPrevCalEvent = () =>
+    setCalEventIdx((calSafeIdx - 1 + calList.length) % calList.length);
+  const goToNextCalEvent = () => setCalEventIdx((calSafeIdx + 1) % calList.length);
+
+  // "Today", "Tomorrow", "In 5 days" — easier to read than a bare date
+  const calRelativeLabel = (iso) => {
+    const diff = Math.round(
+      (new Date(`${String(iso).slice(0, 10)}T00:00:00`) -
+        new Date(`${calTodayKey}T00:00:00`)) / 86400000
+    );
+    if (diff < 0) return { text: "Past event", strong: false };
+    if (diff === 0) return { text: "Today", strong: true };
+    if (diff === 1) return { text: "Tomorrow", strong: true };
+    if (diff <= 30) return { text: `In ${diff} days`, strong: false };
+    return null;
+  };
 
   // ---- Stories & Videos -------------------------------------------------------
   // Stories are the real, published posts from the Stories section (same
@@ -535,7 +594,19 @@ export default function DashboardOverview() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
             <div className="max-w-3xl pb-16 sm:pb-12">
-              <div className="animate-fade-up-4 flex flex-wrap items-center gap-3">
+              <p className="rt-hero-text animate-fade-up mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-[#FBBF24] sm:text-xs">
+                <span className="h-px w-10 bg-[#FBBF24]" />
+                Konkan Coast, Maharashtra
+              </p>
+
+              <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-7xl lg:text-[5.5rem]">
+                Explore{" "}
+                <span className="bg-gradient-to-r from-[#FBBF24] via-[#fcd34d] to-[#f59e0b] bg-clip-text text-transparent">
+                  Ratnagiri
+                </span>
+              </h1>
+
+              <div className="animate-fade-up-4 mt-8 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate("/plan-your-trip")}
                   className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[#FBBF24] px-7 py-3.5 text-sm font-bold text-[#0b3149] shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:-translate-y-0.5 hover:bg-[#fcc934]"
@@ -585,7 +656,7 @@ export default function DashboardOverview() {
               <button
                 key={title}
                 onClick={() => navigate(route)}
-                className="rt-card tint-amber group relative h-[26rem] overflow-hidden rounded-3xl text-left"
+                className="rt-card tint-amber group relative h-[30rem] overflow-hidden rounded-3xl text-left"
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
@@ -610,11 +681,12 @@ export default function DashboardOverview() {
               </button>
             ))}
 
-            {/* Mini calendar. Dots mark days with events; the buttons below
-                open the full calendar page (CALENDAR_ROUTE) or its form. */}
-            <div className="rt-card tint-amber flex h-[26rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
+            {/* Mini calendar. Tap a dotted day to see its events; use the arrows
+                under the grid to step through upcoming events without leaving
+                the page. Buttons open the full calendar page / contribute form. */}
+            <div className="rt-card tint-amber flex h-[30rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
               {/* month header + prev/next */}
-              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[#B4532A] to-[#8f3f1f] px-3 py-3.5 text-white">
+              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[#B4532A] to-[#8f3f1f] px-3 py-2.5 text-white">
                 <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full border border-white/15" />
                 <button
                   onClick={() => shiftCalMonth(-1)}
@@ -623,9 +695,21 @@ export default function DashboardOverview() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <p className="relative font-display text-base font-semibold">
-                  {MONTH_NAMES[calMonth]} <span className="font-normal text-white/70">{calYear}</span>
-                </p>
+                <div className="relative text-center">
+                  <p className="font-display text-base font-semibold">
+                    {MONTH_NAMES[calMonth]} <span className="font-normal text-white/70">{calYear}</span>
+                  </p>
+                  <button
+                    onClick={calGoToday}
+                    tabIndex={calIsCurrentMonth ? -1 : 0}
+                    aria-hidden={calIsCurrentMonth}
+                    className={`mx-auto mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-white/80 underline-offset-2 hover:text-white hover:underline ${
+                      calIsCurrentMonth ? "invisible" : ""
+                    }`}
+                  >
+                    Back to today
+                  </button>
+                </div>
                 <button
                   onClick={() => shiftCalMonth(1)}
                   aria-label="Next month"
@@ -636,7 +720,7 @@ export default function DashboardOverview() {
               </div>
 
               {/* weekday initials */}
-              <div className="grid shrink-0 grid-cols-7 px-3 pt-3 text-center text-[11px] font-bold tracking-wider text-slate-400">
+              <div className="grid shrink-0 grid-cols-7 px-3 pt-2.5 text-center text-[11px] font-bold tracking-wider text-slate-400">
                 {CAL_WEEKDAYS.map((d, i) => (
                   <div key={i}>{d}</div>
                 ))}
@@ -650,13 +734,18 @@ export default function DashboardOverview() {
                   const key = toDateKey(calYear, calMonth, day);
                   const dayEvents = calEventsByDate[key] || [];
                   const isToday = key === calTodayKey;
+                  const isSelected = key === calSelected;
                   const hasEvents = dayEvents.length > 0;
 
                   const inner = (
                     <>
                       <span
                         className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
-                          isToday ? "bg-[#173b45] text-white" : "text-slate-600"
+                          isToday
+                            ? "bg-[#173b45] text-white"
+                            : isSelected
+                            ? "bg-[#B4532A] text-white"
+                            : "text-slate-600"
                         }`}
                       >
                         {day}
@@ -679,9 +768,13 @@ export default function DashboardOverview() {
                   return hasEvents ? (
                     <button
                       key={key}
-                      onClick={() => navigate(CALENDAR_ROUTE)}
+                      onClick={() => setCalSelected((prev) => (prev === key ? null : key))}
+                      aria-pressed={isSelected}
+                      aria-label={`${day} ${MONTH_NAMES[calMonth]}: ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
                       title={dayEvents.map((e) => e.title).join(", ")}
-                      className="flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-amber-50"
+                      className={`flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-amber-50 ${
+                        isSelected ? "bg-amber-50 ring-1 ring-[#B4532A]/40" : ""
+                      }`}
                     >
                       {inner}
                     </button>
@@ -693,26 +786,112 @@ export default function DashboardOverview() {
                 })}
               </div>
 
-              {/* next event / empty state */}
-              <div className="min-h-0 flex-1 overflow-hidden px-3 pt-2">
+              {/* events: arrows step through the list */}
+              <div className="min-h-0 flex-1 px-3 pt-2">
                 <div className="border-t border-slate-100 pt-2">
-                  {calFeatured ? (
-                    <button onClick={() => navigate(CALENDAR_ROUTE)} className="w-full text-left">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
-                        {calEvents.length} event{calEvents.length === 1 ? "" : "s"} in{" "}
-                        {MONTH_NAMES[calMonth]}
-                      </p>
-                      <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
-                        {calFeatured.title}
-                      </p>
-                      <p className="t-meta text-slate-500">
-                        {formatShortDate(calFeatured.event_date)}
-                      </p>
-                    </button>
-                  ) : (
-                    <p className="t-meta text-slate-500">
-                      No events listed for {MONTH_NAMES[calMonth]}.
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <p className="truncate text-[11px] font-bold uppercase tracking-wide text-[#B4532A]">
+                      {calListLabel}
                     </p>
+                    <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-slate-400">
+                      {calSelected && (
+                        <button
+                          onClick={() => setCalSelected(null)}
+                          className="text-slate-500 underline-offset-2 hover:text-[#B4532A] hover:underline"
+                        >
+                          Show all
+                        </button>
+                      )}
+                      {calList.length > 0 && (
+                        <span aria-live="polite" className="tabular-nums">
+                          {calSafeIdx + 1} of {calList.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {calCurrent ? (
+                    (() => {
+                      const color =
+                        CAL_CATEGORY_COLORS[calCurrent.category] || CAL_CATEGORY_COLORS.beaches;
+                      const dateObj = new Date(`${String(calCurrent.event_date).slice(0, 10)}T00:00:00`);
+                      const rel = calRelativeLabel(calCurrent.event_date);
+                      const place = calCurrent.location || calCurrent.venue || calCurrent.place;
+                      return (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={goToPrevCalEvent}
+                            disabled={calList.length < 2}
+                            aria-label="Previous event"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[#B4532A] hover:ring-[#B4532A]/40 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
+                          >
+                            <ChevronLeft size={15} />
+                          </button>
+
+                          <button
+                            onClick={() => navigate(CALENDAR_ROUTE)}
+                            className="group/ev flex min-w-0 flex-1 items-center gap-2.5 rounded-xl bg-amber-50/70 p-2 text-left ring-1 ring-amber-100 transition hover:bg-amber-50 hover:ring-amber-200"
+                          >
+                            <span className="flex w-11 shrink-0 flex-col items-center overflow-hidden rounded-lg bg-white text-center shadow-sm ring-1 ring-slate-200/80">
+                              <span className="h-1 w-full" style={{ background: color }} />
+                              <span className="pt-0.5 text-[9px] font-bold uppercase leading-none tracking-wider text-slate-500">
+                                {dateObj.toLocaleDateString("en-IN", { month: "short" })}
+                              </span>
+                              <span className="pb-0.5 font-display text-lg font-bold leading-tight text-slate-900">
+                                {dateObj.getDate()}
+                              </span>
+                            </span>
+
+                            <span className="min-w-0 flex-1">
+                              <span className="mb-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+                                  {CAL_CATEGORY_LABELS[calCurrent.category] || "Event"}
+                                </span>
+                                {rel && (
+                                  <span
+                                    className={`rounded-full px-1.5 py-px text-[9px] font-bold ${
+                                      rel.strong
+                                        ? "bg-[#B4532A] text-white"
+                                        : "bg-white text-slate-500 ring-1 ring-slate-200"
+                                    }`}
+                                  >
+                                    {rel.text}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="line-clamp-2 block text-[13px] font-semibold leading-snug text-slate-900">
+                                {calCurrent.title}
+                              </span>
+                              {place && (
+                                <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-slate-500">
+                                  <MapPin size={10} className="shrink-0" />
+                                  <span className="truncate">{place}</span>
+                                </span>
+                              )}
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={goToNextCalEvent}
+                            disabled={calList.length < 2}
+                            aria-label="Next event"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[#B4532A] hover:ring-[#B4532A]/40 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
+                          >
+                            <ChevronRight size={15} />
+                          </button>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="rounded-xl bg-slate-50 px-3 py-3 text-center ring-1 ring-slate-100">
+                      <p className="text-[13px] font-semibold text-slate-700">
+                        No events {calSelected ? "on this day" : `in ${MONTH_NAMES[calMonth]} yet`}
+                      </p>
+                      <p className="t-meta mt-0.5 text-slate-500">
+                        Know of one? Tap Contribute to add it.
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
