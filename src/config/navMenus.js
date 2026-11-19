@@ -30,7 +30,7 @@ export const PLAN_MENU = {
   children: [
     { label: "Plan Your Trip", route: "/plan-your-trip" },
     // The interactive map page lives at /map (see App.jsx).
-    { label: "Plan Your Trip – Interactive Map", route: "/map" },
+    
     GEOGRAPHY_SUBMENU,
   ],
 };
