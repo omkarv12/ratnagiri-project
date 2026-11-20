@@ -32,6 +32,8 @@ import GoodGovernanceImg from "../assets/good_governance.jpg";
 import RatnagiriCinematic from "../components/RatnagiriCinematic";
 import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
+// Hero: plain video with Beaches / Forts / Temples / Nature tabs
+import HeroVideoTabs from "../components/HeroVideoTabs";
 // NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
 // App.jsx so it opens as soon as the website starts, even during loading.
 
@@ -47,11 +49,8 @@ import VisitorCounter from "../components/VisitorCounter";
     border-[color:var(--rt-teal-line)]   ring-[color:var(--rt-kokum-line)]
 */
 
-// Hero background video. Put your file in the project's `public/` folder
-// (e.g. public/hero-video.mp4) and it will be served from "/hero-video.mp4".
-// Optional: add a poster image in public/ and set HERO_POSTER to its path.
-const HERO_VIDEO = "/hero-video.mp4";
-const HERO_POSTER = "";
+// The hero videos and tabs now live in components/HeroVideoTabs.jsx
+// (edit HERO_TABS there).
 
 // The loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
@@ -551,22 +550,6 @@ export default function DashboardOverview() {
   return (
     <div className="font-body animate-in fade-in duration-500">
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .animate-fade-up-2 { animation: fadeUp 0.8s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .animate-fade-up-3 { animation: fadeUp 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .animate-fade-up-4 { animation: fadeUp 0.8s 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-        /* "Scroll" cue: a line that keeps travelling down */
-        @keyframes rt-scrolldown {
-          0%   { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        .rt-scroll-line { animation: rt-scrolldown 1.8s ease-in-out infinite; }
-
         /* Slim scrollbar */
         .rt-feed { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
         .rt-feed::-webkit-scrollbar { height: 6px; width: 6px; }
@@ -604,80 +587,13 @@ export default function DashboardOverview() {
         .rt-cta-arrow { transition: transform 0.25s ease; }
         .rt-cta:hover .rt-cta-arrow { transform: translateX(3px); }
 
-        .rt-hero-text { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45); }
-
         @media (prefers-reduced-motion: reduce) {
-          .animate-fade-up, .animate-fade-up-2, .animate-fade-up-3, .animate-fade-up-4 { animation: none; }
-          .rt-scroll-line { animation: none; }
           .rt-card, .rt-card:hover { transition: none; transform: none; }
         }
       `}</style>
 
-      {/* ================= Hero — full-bleed, edge to edge ================= */}
-      <section className="relative h-[calc(100svh-5rem)] max-h-[940px] min-h-[580px] w-full overflow-hidden bg-[color:var(--rt-ink-deep)]">
-        {/* background video: muted + looping + playsInline so it autoplays */}
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          src={HERO_VIDEO}
-          poster={HERO_POSTER || undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-
-        {/* scrims: darker at the left (text) and bottom (controls) */}
-        <div className="rt-scrim-hero-x absolute inset-0" />
-        <div className="rt-scrim-hero-y absolute inset-0" />
-
-        {/* content */}
-        <div className="absolute inset-0 flex items-center">
-          <div className="mx-auto w-full max-w-[1680px] px-6 sm:px-10 lg:px-16">
-            <div className="max-w-3xl pb-16 sm:pb-12">
-              <p className="rt-hero-text animate-fade-up mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-[color:var(--rt-gold)] sm:text-xs">
-                <span className="h-px w-10 bg-[color:var(--rt-gold)]" />
-                Konkan Coast, Maharashtra
-              </p>
-
-              <h1 className="rt-hero-text animate-fade-up-2 font-display text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-7xl lg:text-[5.5rem]">
-                Explore{" "}
-                <span className="bg-gradient-to-r from-[color:var(--rt-gold)] via-[color:var(--rt-gold-soft)] to-[color:var(--rt-gold-deep)] bg-clip-text text-transparent">
-                  Ratnagiri
-                </span>
-              </h1>
-
-              <div className="animate-fade-up-4 mt-8 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => navigate("/plan-your-trip")}
-                  className="rt-cta group inline-flex items-center gap-2 rounded-full bg-[color:var(--rt-gold)] px-7 py-3.5 text-sm font-bold text-[color:var(--rt-ink)] shadow-[0_18px_40px_-12px_rgba(242,178,51,0.7)] transition hover:-translate-y-0.5 hover:bg-[color:var(--rt-gold-soft)]"
-                >
-                  Plan your trip
-                  <ArrowRight size={16} className="rt-cta-arrow" />
-                </button>
-                <button
-                  onClick={() => navigate("/map")}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-7 py-3.5 text-sm font-semibold text-white ring-1 ring-white/40 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/20"
-                >
-                  <MapPin size={16} />
-                  Explore the map
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* scroll cue */}
-        <div className="pointer-events-none absolute bottom-20 right-6 hidden flex-col items-center gap-2 lg:flex xl:right-10">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70 [writing-mode:vertical-rl]">
-            Scroll
-          </span>
-          <span className="relative h-12 w-px overflow-hidden bg-white/25">
-            <span className="rt-scroll-line absolute inset-0 bg-white" />
-          </span>
-        </div>
-      </section>
+      {/* ================= Hero — plain video + category tabs ================= */}
+      <HeroVideoTabs />
 
       {/* ================= Experiences (the one warm "sand" band) ================= */}
       <section id="experiences" className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-sand)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16">

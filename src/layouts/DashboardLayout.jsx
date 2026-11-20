@@ -146,6 +146,7 @@ const THEME_CSS = `
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(242,178,51,.55), transparent);
   pointer-events: none;
+  transition: opacity .35s ease;
 }
 .rt-header-float {
   border-radius: 1.5rem;
@@ -156,6 +157,21 @@ const THEME_CSS = `
   box-shadow: 0 20px 40px -16px rgba(2,20,32,.65), 0 2px 6px rgba(2,20,32,.2);
 }
 .rt-header-float::before { opacity: .38; }
+
+/* Home page, top of page: the header is see-through over the hero video,
+   plain white links with a thin red line under them. As soon as the page
+   scrolls, it turns back into the floating frosted bar above. */
+.rt-header.rt-header-clear {
+  background-color: transparent;
+  box-shadow: none;
+}
+.rt-header.rt-header-clear::before,
+.rt-header.rt-header-clear::after { opacity: 0; }
+.rt-header-clear .rt-nav-link { text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+.rt-header-clear .rt-nav-wrap {
+  border-bottom: 1px solid var(--rt-laterite-bright);
+}
+.rt-nav-wrap { border-bottom: 1px solid transparent; transition: border-color .3s ease; }
 
 /* Reading-progress line, only visible while floating */
 .rt-progress {
@@ -889,6 +905,12 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // On the home page the hero video runs under the header. At the very top
+  // the header is see-through (plain links over the video); once the page is
+  // scrolled it becomes the normal floating bar.
+  const isHome = location.pathname === "/dashboard";
+  const clearHeader = isHome && !scrolled;
+
   /* Search palette */
   const [searchOpen, setSearchOpen] = useState(false);
   const pages = useMemo(() => {
@@ -988,7 +1010,11 @@ export default function DashboardLayout() {
             scrolled ? "px-2 pt-2 sm:px-4 sm:pt-3 lg:px-6" : "px-0 pt-0"
           }`}
         >
-          <header className={`rt-header ${scrolled ? "rt-header-float" : ""}`}>
+          <header
+            className={`rt-header ${scrolled ? "rt-header-float" : ""} ${
+              clearHeader ? "rt-header-clear" : ""
+            }`}
+          >
             <div
               className={`relative grid w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5 transition-[height] duration-300 ease-out ${
                 scrolled ? "h-16" : "h-20"
@@ -1017,7 +1043,7 @@ export default function DashboardLayout() {
               </div>
 
               {/* Center: page links (desktop only; smaller screens use the sidebar) */}
-              <div className="hidden lg:block min-w-0">
+              <div className="rt-nav-wrap hidden lg:block min-w-0">
                 <PrimaryNav items={NAV_ITEMS} navigate={navigate} isItemActive={isItemActive} />
               </div>
 
@@ -1087,7 +1113,8 @@ export default function DashboardLayout() {
 
         {/* Main content */}
         <div id="main-content" tabIndex={-1} className="pb-8 outline-none">
-          <Breadcrumb />
+          {/* Home has the hero video sliding under the header, so no breadcrumb row there */}
+          {!isHome && <Breadcrumb />}
           <Outlet />
         </div>
       </main>
