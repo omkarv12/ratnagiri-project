@@ -2,12 +2,10 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Sidebar from "../components/Sidebar";
-import { useAuth } from "../context/AuthContext";
 import { MENUS } from "../config/navMenus";
 import {
   Menu,
   X,
-  ShieldCheck,
   MapPlus,
   HeartHandshake,
   Search,
@@ -148,15 +146,44 @@ const THEME_CSS = `
   pointer-events: none;
   transition: opacity .35s ease;
 }
+/* After scrolling: full-width, light frosted bar with dark links
+   (like the reference), and the brand as a kokum-red block on the left. */
 .rt-header-float {
-  border-radius: 1.5rem;
-  background-color: rgba(10, 42, 60, .78);
-  border-color: rgba(255,255,255,.14);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  box-shadow: 0 20px 40px -16px rgba(2,20,32,.65), 0 2px 6px rgba(2,20,32,.2);
+  border-radius: 0;
+  background-color: rgba(255, 255, 255, .86);
+  border-color: transparent;
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 1px 0 rgba(10,42,60,.08), 0 10px 24px -16px rgba(10,42,60,.35);
 }
-.rt-header-float::before { opacity: .38; }
+.rt-header-float::before,
+.rt-header-float::after { opacity: 0; }
+
+.rt-header-float .rt-nav-link { color: var(--rt-ink); }
+.rt-header-float .rt-nav-link:hover,
+.rt-header-float .group:hover > .rt-nav-link,
+.rt-header-float .group:focus-within > .rt-nav-link { background-color: rgba(10, 42, 60, .07); }
+.rt-header-float .rt-nav-link::after { background: var(--rt-laterite); }
+.rt-header-float .rt-caret { border-top-color: rgba(10,42,60,.7); }
+.rt-header-float .group:hover .rt-caret,
+.rt-header-float .group:focus-within .rt-caret { border-top-color: var(--rt-ink); }
+.rt-header-float .rt-toggle { color: var(--rt-ink); }
+.rt-header-float .rt-toggle:hover { background-color: rgba(10,42,60,.08); }
+.rt-header-float .rt-util {
+  color: var(--rt-ink);
+  background: rgba(10,42,60,.06);
+  box-shadow: 0 0 0 1px rgba(10,42,60,.2);
+}
+.rt-header-float .rt-util:hover { background: rgba(10,42,60,.12); box-shadow: 0 0 0 1px rgba(10,42,60,.35); }
+.rt-header-float .rt-util kbd { background: rgba(10,42,60,.08); }
+/* Orange reading-progress line: hidden. Delete this rule to bring it back. */
+.rt-header .rt-progress { display: none; }
+
+/* Brand block */
+.rt-brand {
+  background: linear-gradient(180deg, var(--rt-kokum) 0%, var(--rt-kokum-dark) 100%);
+  box-shadow: 0 8px 18px -10px rgba(112,35,57,.7);
+}
 
 /* Home page, top of page: the header is see-through over the hero video,
    plain white links with a thin red line under them. As soon as the page
@@ -168,10 +195,6 @@ const THEME_CSS = `
 .rt-header.rt-header-clear::before,
 .rt-header.rt-header-clear::after { opacity: 0; }
 .rt-header-clear .rt-nav-link { text-shadow: 0 1px 8px rgba(0,0,0,.55); }
-.rt-header-clear .rt-nav-wrap {
-  border-bottom: 1px solid var(--rt-laterite-bright);
-}
-.rt-nav-wrap { border-bottom: 1px solid transparent; transition: border-color .3s ease; }
 
 /* Reading-progress line, only visible while floating */
 .rt-progress {
@@ -409,7 +432,11 @@ iframe.skiptranslate, .goog-te-banner-frame { display: none !important; }
 const NAV_ITEM_CLASS =
   "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3 xl:px-4 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
 
-const NAV_ITEMS = [{ label: "Home", route: "/dashboard", exact: true }, ...MENUS];
+// "About" is not shown in the header any more.
+const NAV_ITEMS = [
+  { label: "Home", route: "/dashboard", exact: true },
+  ...MENUS.filter((m) => !/^about/i.test(m.label)),
+];
 
 const NAV_GAP = 4; // px — must match gap-1 on the nav row
 
@@ -421,7 +448,7 @@ function Caret() {
   return (
     <span
       aria-hidden="true"
-      className="ml-0.5 h-0 w-0 border-x-[4px] border-t-[5px] border-x-transparent border-t-white/80 group-hover:border-t-white group-focus-within:border-t-white group-hover:rotate-180 group-focus-within:rotate-180 transition-transform duration-200"
+      className="rt-caret ml-0.5 h-0 w-0 border-x-[4px] border-t-[5px] border-x-transparent border-t-white/80 group-hover:border-t-white group-focus-within:border-t-white group-hover:rotate-180 group-focus-within:rotate-180 transition-transform duration-200"
     />
   );
 }
@@ -901,7 +928,6 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const progressRef = useRef(null);
-  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1006,9 +1032,7 @@ export default function DashboardLayout() {
         {/* Sticky wrapper: its padding is what makes the bar "float" off the edges.
             pointer-events-none so the transparent gap never blocks clicks. */}
         <div
-          className={`rt-header-in pointer-events-none sticky top-0 z-40 transition-[padding] duration-300 ease-out ${
-            scrolled ? "px-2 pt-2 sm:px-4 sm:pt-3 lg:px-6" : "px-0 pt-0"
-          }`}
+          className="rt-header-in pointer-events-none sticky top-0 z-40"
         >
           <header
             className={`rt-header ${scrolled ? "rt-header-float" : ""} ${
@@ -1021,12 +1045,12 @@ export default function DashboardLayout() {
               }`}
             >
               {/* Left: mobile toggle + brand */}
-              <div className="flex min-w-0 items-center gap-1 sm:gap-3 lg:shrink-0">
+              <div className="flex min-w-0 items-center gap-1 self-stretch sm:gap-3 lg:shrink-0">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   aria-label="Toggle menu"
                   aria-expanded={sidebarOpen}
-                  className="lg:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white hover:bg-white/10 transition"
+                  className="rt-toggle lg:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white hover:bg-white/10 transition"
                 >
                   {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
                 </button>
@@ -1034,7 +1058,7 @@ export default function DashboardLayout() {
                 <button
                   onClick={() => navigate("/dashboard")}
                   aria-label="Visit Ratnagiri — home"
-                  className="flex min-w-0 items-center"
+                  className="rt-brand flex min-w-0 items-center self-stretch px-4 sm:px-6"
                 >
                   <span translate="no" className="rt-display truncate whitespace-nowrap text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-white leading-tight">
                     Visit Ratnagiri
@@ -1094,15 +1118,6 @@ export default function DashboardLayout() {
                   <span className="relative hidden 2xl:inline">Contribute</span>
                 </button>
 
-                <button
-                  onClick={() => navigate(user ? "/admin" : "/login")}
-                  aria-label="Admin"
-                  title="Admin"
-                  className="rt-btn rt-btn-admin"
-                >
-                  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
-                  <ShieldCheck size={16} className="rt-shield relative" />
-                </button>
               </div>
             </div>
 
