@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Building2, Film, Home, Search, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Film,
+  Home,
+  Landmark,
+  MapPin,
+  Search,
+  Sparkles,
+  Users,
+  Waves,
+} from "lucide-react";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
@@ -9,15 +19,18 @@ import EconomyImg from "../assets/Economy.jpg";
 import ExperienceBg from "../assets/Experience-Bg.jpg";
 
 /*
-  Explore mosaic — a patchwork of tiles on a plain background, laid out like the
-  reference: Homestays & Hotels, Plan Your Trip, Culture, Destinations,
+  Explore collage — tiles spread out over a photo background (like the reference):
+  Homestays & Hotels, Plan Your Trip, Culture, Destinations,
   Tourist Guides and Travel Agents, Adventure, Media Room.
+
+  Every corner is square on purpose. Each tile has an icon, a title and a one-line
+  hint so a visitor understands it at a glance. Tiles drift up and down very slowly.
 
   EDIT HERE
   - ROUTES: change each tile's link to the real page in config/navMenus.
-  - IMAGES: these are placeholder photos from your existing assets. Drop real
-    photos in src/assets and import them here (Culture = festival photo,
-    Adventure = water sports / trekking, etc.).
+  - IMAGES: placeholder photos from your existing assets. Drop real photos in
+    src/assets and import them here.
+  - Positions: the lg:left / lg:top / lg:w / lg:h classes in TILES (desktop only).
   Keep id="experiences" so the nav header's #experiences link still scrolls here.
 */
 
@@ -39,6 +52,25 @@ const IMAGES = {
 };
 
 const THEMES = ["Heritage", "Nature", "Beaches", "Spiritual"];
+
+// Desktop = free-placed collage on a 1280 x 820 canvas (left/width in %, top/height in px).
+// Phones/tablets = one tile per row, alternating left and right.
+const POS = {
+  stay: "self-start w-[92%] h-64 lg:left-[3.1%] lg:top-[20px] lg:w-[25.8%] lg:h-[300px]",
+  plan: "self-end w-[92%] h-56 lg:left-[62.5%] lg:top-0 lg:w-[28.1%] lg:h-[220px]",
+  culture: "self-start w-[92%] h-56 lg:left-[40.6%] lg:top-[280px] lg:w-[29.7%] lg:h-[200px]",
+  destinations: "self-end w-[92%] h-64 lg:left-[3.1%] lg:top-[380px] lg:w-[29.7%] lg:h-[300px]",
+  guides: "self-start w-[92%] h-56 lg:left-[75%] lg:top-[360px] lg:w-[21.9%] lg:h-[200px]",
+  adventure: "self-end w-[92%] h-56 lg:left-[37.5%] lg:top-[550px] lg:w-[23.4%] lg:h-[200px]",
+  media: "self-start w-[92%] h-48 lg:left-[65.6%] lg:top-[630px] lg:w-[21.9%] lg:h-[170px]",
+};
+
+const PHOTO_TILES = [
+  { key: "culture", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, image: IMAGES.culture, route: ROUTES.culture, delay: 150, float: "0s" },
+  { key: "destinations", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, image: IMAGES.destinations, route: ROUTES.destinations, delay: 250, float: "-2s" },
+  { key: "guides", title: "Tourist Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, image: IMAGES.guides, route: ROUTES.guides, delay: 350, float: "-4s" },
+  { key: "adventure", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, image: IMAGES.adventure, route: ROUTES.adventure, delay: 450, float: "-1s" },
+];
 
 function useInView(threshold = 0.1) {
   const ref = useRef(null);
@@ -66,11 +98,11 @@ export default function ExperiencesMosaic() {
   const [ref, inView] = useInView();
   const [theme, setTheme] = useState(null);
 
-  // Fade-up with stagger; applied on each tile's outer wrapper
-  const wrap = (cls, delay) => ({
+  // Outer wrapper: position + fade-up reveal with a stagger
+  const wrap = (pos, delay) => ({
     style: { transitionDelay: `${delay}ms` },
-    className: `${cls} transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 motion-reduce:scale-100 ${
-      inView ? "translate-y-0 scale-100 opacity-100" : "translate-y-10 scale-95 opacity-0"
+    className: `relative lg:absolute ${pos} transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 ${
+      inView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
     }`,
   });
 
@@ -78,46 +110,25 @@ export default function ExperiencesMosaic() {
     navigate(theme ? `${ROUTES.plan}?theme=${theme.toLowerCase()}` : ROUTES.plan);
 
   const tileBtn =
-    "group relative block h-full w-full overflow-hidden text-left shadow-[0_18px_40px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-900/5 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_56px_-20px_rgba(15,23,42,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--rt-gold)]";
+    "group relative block h-full w-full overflow-hidden text-left shadow-[0_22px_44px_-18px_rgba(0,0,0,0.8)] transition duration-500 hover:-translate-y-2 hover:shadow-[0_32px_60px_-18px_rgba(0,0,0,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--rt-gold)]";
+  const printFrame = "border-[6px] border-white"; // thin white "photo print" frame
 
-  // 12-column grid, 6 rows of 110px on desktop — three columns of tiles, no gaps:
-  //   left   : Homestays & Hotels (3 rows) + Destinations (3 rows)
-  //   middle : Plan Your Trip (2 rows) + Culture (4 rows)
-  //   right  : Tourist Guides & Agents + Adventure + Media Room (2 rows each)
-  const photoTiles = [
-    {
-      key: "culture",
-      title: "Culture",
-      image: IMAGES.culture,
-      route: ROUTES.culture,
-      cls: "col-span-2 h-44 lg:h-auto lg:col-span-4 lg:col-start-5 lg:row-span-4 lg:row-start-3",
-      delay: 150,
-    },
-    {
-      key: "destinations",
-      title: "Destinations",
-      image: IMAGES.destinations,
-      route: ROUTES.destinations,
-      cls: "col-span-2 h-52 lg:h-auto lg:col-span-4 lg:col-start-1 lg:row-span-3 lg:row-start-4",
-      delay: 250,
-    },
-    {
-      key: "guides",
-      title: "Tourist Guides and Travel Agents",
-      image: IMAGES.guides,
-      route: ROUTES.guides,
-      cls: "col-span-2 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1",
-      delay: 350,
-    },
-    {
-      key: "adventure",
-      title: "Adventure",
-      image: IMAGES.adventure,
-      route: ROUTES.adventure,
-      cls: "col-span-1 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-3",
-      delay: 450,
-    },
-  ];
+  const label = (Icon, title, hint) => (
+    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-10">
+      <p className="flex items-center gap-2 font-display text-lg font-semibold leading-tight text-white">
+        <Icon size={17} aria-hidden="true" className="shrink-0 text-[color:var(--rt-gold)]" />
+        {title}
+      </p>
+      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-white/85">
+        {hint}
+        <ArrowRight
+          size={15}
+          aria-hidden="true"
+          className="shrink-0 text-[color:var(--rt-gold)] transition-transform duration-300 group-hover:translate-x-1"
+        />
+      </p>
+    </div>
+  );
 
   return (
     <section
@@ -125,42 +136,57 @@ export default function ExperiencesMosaic() {
       ref={ref}
       className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-ink)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
       style={{
-        // soft dark overlay on the photo so the tiles and their text stay readable
-        backgroundImage: `linear-gradient(rgba(10,42,60,0.55), rgba(10,42,60,0.55)), url(${ExperienceBg})`,
+        // light overlay so the photo stays visible but the tiles still pop
+        backgroundImage: `linear-gradient(rgba(8,24,32,0.35), rgba(8,24,32,0.35)), url(${ExperienceBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
+      <style>{`
+        @keyframes rt-bob-kf {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-7px); }
+        }
+        .rt-bob { animation: rt-bob-kf 7s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .rt-bob { animation: none; } }
+      `}</style>
+
       <h2 className="sr-only">Explore Ratnagiri</h2>
 
-      <div className="relative mx-auto max-w-[1280px]">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-12 lg:auto-rows-[110px] lg:gap-4">
-          {/* ---------- Homestays & Hotels (the white "logo" tile) ---------- */}
-          <div {...wrap("col-span-2 lg:col-span-4 lg:col-start-1 lg:row-span-3 lg:row-start-1", 0)}>
-            <button onClick={() => navigate(ROUTES.stay)} className={`${tileBtn} flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-6 text-center`}>
-              <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--rt-laterite-tint)] text-[color:var(--rt-laterite)] transition group-hover:rotate-6">
+      <div className="relative mx-auto flex max-w-[1280px] flex-col gap-8 lg:block lg:h-[820px] lg:gap-0">
+        {/* ---------- Homestays & Hotels (white tile) ---------- */}
+        <div {...wrap(POS.stay, 0)}>
+          <div className="rt-bob h-full w-full" style={{ animationDelay: "-3s" }}>
+            <button onClick={() => navigate(ROUTES.stay)} className={`${tileBtn} flex flex-col items-center justify-center gap-3 bg-white p-6 text-center`}>
+              <span className="flex h-16 w-16 items-center justify-center bg-[color:var(--rt-laterite-tint)] text-[color:var(--rt-laterite)] transition duration-500 group-hover:scale-110">
                 <Home size={30} aria-hidden="true" />
               </span>
               <span className="font-display text-2xl font-bold leading-tight text-[color:var(--rt-ink)]">
                 Homestays <span className="text-[color:var(--rt-laterite)]">&amp;</span> Hotels
               </span>
               <span className="h-px w-24 bg-[color:var(--rt-ink)]/40" />
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--rt-ink)]/70">
-                <Building2 size={14} aria-hidden="true" /> Stay local
+              <span className="text-xs font-semibold text-[color:var(--rt-ink)]/70">
+                Stay with local families or book a hotel
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--rt-laterite)]">
+                Explore <ArrowRight size={14} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1" />
               </span>
             </button>
           </div>
+        </div>
 
-          {/* ---------- Plan Your Trip panel ---------- */}
-          <div {...wrap("col-span-2 lg:col-span-4 lg:col-start-5 lg:row-span-2 lg:row-start-1", 100)}>
-            <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[color:var(--rt-kokum)] to-[color:var(--rt-kokum-dark)] p-5 text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.45)]">
-              <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full border border-white/20" />
-              <div className="relative">
+        {/* ---------- Plan Your Trip panel ---------- */}
+        <div {...wrap(POS.plan, 100)}>
+          <div className="rt-bob h-full w-full" style={{ animationDelay: "-5s" }}>
+            <div className="flex h-full flex-col justify-between bg-gradient-to-br from-[color:var(--rt-kokum)] to-[color:var(--rt-kokum-dark)] p-5 text-white shadow-[0_22px_44px_-18px_rgba(0,0,0,0.8)]">
+              <div>
                 <p className="flex items-center gap-2 font-display text-lg font-semibold">
                   <Sparkles size={16} className="text-[color:var(--rt-gold)]" aria-hidden="true" />
                   Plan Your Trip
                 </p>
-                <p className="mt-3 text-[10px] font-bold uppercase tracking-widest text-white/70">Travel theme</p>
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-white/70">
+                  What do you like?
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {THEMES.map((t) => {
                     const active = theme === t;
@@ -169,7 +195,7 @@ export default function ExperiencesMosaic() {
                         key={t}
                         onClick={() => setTheme(active ? null : t)}
                         aria-pressed={active}
-                        className={`rounded-full px-3.5 py-1 text-xs font-semibold ring-1 transition ${
+                        className={`px-3 py-1 text-xs font-semibold ring-1 transition ${
                           active
                             ? "bg-white text-[color:var(--rt-kokum)] ring-white"
                             : "bg-white/10 text-white ring-white/40 hover:bg-white/20"
@@ -183,51 +209,40 @@ export default function ExperiencesMosaic() {
               </div>
               <button
                 onClick={goPlan}
-                className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-[color:var(--rt-laterite)] py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-[color:var(--rt-laterite-dark)]"
+                className="mt-3 flex w-full items-center justify-center gap-2 bg-[color:var(--rt-laterite)] py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-[color:var(--rt-laterite-dark)]"
               >
                 <Search size={13} aria-hidden="true" /> Search
               </button>
             </div>
           </div>
+        </div>
 
-          {/* ---------- Photo tiles: Culture, Destinations, Guides & Agents, Adventure ---------- */}
-          {photoTiles.map(({ key, title, image, route, cls, delay }) => (
-            <div key={key} {...wrap(cls, delay)}>
-              <button onClick={() => navigate(route)} className={`${tileBtn} rounded-2xl`}>
+        {/* ---------- Photo tiles ---------- */}
+        {PHOTO_TILES.map(({ key, title, hint, icon, image, route, delay, float }) => (
+          <div key={key} {...wrap(POS[key], delay)}>
+            <div className="rt-bob h-full w-full" style={{ animationDelay: float }}>
+              <button onClick={() => navigate(route)} className={`${tileBtn} ${printFrame}`}>
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{ backgroundImage: `url(${image})` }}
                 />
-                <div className="rt-scrim-card absolute inset-0" />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
-                  <p className="font-display text-lg font-semibold leading-tight text-white drop-shadow">{title}</p>
-                  <ArrowRight
-                    size={18}
-                    aria-hidden="true"
-                    className="shrink-0 text-[color:var(--rt-gold)] opacity-0 transition duration-300 group-hover:translate-x-1 group-hover:opacity-100 max-lg:opacity-100"
-                  />
-                </div>
+                {label(icon, title, hint)}
               </button>
             </div>
-          ))}
+          </div>
+        ))}
 
-          {/* ---------- Media Room ---------- */}
-          <div {...wrap("col-span-1 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-5", 550)}>
+        {/* ---------- Media Room ---------- */}
+        <div {...wrap(POS.media, 550)}>
+          <div className="rt-bob h-full w-full" style={{ animationDelay: "-6s" }}>
             <button
               onClick={() => navigate(ROUTES.media)}
-              className={`${tileBtn} rounded-2xl bg-gradient-to-br from-[color:var(--rt-teal)] to-[color:var(--rt-ink)]`}
+              className={`${tileBtn} ${printFrame} bg-gradient-to-br from-[color:var(--rt-teal)] to-[color:var(--rt-ink)]`}
             >
-              <span className="absolute inset-0 flex items-center justify-center text-white/20 transition duration-500 group-hover:scale-110 group-hover:text-white/30">
-                <Film size={72} aria-hidden="true" />
+              <span className="absolute inset-0 flex items-start justify-center pt-5 text-white/25 transition duration-500 group-hover:scale-110 group-hover:text-white/40">
+                <Film size={64} aria-hidden="true" />
               </span>
-              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
-                <p className="font-display text-lg font-semibold leading-tight text-white">Media Room</p>
-                <ArrowRight
-                  size={18}
-                  aria-hidden="true"
-                  className="shrink-0 text-[color:var(--rt-gold)] opacity-0 transition duration-300 group-hover:translate-x-1 group-hover:opacity-100 max-lg:opacity-100"
-                />
-              </div>
+              {label(Film, "Media Room", "Photos, videos and reels")}
             </button>
           </div>
         </div>

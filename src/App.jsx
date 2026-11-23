@@ -5,6 +5,7 @@ import { LocationsProvider } from "./context/LocationsContext";
 
 // Layout
 import DashboardLayout from "./layouts/DashboardLayout";
+import MusicToggle from "./components/MusicToggle";
 
 // Shared components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -91,7 +92,7 @@ export default function App() {
             <Route path="/society" element={<Society />} />
             <Route path="/economy" element={<Economy />} />
             <Route path="/good-governance" element={<GoodGovernance />} />
-
+            <MusicToggle />
             {/* Experiences */}
             <Route path="/experiences/upcoming-events" element={<UpcomingEventsPage />} />
             <Route path="/experiences/discover-your-stay" element={<DiscoverYourStay />} />
