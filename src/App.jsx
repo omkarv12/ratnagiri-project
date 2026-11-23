@@ -71,7 +71,7 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <HowDidYouHearModal />
-
+        <MusicToggle />
         <Routes>
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -92,7 +92,7 @@ export default function App() {
             <Route path="/society" element={<Society />} />
             <Route path="/economy" element={<Economy />} />
             <Route path="/good-governance" element={<GoodGovernance />} />
-            <MusicToggle />
+            
             {/* Experiences */}
             <Route path="/experiences/upcoming-events" element={<UpcomingEventsPage />} />
             <Route path="/experiences/discover-your-stay" element={<DiscoverYourStay />} />
