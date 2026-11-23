@@ -2,45 +2,46 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  BookOpen,
   Film,
   Home,
   Image as ImageIcon,
   Landmark,
+  Map as MapIcon,
   MapPin,
   Search,
-  Sparkles,
   Users,
   Waves,
 } from "lucide-react";
-// Section background photo with the animal (add src/assets/Experience-Bg.jpg)
+// Section background photo (src/assets/Experience-Bg.jpg)
 import ExperienceBg from "../assets/Experience-Bg.jpg";
 
 /*
-  Explore collage — big square-cornered tiles scattered over a photo background,
-  leaving a clear area so the animal in the background stays visible.
+  Explore section — same layout as the reference screenshot:
+
+      LEFT COLUMN                RIGHT COLUMN
+      [ Homestays & Hotels ]     [ Plan Your Trip  (Plan | Map | Blogs) ]
+      [ Destinations       ]     [ Culture                              ]
+      [ Adventure          ]     [ Guides & Agents                      ]
+                                 [ Media Room                           ]
 
   EDIT HERE
-  1) PHOTOS — every tile has an empty "Add photo here" slot. Put your photos in
-     src/assets, import them, and fill IMAGES below, for example:
-         import CultureImg from "../assets/Culture.jpg";
-         const IMAGES = { ..., culture: CultureImg, ... };
-     Until a photo is set, the tile shows a striped placeholder.
-  2) ANIMAL_SIDE — "right" keeps the bottom-right of the background free (animal
-     on the right, like the reference). Use "left" if the animal is on the left.
-  3) ROUTES — change each tile's link to the real page.
-  4) Tile sizes/positions — the `box` of each tile in TILES (a 1280 x 1060 canvas).
+  1) IMAGES  – import your photos and put them in IMAGES (null = striped placeholder).
+  2) ROUTES  – real page links. `map` and `blogs` are used by the Plan Your Trip panel.
+  3) MAP_EMBED_URL – paste your real interactive-map URL (iframe). If empty, the Map tab
+     shows an "Open interactive map" button that goes to ROUTES.map.
+  4) DESTINATIONS / THEMES – the dropdown and chips inside Plan Your Trip.
 
-  Effects: tiles fly in one by one, rest at a slight tilt, float slowly, move a
-  little with the mouse (parallax), and on hover straighten up, lift, zoom the
-  photo and show a light sweep. All motion switches off for visitors who use the
-  "reduce motion" setting.
-  Keep id="experiences" so the nav header's #experiences link still scrolls here.
+  Effects
+  - Scroll: the two columns slide up at different speeds (the right one a bit faster),
+    so the collage "lifts" as you scroll down. Tiles also rise in one by one on first view.
+  - Tiles (Culture-style): photo zooms, a light sweep passes over, the caption lifts and
+    the hint line fades in on hover. Everything is off for "reduce motion".
+  Keep id="experiences" so the header's #experiences link still scrolls here.
 */
 
-const ANIMAL_SIDE = "right"; // "right" | "left"
-
 const IMAGES = {
-  stay: null,
+  stay: null, // e.g. import StayImg from "../assets/Stay.jpg"  ->  stay: StayImg
   culture: null,
   destinations: null,
   guides: null,
@@ -48,73 +49,39 @@ const IMAGES = {
   media: null,
 };
 
+// "cover" fills the tile; "contain" shows the whole picture on white (good for a logo)
+const FIT = { stay: "contain" };
+
 const ROUTES = {
   stay: "/experiences/discover-your-stay",
   culture: "/about/culture",
   destinations: "/about/geography/places",
-  guides: "/plan-your-trip", // TODO: set to the real Guides & Agents page
-  adventure: "/experiences/hidden-paths", // TODO: set to the real Adventure page
+  guides: "/plan-your-trip", // TODO: real Guides & Agents page
+  adventure: "/experiences/hidden-paths", // TODO: real Adventure page
   media: "/videos",
   plan: "/plan-your-trip",
+  map: "/map", // TODO: your interactive map page
+  blogs: "/blogs", // TODO: your blog listing page (search goes to ?q=...)
 };
 
-const THEMES = ["Heritage", "Nature", "Beaches", "Spiritual"];
+const MAP_EMBED_URL = ""; // e.g. "/map?embed=1" — shown inside the panel when set
 
-const CANVAS_W = 1280;
+const DESTINATIONS = ["All cities", "Ratnagiri", "Ganpatipule", "Guhagar", "Dapoli", "Chiplun"];
+const THEMES = ["Heritage", "Nature", "Spiritual", "Wildlife"];
+const BLOG_TAGS = ["Beaches", "Food", "Temples", "Forts"];
 
-// box = x, y, w, h on the desktop canvas (right-side animal layout).
-// mh = height on phones. tilt = resting angle. depth = mouse-parallax strength.
-// from = where the tile flies in from. bob/bobDelay = float speed.
+// col: which column. o: order on phones. speed: scroll lift of that column is set in CSS.
 const TILES = [
-  {
-    key: "stay", kind: "postcard", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel",
-    icon: Home, route: ROUTES.stay,
-    box: { x: 40, y: 20, w: 400, h: 340 }, mh: 340, tilt: -1.5, depth: 14, from: [-90, -30], delay: 0, bob: "8s", bobDelay: "-3s",
-  },
-  {
-    key: "plan", kind: "plan", title: "Plan Your Trip", hint: "What do you like?",
-    icon: Sparkles, route: ROUTES.plan,
-    box: { x: 720, y: 0, w: 440, h: 250 }, mh: 270, tilt: 0.8, depth: 8, from: [90, -40], delay: 120, bob: "9s", bobDelay: "-5s",
-  },
-  {
-    key: "culture", kind: "photo", title: "Culture", hint: "Festivals, food and traditions",
-    icon: Landmark, route: ROUTES.culture,
-    box: { x: 540, y: 290, w: 380, h: 270 }, mh: 280, tilt: 1.2, depth: 22, from: [90, -10], delay: 240, bob: "7s", bobDelay: "-1s",
-  },
-  {
-    key: "destinations", kind: "photo", title: "Destinations", hint: "Beaches, forts and temples",
-    icon: MapPin, route: ROUTES.destinations,
-    box: { x: 40, y: 410, w: 440, h: 330 }, mh: 320, tilt: 1, depth: 12, from: [-90, 40], delay: 360, bob: "10s", bobDelay: "-4s",
-  },
-  {
-    key: "guides", kind: "photo", title: "Tourist Guides and Travel Agents", hint: "Find trusted local guides",
-    icon: Users, route: ROUTES.guides,
-    box: { x: 540, y: 610, w: 380, h: 250 }, mh: 270, tilt: -1.2, depth: 26, from: [70, 70], delay: 480, bob: "8.5s", bobDelay: "-2s",
-  },
-  {
-    key: "adventure", kind: "photo", title: "Adventure", hint: "Water sports, treks and trails",
-    icon: Waves, route: ROUTES.adventure,
-    box: { x: 40, y: 790, w: 380, h: 230 }, mh: 270, tilt: -1, depth: 18, from: [-70, 80], delay: 600, bob: "7.5s", bobDelay: "-6s",
-  },
-  {
-    key: "media", kind: "photo", title: "Media Room", hint: "Photos, videos and reels",
-    icon: Film, route: ROUTES.media,
-    box: { x: 460, y: 900, w: 340, h: 160 }, mh: 250, tilt: 1.4, depth: 20, from: [0, 90], delay: 720, bob: "9.5s", bobDelay: "-7s",
-  },
+  { key: "stay", col: "L", o: 1, h: "aspect-square", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
+  { key: "plan", col: "R", o: 2, panel: true, delay: 120 },
+  { key: "culture", col: "R", o: 3, h: "h-[400px]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 240 },
+  { key: "destinations", col: "L", o: 4, h: "h-[340px]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 300 },
+  { key: "guides", col: "R", o: 5, h: "h-[300px]", title: "Tourist Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 420 },
+  { key: "adventure", col: "L", o: 6, h: "h-[300px]", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
+  { key: "media", col: "R", o: 7, h: "h-[260px]", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 600 },
 ];
 
-// left/width as % of the canvas, top/height in px. Mirrors when the animal is on the left.
-const place = ({ x, y, w, h }) => {
-  const left = ANIMAL_SIDE === "right" ? x : CANVAS_W - x - w;
-  return {
-    l: `${((left / CANVAS_W) * 100).toFixed(2)}%`,
-    t: `${y}px`,
-    w: `${((w / CANVAS_W) * 100).toFixed(2)}%`,
-    h: `${h}px`,
-  };
-};
-
-function useInView(threshold = 0.08) {
+function useInView(threshold = 0.05) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -135,19 +102,51 @@ function useInView(threshold = 0.08) {
   return [ref, inView];
 }
 
-// The photo area: your photo when set, otherwise a clear "add photo" placeholder
-function PhotoSlot({ image, label }) {
+// Writes --p (-1 … 1) on the section while it passes through the screen.
+// CSS turns it into the upward slide of each column.
+function useScrollProgress(ref) {
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = node.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const center = r.top + r.height / 2;
+      const p = (vh / 2 - center) / (vh / 2 + r.height / 2);
+      node.style.setProperty("--p", Math.max(-1, Math.min(1, p)).toFixed(4));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [ref]);
+}
+
+function PhotoSlot({ image, label, fit }) {
   if (image) {
     return (
       <div
-        className="rt-zoom absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${image})` }}
+        className="rt-zoom absolute inset-0 bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${image})`,
+          backgroundSize: fit === "contain" ? "contain" : "cover",
+          backgroundColor: fit === "contain" ? "#fff" : undefined,
+        }}
       />
     );
   }
   return (
     <div
-      className="rt-zoom absolute inset-0 flex flex-col items-center justify-center gap-2 pb-10 text-center text-slate-500"
+      className="rt-zoom absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-500"
       style={{ background: "repeating-linear-gradient(45deg,#e6dfd1 0 14px,#f3efe5 14px 28px)" }}
     >
       <ImageIcon size={36} aria-hidden="true" />
@@ -157,101 +156,281 @@ function PhotoSlot({ image, label }) {
   );
 }
 
-export default function ExperiencesMosaic() {
+/* ---------- Plan Your Trip panel: Plan | Map | Blogs ---------- */
+function PlanPanel() {
   const navigate = useNavigate();
-  const [ref, inView] = useInView();
-  const stageRef = useRef(null);
+  const [tab, setTab] = useState("plan");
+  const [dest, setDest] = useState(DESTINATIONS[0]);
   const [theme, setTheme] = useState(null);
+  const [query, setQuery] = useState("");
 
-  const goPlan = () =>
-    navigate(theme ? `${ROUTES.plan}?theme=${theme.toLowerCase()}` : ROUTES.plan);
-
-  // Mouse parallax: tiles drift a little with the pointer
-  const onMove = (e) => {
-    const stage = stageRef.current;
-    if (!stage || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    stage.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
-    stage.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+  const goPlan = () => {
+    const qs = new URLSearchParams();
+    if (dest !== DESTINATIONS[0]) qs.set("city", dest);
+    if (theme) qs.set("theme", theme.toLowerCase());
+    const s = qs.toString();
+    navigate(s ? `${ROUTES.plan}?${s}` : ROUTES.plan);
   };
-  const onLeave = () => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    stage.style.setProperty("--mx", "0");
-    stage.style.setProperty("--my", "0");
+  const goBlogs = (q) => {
+    const text = (q ?? query).trim();
+    navigate(text ? `${ROUTES.blogs}?q=${encodeURIComponent(text)}` : ROUTES.blogs);
   };
 
-  const title = (t) =>
-    t.key === "stay" ? (
-      <>
-        Homestays <span className="text-[color:var(--rt-laterite)]">&amp;</span> Hotels
-      </>
-    ) : (
-      t.title
-    );
+  const tabs = [
+    { id: "plan", label: "Plan", icon: Search },
+    { id: "map", label: "Map", icon: MapIcon },
+    { id: "blogs", label: "Blogs", icon: BookOpen },
+  ];
 
-  const bgDir = ANIMAL_SIDE === "right" ? "to right" : "to left";
+  return (
+    <div className="rt-panel flex h-full min-h-[436px] flex-col p-8 text-white">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="flex items-center gap-3 font-display text-3xl font-medium">
+          <MapIcon size={30} aria-hidden="true" className="text-white/80" />
+          Plan Your Trip
+        </h3>
+      </div>
+
+      <div role="tablist" aria-label="Plan your trip" className="mt-5 flex gap-1 border-b border-white/25">
+        {tabs.map(({ id, label, icon: TabIcon }) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition ${
+              tab === id ? "border-b-2 border-white text-white" : "border-b-2 border-transparent text-white/60 hover:text-white"
+            }`}
+          >
+            <TabIcon size={15} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "plan" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <label htmlFor="rt-dest" className="text-sm font-semibold">Destinations</label>
+          <select
+            id="rt-dest"
+            value={dest}
+            onChange={(e) => setDest(e.target.value)}
+            className="mt-2 h-12 w-full rounded-sm bg-white px-4 text-base text-slate-900"
+          >
+            {DESTINATIONS.map((d) => (
+              <option key={d}>{d}</option>
+            ))}
+          </select>
+
+          <p className="mt-6 text-sm font-semibold">Travel theme</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {THEMES.map((th) => {
+              const active = theme === th;
+              return (
+                <button
+                  key={th}
+                  onClick={() => setTheme(active ? null : th)}
+                  aria-pressed={active}
+                  className={`rt-chip rounded-full px-6 py-2 text-base ring-1 ${
+                    active ? "bg-white font-semibold text-[color:var(--rt-kokum,#8b0a3a)] ring-white" : "text-white ring-white/60 hover:bg-white/15"
+                  }`}
+                >
+                  {th}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={goPlan}
+            className="rt-shimmer mt-auto w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
+          >
+            Search
+          </button>
+        </div>
+      )}
+
+      {tab === "map" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          {MAP_EMBED_URL ? (
+            <iframe
+              title="Interactive map"
+              src={MAP_EMBED_URL}
+              loading="lazy"
+              className="min-h-[260px] w-full flex-1 border-0 bg-white"
+            />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 border border-white/30 bg-white/10 p-6 text-center">
+              <MapPin size={40} aria-hidden="true" className="text-[color:var(--rt-gold,#f2b84b)]" />
+              <p className="text-base text-white/90">See every beach, fort, temple and homestay on one map.</p>
+            </div>
+          )}
+          <button
+            onClick={() => navigate(ROUTES.map)}
+            className="rt-shimmer mt-4 w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.2em] text-white transition hover:brightness-110"
+          >
+            Open map
+          </button>
+        </div>
+      )}
+
+      {tab === "blogs" && (
+        <form
+          className="mt-5 flex flex-1 flex-col"
+          onSubmit={(e) => {
+            e.preventDefault();
+            goBlogs();
+          }}
+        >
+          <label htmlFor="rt-blog" className="text-sm font-semibold">Search travel blogs</label>
+          <input
+            id="rt-blog"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="e.g. Ganpatipule sunset"
+            className="mt-2 h-12 w-full rounded-sm bg-white px-4 text-base text-slate-900 placeholder:text-slate-400"
+          />
+          <p className="mt-6 text-sm font-semibold">Popular topics</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {BLOG_TAGS.map((tag) => (
+              <button
+                type="button"
+                key={tag}
+                onClick={() => goBlogs(tag)}
+                className="rt-chip rounded-full px-6 py-2 text-base text-white ring-1 ring-white/60 hover:bg-white/15"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          <button
+            type="submit"
+            className="rt-shimmer mt-auto w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
+          >
+            Search
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Photo tile (Culture style: photo fills it, bold caption bottom-left) ---------- */
+function PhotoTile({ t }) {
+  const navigate = useNavigate();
+  const Icon = t.icon;
+  return (
+    <button
+      onClick={() => navigate(ROUTES[t.key])}
+      className="rt-tile group"
+      aria-label={`${t.title}: ${t.hint}`}
+    >
+      <PhotoSlot image={IMAGES[t.key]} label={t.title} fit={FIT[t.key]} />
+      <div className="rt-label absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-6 pb-5 pt-20">
+        <p className="flex items-center gap-2 font-display text-3xl font-semibold leading-tight text-white">
+          <Icon size={24} aria-hidden="true" className="shrink-0 text-[color:var(--rt-gold,#f2b84b)]" />
+          {t.title}
+        </p>
+        <p className="rt-hint mt-1 flex items-center justify-between gap-2 text-base text-white/90">
+          {t.hint}
+          <ArrowRight size={20} aria-hidden="true" className="rt-arrow shrink-0 text-[color:var(--rt-gold,#f2b84b)]" />
+        </p>
+      </div>
+    </button>
+  );
+}
+
+export default function ExperiencesMosaic() {
+  const [ref, inView] = useInView();
+  useScrollProgress(ref);
+
+  const renderTile = (t) => (
+    <div
+      key={t.key}
+      className={`rt-enter order-[var(--o)] lg:order-none ${t.panel ? "" : t.h} ${t.panel ? "" : "relative"}`}
+      style={{
+        "--o": t.o,
+        transitionDelay: `${t.delay}ms`,
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(70px)",
+      }}
+    >
+      {t.panel ? (
+        <div className="rt-panel-wrap">
+          <PlanPanel />
+        </div>
+      ) : (
+        <PhotoTile t={t} />
+      )}
+    </div>
+  );
 
   return (
     <section
       id="experiences"
       ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-ink)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
+      className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-ink,#0b1d26)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
       style={{
-        // darker where the tiles are, lighter on the animal's side so it stays clear
-        backgroundImage: `linear-gradient(${bgDir}, rgba(8,24,32,0.5), rgba(8,24,32,0.08)), url(${ExperienceBg})`,
+        backgroundImage: `linear-gradient(rgba(8,24,32,0.35), rgba(8,24,32,0.35)), url(${ExperienceBg})`,
         backgroundSize: "cover",
-        backgroundPosition: `${ANIMAL_SIDE} bottom`,
+        backgroundPosition: "center",
       }}
     >
       <style>{`
-        .rt-slot { position: relative; width: 94%; height: var(--mh); }
+        /* columns: on phones they dissolve so the tiles stack in the "o" order */
+        .rt-col { display: contents; }
         @media (min-width: 1024px) {
-          .rt-slot { position: absolute; left: var(--l); top: var(--t); width: var(--w); height: var(--h); }
-          .rt-par { transform: translate(calc(var(--mx, 0) * var(--depth, 0) * 1px), calc(var(--my, 0) * var(--depth, 0) * 1px)); }
+          .rt-col { display: flex; flex: 1 1 0; flex-direction: column; gap: 20px; min-width: 0; will-change: transform; }
+          .rt-col-l { transform: translateY(calc(var(--p, 0) * -28px)); }
+          .rt-col-r { transform: translateY(calc(var(--p, 0) * -72px)); }
         }
-        .rt-enter { transition: opacity 1s ease-out, transform 1.1s cubic-bezier(.22,1,.36,1); }
-        .rt-par { transition: transform .35s ease-out; }
 
-        @keyframes rt-bob-kf { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-        .rt-bob { animation: rt-bob-kf 8s ease-in-out infinite; }
+        .rt-enter { transition: opacity .9s ease-out, transform 1s cubic-bezier(.22,1,.36,1); }
+
+        .rt-panel-wrap {
+          height: 100%;
+          background: linear-gradient(160deg, var(--rt-kokum, #8b0a3a), var(--rt-kokum-dark, #b5103f));
+          box-shadow: 0 24px 48px -18px rgba(0,0,0,.7);
+        }
 
         .rt-tile {
           position: relative; display: block; width: 100%; height: 100%;
-          overflow: hidden; border: 6px solid #fff; text-align: left;
-          rotate: var(--tilt, 0deg);
-          box-shadow: 0 24px 48px -18px rgba(0,0,0,.8);
-          transition: rotate .5s ease, transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease;
+          overflow: hidden; text-align: left;
+          box-shadow: 0 24px 48px -20px rgba(0,0,0,.75);
+          transition: transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease;
         }
         .rt-tile:hover, .rt-tile:focus-visible {
-          rotate: 0deg; transform: translateY(-12px) scale(1.03);
-          box-shadow: 0 38px 70px -20px rgba(0,0,0,.9);
+          transform: translateY(-8px);
+          box-shadow: 0 38px 70px -22px rgba(0,0,0,.9);
         }
-        .rt-tile:focus-visible { outline: 2px solid var(--rt-gold); outline-offset: 3px; }
+        .rt-tile:focus-visible { outline: 2px solid var(--rt-gold, #f2b84b); outline-offset: 3px; }
+
+        /* light sweep */
         .rt-tile::after {
           content: ""; position: absolute; inset: 0; pointer-events: none;
-          background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.38) 50%, transparent 65%);
+          background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%);
           transform: translateX(-130%);
         }
         .rt-tile:hover::after { transform: translateX(130%); transition: transform .9s ease; }
 
         .rt-zoom { transition: transform .8s cubic-bezier(.22,1,.36,1); }
-        .rt-tile:hover .rt-zoom { transform: scale(1.12); }
+        .rt-tile:hover .rt-zoom { transform: scale(1.1); }
+
         .rt-label { transition: transform .45s ease; }
-        .rt-tile:hover .rt-label { transform: translateY(-6px); }
+        .rt-hint { opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease; }
+        .rt-tile:hover .rt-label, .rt-tile:focus-visible .rt-label { transform: translateY(-4px); }
+        .rt-tile:hover .rt-hint, .rt-tile:focus-visible .rt-hint { opacity: 1; transform: none; }
+        @media (hover: none) { .rt-hint { opacity: 1; transform: none; } }
+
         .rt-arrow { transition: transform .3s ease; }
         .rt-tile:hover .rt-arrow { transform: translateX(6px); }
-
-        @keyframes rt-spin-kf { to { transform: rotate(360deg); } }
-        .rt-spin { animation: rt-spin-kf 10s linear infinite; }
 
         .rt-shimmer { position: relative; overflow: hidden; }
         .rt-shimmer::after {
           content: ""; position: absolute; inset: 0;
-          background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.45) 50%, transparent 70%);
-          transform: translateX(-120%); animation: rt-shimmer-kf 3.2s ease-in-out infinite;
+          background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.4) 50%, transparent 70%);
+          transform: translateX(-120%); animation: rt-shimmer-kf 3.4s ease-in-out infinite;
         }
         @keyframes rt-shimmer-kf { 0% { transform: translateX(-120%); } 60%, 100% { transform: translateX(120%); } }
 
@@ -259,139 +438,19 @@ export default function ExperiencesMosaic() {
         .rt-chip:hover { transform: translateY(-3px); }
 
         @media (prefers-reduced-motion: reduce) {
-          .rt-bob, .rt-spin, .rt-shimmer::after { animation: none; }
+          .rt-col { transform: none !important; }
+          .rt-shimmer::after { animation: none; }
           .rt-enter { transition: none; opacity: 1 !important; transform: none !important; }
-          .rt-par { transform: none !important; }
-          .rt-tile, .rt-tile:hover, .rt-tile:focus-visible { transition: none; transform: none; }
+          .rt-tile, .rt-tile:hover, .rt-tile:focus-visible, .rt-zoom, .rt-label, .rt-hint { transition: none; transform: none; }
+          .rt-hint { opacity: 1; }
         }
       `}</style>
 
-      <h2 className="sr-only">Explore Ratnagiri</h2>
+      <h2 className="sr-only">Explore</h2>
 
-      <div
-        ref={stageRef}
-        className="relative mx-auto flex max-w-[1280px] flex-col gap-10 lg:block lg:h-[1060px] lg:gap-0"
-      >
-        {TILES.map((t, i) => {
-          const p = place(t.box);
-          const Icon = t.icon;
-          return (
-            <div
-              key={t.key}
-              className="rt-slot rt-enter"
-              style={{
-                "--l": p.l,
-                "--t": p.t,
-                "--w": p.w,
-                "--h": p.h,
-                "--mh": `${t.mh}px`,
-                alignSelf: i % 2 === 0 ? "flex-start" : "flex-end",
-                transitionDelay: `${t.delay}ms`,
-                opacity: inView ? 1 : 0,
-                transform: inView ? "translate(0,0)" : `translate(${t.from[0]}px, ${t.from[1]}px)`,
-              }}
-            >
-              <div className="rt-par h-full w-full" style={{ "--depth": t.depth }}>
-                <div
-                  className="rt-bob h-full w-full"
-                  style={{ animationDuration: t.bob, animationDelay: t.bobDelay }}
-                >
-                  {/* ---- Plan Your Trip panel ---- */}
-                  {t.kind === "plan" && (
-                    <div
-                      className="rt-tile bg-gradient-to-br from-[color:var(--rt-kokum)] to-[color:var(--rt-kokum-dark)] p-5 text-white"
-                      style={{ "--tilt": `${t.tilt}deg` }}
-                    >
-                      <div className="flex h-full flex-col justify-between">
-                        <div>
-                          <p className="flex items-center gap-2 font-display text-xl font-semibold">
-                            <Sparkles size={18} className="rt-spin text-[color:var(--rt-gold)]" aria-hidden="true" />
-                            Plan Your Trip
-                          </p>
-                          <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-white/70">
-                            What do you like?
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {THEMES.map((th) => {
-                              const active = theme === th;
-                              return (
-                                <button
-                                  key={th}
-                                  onClick={() => setTheme(active ? null : th)}
-                                  aria-pressed={active}
-                                  className={`rt-chip px-3.5 py-1.5 text-sm font-semibold ring-1 ${
-                                    active
-                                      ? "bg-white text-[color:var(--rt-kokum)] ring-white"
-                                      : "bg-white/10 text-white ring-white/40 hover:bg-white/25"
-                                  }`}
-                                >
-                                  {th}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <button
-                          onClick={goPlan}
-                          className="rt-shimmer mt-3 flex w-full items-center justify-center gap-2 bg-[color:var(--rt-laterite)] py-2.5 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[color:var(--rt-laterite-dark)]"
-                        >
-                          <Search size={15} aria-hidden="true" /> Search
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ---- Postcard (photo on top, white caption below) ---- */}
-                  {t.kind === "postcard" && (
-                    <button
-                      onClick={() => navigate(t.route)}
-                      className="rt-tile group flex flex-col bg-white"
-                      style={{ "--tilt": `${t.tilt}deg` }}
-                    >
-                      <div className="relative min-h-0 flex-1 overflow-hidden">
-                        <PhotoSlot image={IMAGES[t.key]} label={t.title} />
-                      </div>
-                      <div className="rt-label shrink-0 bg-white px-5 py-4">
-                        <p className="flex items-center gap-2 font-display text-2xl font-bold leading-tight text-[color:var(--rt-ink)]">
-                          <Icon size={22} aria-hidden="true" className="shrink-0 text-[color:var(--rt-laterite)]" />
-                          {title(t)}
-                        </p>
-                        <p className="mt-1 flex items-center justify-between gap-2 text-sm text-[color:var(--rt-ink)]/70">
-                          {t.hint}
-                          <ArrowRight size={18} aria-hidden="true" className="rt-arrow shrink-0 text-[color:var(--rt-laterite)]" />
-                        </p>
-                      </div>
-                    </button>
-                  )}
-
-                  {/* ---- Photo tile (photo fills it, caption on top of it) ---- */}
-                  {t.kind === "photo" && (
-                    <button
-                      onClick={() => navigate(t.route)}
-                      className="rt-tile group"
-                      style={{ "--tilt": `${t.tilt}deg` }}
-                    >
-                      <PhotoSlot image={IMAGES[t.key]} label={t.title} />
-                      <div className="rt-label absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-5 pb-4 pt-14">
-                        <p className="flex items-center gap-2 font-display text-xl font-semibold leading-tight text-white">
-                          <Icon size={20} aria-hidden="true" className="shrink-0 text-[color:var(--rt-gold)]" />
-                          {t.title}
-                        </p>
-                        <p className="mt-1 flex items-center justify-between gap-2 text-sm text-white/85">
-                          {t.hint}
-                          <ArrowRight size={18} aria-hidden="true" className="rt-arrow shrink-0 text-[color:var(--rt-gold)]" />
-                        </p>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* phones: leave room at the bottom so the background animal shows */}
-        <div aria-hidden="true" className="h-56 lg:hidden" />
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-5 lg:flex-row lg:items-start">
+        <div className="rt-col rt-col-l">{TILES.filter((t) => t.col === "L").map(renderTile)}</div>
+        <div className="rt-col rt-col-r">{TILES.filter((t) => t.col === "R").map(renderTile)}</div>
       </div>
     </section>
   );
