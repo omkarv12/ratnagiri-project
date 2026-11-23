@@ -3,7 +3,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Landmark,
-  Compass,
   BookOpen,
   PlayCircle,
   Film,
@@ -12,19 +11,12 @@ import {
   Handshake,
   ExternalLink,
   Calendar,
-  CalendarDays,
-  PlusCircle,
   User,
-  MapPin,
   ArrowRight,
 } from "lucide-react";
 import { useLocations } from "../context/LocationsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { blogApi } from "../api/blogApi";
-import API_BASE_URL from "../config";
-import KokaniFoodImg from "../assets/Kokani-Food.jpg";
-import GuidedWalksImg from "../assets/Guided-Walks.jpg";
-import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
 import EconomyImg from "../assets/Economy.jpg";
 import GoodGovernanceImg from "../assets/good_governance.jpg";
@@ -34,6 +26,8 @@ import { Mail, Send, Phone } from "lucide-react";
 import VisitorCounter from "../components/VisitorCounter";
 // Hero: plain video with Beaches / Forts / Temples / Nature tabs
 import HeroVideoTabs from "../components/HeroVideoTabs";
+// Experiences: photo-tile mosaic (replaces the old cards + mini calendar)
+import ExperiencesMosaic from "../components/ExperiencesMosaic";
 // NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
 // App.jsx so it opens as soon as the website starts, even during loading.
 
@@ -50,49 +44,13 @@ import HeroVideoTabs from "../components/HeroVideoTabs";
 */
 
 // The hero videos and tabs now live in components/HeroVideoTabs.jsx
-// (edit HERO_TABS there).
+// (edit HERO_TABS there). The Experiences section lives in
+// components/ExperiencesMosaic.jsx.
 
 // The loading scene always plays at least this long (ms), even when the
 // data arrives faster, so the intro isn't just a flash. Set to 0 to show the
 // loader only while data is actually loading.
 const MIN_LOADER_MS = 0;
-
-// Route of the Upcoming Events page (UpcomingEventsPage). Matches "Upcoming
-// Events" under the Experiences menu in config/navMenus.
-const CALENDAR_ROUTE = "/experiences/upcoming-events";
-
-// ---- Mini calendar helpers (Experiences section) ----
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-const CAL_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
-
-// Same category colours as the full EventsCalendar page (data colours, kept
-// identical on both pages so a category looks the same everywhere)
-const CAL_CATEGORY_COLORS = {
-  beaches: "#f7a072",
-  forts: "#64b5f6",
-  temples: "#ba68c8",
-  waterfalls: "#4dd0e1",
-  mangoes: "#ffd54f",
-};
-const CAL_CATEGORY_LABELS = {
-  beaches: "Beaches",
-  forts: "Forts",
-  temples: "Temples",
-  waterfalls: "Waterfalls",
-  mangoes: "Mango season",
-};
-
-const toDateKey = (y, m, d) =>
-  `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-
-const formatShortDate = (iso) =>
-  new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-  });
 
 // Full playlist link kept for "Open full playlist" — individual videos below
 // are rendered from videosData so two can be shown per page.
@@ -278,132 +236,6 @@ export default function DashboardOverview() {
     const t = setTimeout(() => setMinTimeDone(true), MIN_LOADER_MS);
     return () => clearTimeout(t);
   }, []);
-
-  // ---- Experiences -----------------------------------------------------------
-  // Each card opens its own page (ExperiencePage), whose content is managed in
-  // Admin → Local Experiences.
-  const experiencesData = [
-    {
-      title: "Guided Walks",
-      description: "Local guides lead you through forts, markets and coastal trails.",
-      image: GuidedWalksImg,
-      route: "/experiences/guided-walks",
-    },
-    {
-      title: "Konkani Food",
-      description: "Taste solkadhi, fish curry-rice and other Malvani classics.",
-      image: KokaniFoodImg,
-      route: "/experiences/konkani-food",
-    },
-    {
-      title: "Community Interaction",
-      description: "Meet fisherfolk, farmers and artisans in their own villages.",
-      image: CommunityInteractionImg,
-      route: "/experiences/community-interaction",
-    },
-  ];
-
-  // ---- Mini calendar (right-hand panel of the Experiences section) ---------
-  // Reads the same /api/events endpoint as the full EventsCalendar page.
-  const calNow = new Date();
-  const calTodayKey = toDateKey(calNow.getFullYear(), calNow.getMonth(), calNow.getDate());
-  const [calYear, setCalYear] = useState(calNow.getFullYear());
-  const [calMonth, setCalMonth] = useState(calNow.getMonth());
-  const [calEvents, setCalEvents] = useState([]);
-  const [calSelected, setCalSelected] = useState(null); // "YYYY-MM-DD" of a tapped day
-  const [calEventIdx, setCalEventIdx] = useState(0); // which event the arrows are showing
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE_URL}/api/events?year=${calYear}&month=${calMonth + 1}`)
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => !cancelled && setCalEvents(Array.isArray(data) ? data : []))
-      .catch(() => !cancelled && setCalEvents([]));
-    return () => {
-      cancelled = true;
-    };
-  }, [calYear, calMonth]);
-
-  const shiftCalMonth = (delta) => {
-    const d = new Date(calYear, calMonth + delta, 1);
-    setCalYear(d.getFullYear());
-    setCalMonth(d.getMonth());
-    setCalSelected(null);
-  };
-
-  const calGoToday = () => {
-    setCalYear(calNow.getFullYear());
-    setCalMonth(calNow.getMonth());
-    setCalSelected(null);
-  };
-
-  // events grouped by YYYY-MM-DD
-  const calEventsByDate = {};
-  calEvents.forEach((e) => {
-    const key = String(e.event_date).slice(0, 10);
-    (calEventsByDate[key] = calEventsByDate[key] || []).push(e);
-  });
-
-  // blank cells before the 1st, then each day of the month
-  const calFirstDay = new Date(calYear, calMonth, 1).getDay();
-  const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const calCells = [
-    ...Array.from({ length: calFirstDay }, () => null),
-    ...Array.from({ length: calDaysInMonth }, (_, i) => i + 1),
-  ];
-
-  // ---- Event list shown under the grid --------------------------------------
-  // Default: upcoming events of the visible month. Tapping a day with events
-  // narrows the list to that day. The arrows step through the list.
-  const calSorted = [...calEvents].sort((a, b) =>
-    String(a.event_date).localeCompare(String(b.event_date))
-  );
-  const calIsCurrentMonth =
-    calYear === calNow.getFullYear() && calMonth === calNow.getMonth();
-  const calUpcoming = calSorted.filter(
-    (e) => String(e.event_date).slice(0, 10) >= calTodayKey
-  );
-
-  let calList;
-  let calListLabel;
-  if (calSelected) {
-    calList = calEventsByDate[calSelected] || [];
-    calListLabel = `On ${formatShortDate(calSelected)}`;
-  } else if (calIsCurrentMonth && calUpcoming.length > 0) {
-    calList = calUpcoming;
-    calListLabel = "Upcoming events";
-  } else if (calIsCurrentMonth) {
-    calList = calSorted;
-    calListLabel = "Earlier this month";
-  } else {
-    calList = calSorted;
-    calListLabel = `Events in ${MONTH_NAMES[calMonth]}`;
-  }
-
-  // jump back to the first event whenever the list changes
-  const calListKey = `${calYear}-${calMonth}-${calSelected}`;
-  useEffect(() => {
-    setCalEventIdx(0);
-  }, [calListKey, calEvents]);
-
-  const calSafeIdx = Math.min(calEventIdx, Math.max(calList.length - 1, 0));
-  const calCurrent = calList[calSafeIdx] || null;
-  const goToPrevCalEvent = () =>
-    setCalEventIdx((calSafeIdx - 1 + calList.length) % calList.length);
-  const goToNextCalEvent = () => setCalEventIdx((calSafeIdx + 1) % calList.length);
-
-  // "Today", "Tomorrow", "In 5 days" — easier to read than a bare date
-  const calRelativeLabel = (iso) => {
-    const diff = Math.round(
-      (new Date(`${String(iso).slice(0, 10)}T00:00:00`) -
-        new Date(`${calTodayKey}T00:00:00`)) / 86400000
-    );
-    if (diff < 0) return { text: "Past event", strong: false };
-    if (diff === 0) return { text: "Today", strong: true };
-    if (diff === 1) return { text: "Tomorrow", strong: true };
-    if (diff <= 30) return { text: `In ${diff} days`, strong: false };
-    return null;
-  };
 
   // ---- Stories & Videos -------------------------------------------------------
   // Stories are the real, published posts from the Stories section (same
@@ -595,284 +427,8 @@ export default function DashboardOverview() {
       {/* ================= Hero — plain video + category tabs ================= */}
       <HeroVideoTabs />
 
-      {/* ================= Experiences (the one warm "sand" band) ================= */}
-      <section id="experiences" className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-sand)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-40 top-10 h-96 w-96 rounded-full bg-[color:var(--rt-laterite-tint)] blur-3xl" />
-        <span aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-96 w-96 rounded-full bg-[color:var(--rt-teal-tint)] blur-3xl" />
-
-        <div className="relative mx-auto max-w-[1680px]">
-          <SectionHead
-            eyebrow="Experience"
-            title="Local Experiences"
-            icon={Compass}
-            iconClass="bg-[color:var(--rt-laterite-tint)] text-[color:var(--rt-laterite)]"
-            lead="Walks, meals and encounters that go beyond the sightseeing list."
-          />
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.3fr]">
-            {experiencesData.map(({ title, description, image, route }, i) => (
-              <button
-                key={title}
-                onClick={() => navigate(route)}
-                className="rt-card tint-laterite group relative h-[30rem] overflow-hidden rounded-3xl text-left"
-              >
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{ backgroundImage: `url(${image})` }}
-                />
-                <div className="rt-scrim-card absolute inset-0" />
-                <div className="pointer-events-none absolute inset-0 rounded-3xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" />
-
-                <span className="absolute left-5 top-5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold tracking-widest text-white ring-1 ring-white/30 backdrop-blur">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-
-                <div className="absolute inset-x-0 bottom-0 p-6">
-                  <p className="t-h3 text-white">{title}</p>
-                  <p className="t-small mt-1 text-white/80">{description}</p>
-                  <div className="rt-reveal-row">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[color:var(--rt-gold)]">
-                      Explore <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </div>
-              </button>
-            ))}
-
-            {/* Mini calendar. Tap a dotted day to see its events; use the arrows
-                under the grid to step through upcoming events without leaving
-                the page. Buttons open the full calendar page / contribute form. */}
-            <div className="rt-card tint-teal flex h-[30rem] flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200/70">
-              {/* month header + prev/next */}
-              <div className="relative flex shrink-0 items-center justify-between overflow-hidden bg-gradient-to-br from-[color:var(--rt-ink)] to-[color:var(--rt-teal)] px-3 py-2.5 text-white">
-                <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full border border-white/15" />
-                <button
-                  onClick={() => shiftCalMonth(-1)}
-                  aria-label="Previous month"
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/20"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <div className="relative text-center">
-                  <p className="font-display text-base font-semibold">
-                    {MONTH_NAMES[calMonth]} <span className="font-normal text-white/70">{calYear}</span>
-                  </p>
-                  <button
-                    onClick={calGoToday}
-                    tabIndex={calIsCurrentMonth ? -1 : 0}
-                    aria-hidden={calIsCurrentMonth}
-                    className={`mx-auto mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-[color:var(--rt-gold)] underline-offset-2 hover:underline ${
-                      calIsCurrentMonth ? "invisible" : ""
-                    }`}
-                  >
-                    Back to today
-                  </button>
-                </div>
-                <button
-                  onClick={() => shiftCalMonth(1)}
-                  aria-label="Next month"
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/20"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              {/* weekday initials */}
-              <div className="grid shrink-0 grid-cols-7 px-3 pt-2.5 text-center text-[11px] font-bold tracking-wider text-slate-400">
-                {CAL_WEEKDAYS.map((d, i) => (
-                  <div key={i}>{d}</div>
-                ))}
-              </div>
-
-              {/* day grid */}
-              <div className="grid shrink-0 grid-cols-7 gap-y-0.5 px-3 pt-1">
-                {calCells.map((day, i) => {
-                  if (day === null) return <div key={`blank-${i}`} className="h-8" />;
-
-                  const key = toDateKey(calYear, calMonth, day);
-                  const dayEvents = calEventsByDate[key] || [];
-                  const isToday = key === calTodayKey;
-                  const isSelected = key === calSelected;
-                  const hasEvents = dayEvents.length > 0;
-
-                  const inner = (
-                    <>
-                      <span
-                        className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
-                          isToday
-                            ? "bg-[color:var(--rt-ink)] text-white"
-                            : isSelected
-                            ? "bg-[color:var(--rt-teal)] text-white"
-                            : "text-slate-600"
-                        }`}
-                      >
-                        {day}
-                      </span>
-                      <span className="mt-0.5 flex h-1.5 gap-0.5">
-                        {dayEvents.slice(0, 3).map((ev) => (
-                          <span
-                            key={ev.id}
-                            className="h-1.5 w-1.5 rounded-full"
-                            style={{
-                              background:
-                                CAL_CATEGORY_COLORS[ev.category] || CAL_CATEGORY_COLORS.beaches,
-                            }}
-                          />
-                        ))}
-                      </span>
-                    </>
-                  );
-
-                  return hasEvents ? (
-                    <button
-                      key={key}
-                      onClick={() => setCalSelected((prev) => (prev === key ? null : key))}
-                      aria-pressed={isSelected}
-                      aria-label={`${day} ${MONTH_NAMES[calMonth]}: ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
-                      title={dayEvents.map((e) => e.title).join(", ")}
-                      className={`flex h-8 flex-col items-center justify-start rounded-md transition hover:bg-[color:var(--rt-teal-tint)] ${
-                        isSelected ? "bg-[color:var(--rt-teal-tint)] ring-1 ring-[color:var(--rt-teal-line)]" : ""
-                      }`}
-                    >
-                      {inner}
-                    </button>
-                  ) : (
-                    <div key={key} className="flex h-8 flex-col items-center justify-start">
-                      {inner}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* events: arrows step through the list */}
-              <div className="min-h-0 flex-1 px-3 pt-2">
-                <div className="border-t border-slate-100 pt-2">
-                  <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <p className="truncate text-[11px] font-bold uppercase tracking-wide text-[color:var(--rt-teal)]">
-                      {calListLabel}
-                    </p>
-                    <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-slate-400">
-                      {calSelected && (
-                        <button
-                          onClick={() => setCalSelected(null)}
-                          className="text-slate-500 underline-offset-2 hover:text-[color:var(--rt-teal)] hover:underline"
-                        >
-                          Show all
-                        </button>
-                      )}
-                      {calList.length > 0 && (
-                        <span aria-live="polite" className="tabular-nums">
-                          {calSafeIdx + 1} of {calList.length}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {calCurrent ? (
-                    (() => {
-                      const color =
-                        CAL_CATEGORY_COLORS[calCurrent.category] || CAL_CATEGORY_COLORS.beaches;
-                      const dateObj = new Date(`${String(calCurrent.event_date).slice(0, 10)}T00:00:00`);
-                      const rel = calRelativeLabel(calCurrent.event_date);
-                      const place = calCurrent.location || calCurrent.venue || calCurrent.place;
-                      return (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={goToPrevCalEvent}
-                            disabled={calList.length < 2}
-                            aria-label="Previous event"
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[color:var(--rt-teal)] hover:ring-[color:var(--rt-teal-line)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
-                          >
-                            <ChevronLeft size={15} />
-                          </button>
-
-                          <button
-                            onClick={() => navigate(CALENDAR_ROUTE)}
-                            className="group/ev flex min-w-0 flex-1 items-center gap-2.5 rounded-xl bg-[color:var(--rt-teal-tint)] p-2 text-left ring-1 ring-[color:var(--rt-teal-line)] transition hover:ring-[color:var(--rt-teal)]"
-                          >
-                            <span className="flex w-11 shrink-0 flex-col items-center overflow-hidden rounded-lg bg-white text-center shadow-sm ring-1 ring-slate-200/80">
-                              <span className="h-1 w-full" style={{ background: color }} />
-                              <span className="pt-0.5 text-[9px] font-bold uppercase leading-none tracking-wider text-slate-500">
-                                {dateObj.toLocaleDateString("en-IN", { month: "short" })}
-                              </span>
-                              <span className="pb-0.5 font-display text-lg font-bold leading-tight text-slate-900">
-                                {dateObj.getDate()}
-                              </span>
-                            </span>
-
-                            <span className="min-w-0 flex-1">
-                              <span className="mb-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
-                                  {CAL_CATEGORY_LABELS[calCurrent.category] || "Event"}
-                                </span>
-                                {rel && (
-                                  <span
-                                    className={`rounded-full px-1.5 py-px text-[9px] font-bold ${
-                                      rel.strong
-                                        ? "bg-[color:var(--rt-teal)] text-white"
-                                        : "bg-white text-slate-500 ring-1 ring-slate-200"
-                                    }`}
-                                  >
-                                    {rel.text}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="line-clamp-2 block text-[13px] font-semibold leading-snug text-slate-900">
-                                {calCurrent.title}
-                              </span>
-                              {place && (
-                                <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-slate-500">
-                                  <MapPin size={10} className="shrink-0" />
-                                  <span className="truncate">{place}</span>
-                                </span>
-                              )}
-                            </span>
-                          </button>
-
-                          <button
-                            onClick={goToNextCalEvent}
-                            disabled={calList.length < 2}
-                            aria-label="Next event"
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-[color:var(--rt-teal)] hover:ring-[color:var(--rt-teal-line)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:text-slate-500 disabled:hover:ring-slate-200"
-                          >
-                            <ChevronRight size={15} />
-                          </button>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="rounded-xl bg-slate-50 px-3 py-3 text-center ring-1 ring-slate-100">
-                      <p className="text-[13px] font-semibold text-slate-700">
-                        No events {calSelected ? "on this day" : `in ${MONTH_NAMES[calMonth]} yet`}
-                      </p>
-                      <p className="t-meta mt-0.5 text-slate-500">
-                        Know of one? Tap Contribute to add it.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* buttons: laterite = actions */}
-              <div className="flex shrink-0 gap-2 px-3 pb-3 pt-2">
-                <button
-                  onClick={() => navigate(`${CALENDAR_ROUTE}#contribute`)}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full border border-[color:var(--rt-laterite)] py-2 text-xs font-semibold text-[color:var(--rt-laterite)] transition hover:bg-[color:var(--rt-laterite-tint)]"
-                >
-                  <PlusCircle size={13} /> Contribute
-                </button>
-                <button
-                  onClick={() => navigate(CALENDAR_ROUTE)}
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[color:var(--rt-laterite)] py-2 text-xs font-semibold text-white shadow-md shadow-[#B4532A]/30 transition hover:bg-[color:var(--rt-laterite-dark)]"
-                >
-                  <CalendarDays size={13} /> View Calendar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ================= Experiences — photo-tile mosaic ================= */}
+      <ExperiencesMosaic />
 
       {/* ================= Stories & Videos ================= */}
       <section
