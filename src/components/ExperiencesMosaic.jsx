@@ -77,7 +77,7 @@ const TILES = [
   { key: "plan", col: "R", o: 2, panel: true, h: "h-[376px]", delay: 120 },
   { key: "destinations", col: "L", o: 3, h: "h-[270px]", w: "lg:w-[52%]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 240 },
   { key: "culture", col: "L", o: 4, h: "h-[210px]", w: "lg:w-[52%]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 320 },
-  { key: "guides", col: "R", o: 5, h: "h-[184px]", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 400 },
+  { key: "guides", col: "R", o: 5, h: "h-[184px]", w: "lg:w-[62%] lg:self-end", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 400 },
   { key: "adventure", col: "R", o: 6, h: "h-[250px]", w: "lg:w-[62%] lg:self-end", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
   { key: "media", col: "R", o: 7, h: "h-[210px]", w: "lg:w-[62%] lg:self-end", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
 ];
