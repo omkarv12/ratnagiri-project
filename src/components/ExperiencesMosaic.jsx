@@ -80,13 +80,13 @@ const BLOG_TAGS = ["Beaches", "Food", "Temples", "Forts"];
 // col: L / R = top two columns, B = bottom row. o = order on phones.
 // w = desktop width inside its column (default full). Right-column tiles with `end` hug the right edge.
 const TILES = [
-  { key: "stay", col: "L", o: 1, h: "h-[300px]", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
-  { key: "plan", col: "R", o: 2, panel: true, h: "h-[376px]", delay: 120 },
-  { key: "destinations", col: "L", o: 3, h: "h-[270px]", w: "lg:w-[52%]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 240 },
-  { key: "culture", col: "L", o: 4, h: "h-[210px]", w: "lg:w-[52%]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 320 },
-  { key: "guides", col: "R", o: 5, h: "h-[184px]", w: "lg:w-[62%] lg:self-end", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 400 },
-  { key: "adventure", col: "R", o: 6, h: "h-[250px]", w: "lg:w-[62%] lg:self-end", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
-  { key: "media", col: "R", o: 7, h: "h-[210px]", w: "lg:w-[62%] lg:self-end", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
+  { key: "stay", col: "L", o: 1, h: "h-[360px]", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
+  { key: "plan", col: "R", o: 2, panel: true, h: "h-[400px]", delay: 120 },
+  { key: "destinations", col: "L", o: 3, h: "h-[400px]", w: "lg:w-[76%]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 240 },
+  { key: "culture", col: "L", o: 4, h: "h-[330px]", w: "lg:w-[76%]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 320 },
+  { key: "guides", col: "R", o: 5, h: "h-[200px]", w: "lg:w-[78%] lg:self-end", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 400 },
+  { key: "adventure", col: "R", o: 6, h: "h-[260px]", w: "lg:w-[78%] lg:self-end", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
+  { key: "media", col: "R", o: 7, h: "h-[210px]", w: "lg:w-[78%] lg:self-end", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
 ];
 
 function useInView(threshold = 0.05) {
@@ -377,7 +377,7 @@ export default function ExperiencesMosaic() {
     <section
       id="experiences"
       ref={ref}
-      className="relative z-10 scroll-mt-24 overflow-x-clip bg-[color:var(--rt-ink,#0b1d26)] px-5 pb-14 pt-6 sm:px-10 lg:px-16"
+      className="relative z-10 scroll-mt-24 overflow-x-clip bg-[color:var(--rt-ink,#0b1d26)] px-5 pb-24 pt-6 sm:px-10 lg:px-16"
       style={{
         backgroundImage: `linear-gradient(rgba(8,24,32,0.35), rgba(8,24,32,0.35)), url(${ExperienceBg})`,
         backgroundSize: "cover",
@@ -388,29 +388,31 @@ export default function ExperiencesMosaic() {
         /* columns: on phones they dissolve so the tiles stack in the "o" order */
         .rt-col { display: contents; }
         @media (min-width: 1024px) {
-          .rt-col { display: flex; flex: 1 1 0; flex-direction: column; gap: 16px; min-width: 0; will-change: transform; }
+          .rt-col { display: flex; flex: 1 1 0; flex-direction: column; gap: 20px; min-width: 0; will-change: transform; }
           .rt-col-l { transform: translateY(calc(var(--p, 0) * -24px)); }
           .rt-col-r { transform: translateY(calc(var(--p, 0) * -64px)); }
         }
 
         @media (min-width: 1024px) { .rt-row { transform: translateY(calc(var(--p, 0) * -24px)); } }
+        .rt-col:hover { z-index: 30; }
+        .rt-enter:hover { z-index: 20; }
         .rt-enter { transition: opacity .9s ease-out, transform 1s cubic-bezier(.22,1,.36,1); }
 
         .rt-panel-wrap {
           height: 100%;
           background: linear-gradient(160deg, var(--rt-kokum, #8b0a3a), var(--rt-kokum-dark, #b5103f));
-          box-shadow: 0 24px 48px -18px rgba(0,0,0,.7);
+          box-shadow: 0 14px 30px -14px rgba(0,0,0,.6);
         }
 
         .rt-tile {
           position: relative; display: block; width: 100%; height: 100%;
           overflow: hidden; text-align: left;
-          box-shadow: 0 24px 48px -20px rgba(0,0,0,.75);
+          box-shadow: 0 14px 30px -14px rgba(0,0,0,.6);
           transition: transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease;
         }
         .rt-tile:hover, .rt-tile:focus-visible {
           transform: translateY(-8px);
-          box-shadow: 0 38px 70px -22px rgba(0,0,0,.9);
+          box-shadow: 0 22px 40px -16px rgba(0,0,0,.7);
         }
         .rt-tile:focus-visible { outline: 2px solid var(--rt-gold, #f2b84b); outline-offset: 3px; }
 
@@ -456,7 +458,7 @@ export default function ExperiencesMosaic() {
 
       <h2 className="sr-only">Explore</h2>
 
-      <div className="mx-auto flex max-w-[1080px] flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 lg:flex-row lg:items-start">
         <div className="rt-col rt-col-l">{TILES.filter((t) => t.col === "L").map(renderTile)}</div>
         <div className="rt-col rt-col-r">{TILES.filter((t) => t.col === "R").map(renderTile)}</div>
       </div>
