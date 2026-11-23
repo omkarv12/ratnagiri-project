@@ -15,6 +15,13 @@ import {
 } from "lucide-react";
 // Section background photo (src/assets/Experience-Bg.jpg)
 import ExperienceBg from "../assets/Experience-Bg.jpg";
+// Tile photos (src/assets) — file names must match exactly, including .jpg/.png/.webp
+import StayImg from "../assets/Stay.jpg";
+import DestinationsImg from "../assets/Destinations.jpg";
+import CultureImg from "../assets/Culture.jpg";
+import GuidesImg from "../assets/Guides.jpg";
+import AdventureImg from "../assets/Adventure.jpg";
+import MediaImg from "../assets/Media.jpg";
 
 /*
   Explore section — same layout as the reference screenshot:
@@ -41,16 +48,16 @@ import ExperienceBg from "../assets/Experience-Bg.jpg";
 */
 
 const IMAGES = {
-  stay: null, // e.g. import StayImg from "../assets/Stay.jpg"  ->  stay: StayImg
-  culture: null,
-  destinations: null,
-  guides: null,
-  adventure: null,
-  media: null,
+  stay: StayImg,
+  culture: CultureImg,
+  destinations: DestinationsImg,
+  guides: GuidesImg,
+  adventure: AdventureImg,
+  media: MediaImg,
 };
 
 // "cover" fills the tile; "contain" shows the whole picture on white (good for a logo)
-const FIT = { stay: "contain" };
+const FIT = {}; // use { stay: "contain" } only if Stay is a logo on white
 
 const ROUTES = {
   stay: "/experiences/discover-your-stay",
