@@ -71,14 +71,15 @@ const THEMES = ["Heritage", "Nature", "Spiritual", "Wildlife"];
 const BLOG_TAGS = ["Beaches", "Food", "Temples", "Forts"];
 
 // col: L / R = top two columns, B = bottom row. o = order on phones.
+// w = desktop width inside its column (default full). Right-column tiles with `end` hug the right edge.
 const TILES = [
   { key: "stay", col: "L", o: 1, h: "h-[300px]", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
   { key: "plan", col: "R", o: 2, panel: true, h: "h-[376px]", delay: 120 },
-  { key: "culture", col: "R", o: 3, pair: true, h: "h-[184px]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 240 },
-  { key: "guides", col: "R", o: 4, pair: true, h: "h-[184px]", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 300 },
-  { key: "destinations", col: "L", o: 5, h: "h-[260px]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 360 },
-  { key: "adventure", col: "R", o: 6, h: "h-[200px]", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
-  { key: "media", col: "R", o: 7, h: "h-[170px]", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
+  { key: "destinations", col: "L", o: 3, h: "h-[270px]", w: "lg:w-[52%]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 240 },
+  { key: "culture", col: "L", o: 4, h: "h-[210px]", w: "lg:w-[52%]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 320 },
+  { key: "guides", col: "R", o: 5, h: "h-[184px]", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 400 },
+  { key: "adventure", col: "R", o: 6, h: "h-[250px]", w: "lg:w-[62%] lg:self-end", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
+  { key: "media", col: "R", o: 7, h: "h-[210px]", w: "lg:w-[62%] lg:self-end", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
 ];
 
 function useInView(threshold = 0.05) {
@@ -347,7 +348,7 @@ export default function ExperiencesMosaic() {
   const renderTile = (t) => (
     <div
       key={t.key}
-      className={`rt-enter order-[var(--o)] lg:order-none ${t.h} relative`}
+      className={`rt-enter order-[var(--o)] lg:order-none ${t.h} ${t.w || ""} relative`}
       style={{
         "--o": t.o,
         transitionDelay: `${t.delay}ms`,
@@ -450,15 +451,7 @@ export default function ExperiencesMosaic() {
 
       <div className="mx-auto flex max-w-[1080px] flex-col gap-4 lg:flex-row lg:items-start">
         <div className="rt-col rt-col-l">{TILES.filter((t) => t.col === "L").map(renderTile)}</div>
-        {/* right column: Plan, Culture + Guides side by side, then Adventure with Media Room under it.
-            The left side next to Adventure / Media stays empty so the background shows. */}
-        <div className="rt-col rt-col-r">
-          {renderTile(TILES.find((t) => t.key === "plan"))}
-          <div className="order-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:order-none">
-            {TILES.filter((t) => t.pair).map(renderTile)}
-          </div>
-          {TILES.filter((t) => t.col === "R" && !t.panel && !t.pair).map(renderTile)}
-        </div>
+        <div className="rt-col rt-col-r">{TILES.filter((t) => t.col === "R").map(renderTile)}</div>
       </div>
     </section>
   );
