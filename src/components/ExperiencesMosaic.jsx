@@ -70,15 +70,15 @@ const DESTINATIONS = ["All cities", "Ratnagiri", "Ganpatipule", "Guhagar", "Dapo
 const THEMES = ["Heritage", "Nature", "Spiritual", "Wildlife"];
 const BLOG_TAGS = ["Beaches", "Food", "Temples", "Forts"];
 
-// col: which column. o: order on phones. speed: scroll lift of that column is set in CSS.
+// col: L / R = top two columns, B = bottom row. o = order on phones.
 const TILES = [
-  { key: "stay", col: "L", o: 1, h: "aspect-square", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
-  { key: "plan", col: "R", o: 2, panel: true, delay: 120 },
-  { key: "culture", col: "R", o: 3, h: "h-[400px]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 240 },
-  { key: "destinations", col: "L", o: 4, h: "h-[340px]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 300 },
-  { key: "guides", col: "R", o: 5, h: "h-[300px]", title: "Tourist Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 420 },
-  { key: "adventure", col: "L", o: 6, h: "h-[300px]", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
-  { key: "media", col: "R", o: 7, h: "h-[260px]", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 600 },
+  { key: "stay", col: "L", o: 1, h: "h-[300px]", title: "Homestays & Hotels", hint: "Stay with local families or book a hotel", icon: Home, delay: 0 },
+  { key: "plan", col: "R", o: 2, panel: true, h: "h-[376px]", delay: 120 },
+  { key: "culture", col: "R", o: 3, pair: true, h: "h-[184px]", title: "Culture", hint: "Festivals, food and traditions", icon: Landmark, delay: 240 },
+  { key: "guides", col: "R", o: 4, pair: true, h: "h-[184px]", title: "Guides and Travel Agents", hint: "Find trusted local guides", icon: Users, delay: 300 },
+  { key: "destinations", col: "L", o: 5, h: "h-[260px]", title: "Destinations", hint: "Beaches, forts and temples", icon: MapPin, delay: 360 },
+  { key: "adventure", col: "R", o: 6, h: "h-[200px]", title: "Adventure", hint: "Water sports, treks and trails", icon: Waves, delay: 480 },
+  { key: "media", col: "R", o: 7, h: "h-[170px]", title: "Media Room", hint: "Photos, videos and reels", icon: Film, delay: 580 },
 ];
 
 function useInView(threshold = 0.05) {
@@ -102,7 +102,7 @@ function useInView(threshold = 0.05) {
   return [ref, inView];
 }
 
-// Writes --p (-1 … 1) on the section while it passes through the screen.
+// Writes --p (0 … 1) on the section while it passes through the screen.
 // CSS turns it into the upward slide of each column.
 function useScrollProgress(ref) {
   useEffect(() => {
@@ -113,9 +113,8 @@ function useScrollProgress(ref) {
       raf = 0;
       const r = node.getBoundingClientRect();
       const vh = window.innerHeight;
-      const center = r.top + r.height / 2;
-      const p = (vh / 2 - center) / (vh / 2 + r.height / 2);
-      node.style.setProperty("--p", Math.max(-1, Math.min(1, p)).toFixed(4));
+      const p = (vh * 0.9 - r.top) / (vh * 0.9);
+      node.style.setProperty("--p", Math.max(0, Math.min(1, p)).toFixed(4));
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -183,15 +182,15 @@ function PlanPanel() {
   ];
 
   return (
-    <div className="rt-panel flex h-full min-h-[436px] flex-col p-8 text-white">
+    <div className="rt-panel flex h-full flex-col p-6 text-white">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-3 font-display text-3xl font-medium">
-          <MapIcon size={30} aria-hidden="true" className="text-white/80" />
+        <h3 className="flex items-center gap-3 font-display text-2xl font-medium">
+          <MapIcon size={24} aria-hidden="true" className="text-white/80" />
           Plan Your Trip
         </h3>
       </div>
 
-      <div role="tablist" aria-label="Plan your trip" className="mt-5 flex gap-1 border-b border-white/25">
+      <div role="tablist" aria-label="Plan your trip" className="mt-3 flex gap-1 border-b border-white/25">
         {tabs.map(({ id, label, icon: TabIcon }) => (
           <button
             key={id}
@@ -209,20 +208,20 @@ function PlanPanel() {
       </div>
 
       {tab === "plan" && (
-        <div className="mt-5 flex flex-1 flex-col">
+        <div className="mt-3 flex flex-1 flex-col">
           <label htmlFor="rt-dest" className="text-sm font-semibold">Destinations</label>
           <select
             id="rt-dest"
             value={dest}
             onChange={(e) => setDest(e.target.value)}
-            className="mt-2 h-12 w-full rounded-sm bg-white px-4 text-base text-slate-900"
+            className="mt-2 h-11 w-full rounded-sm bg-white px-4 text-base text-slate-900"
           >
             {DESTINATIONS.map((d) => (
               <option key={d}>{d}</option>
             ))}
           </select>
 
-          <p className="mt-6 text-sm font-semibold">Travel theme</p>
+          <p className="mt-4 text-sm font-semibold">Travel theme</p>
           <div className="mt-3 flex flex-wrap gap-3">
             {THEMES.map((th) => {
               const active = theme === th;
@@ -231,7 +230,7 @@ function PlanPanel() {
                   key={th}
                   onClick={() => setTheme(active ? null : th)}
                   aria-pressed={active}
-                  className={`rt-chip rounded-full px-6 py-2 text-base ring-1 ${
+                  className={`rt-chip rounded-full px-5 py-1.5 text-sm ring-1 ${
                     active ? "bg-white font-semibold text-[color:var(--rt-kokum,#8b0a3a)] ring-white" : "text-white ring-white/60 hover:bg-white/15"
                   }`}
                 >
@@ -243,7 +242,7 @@ function PlanPanel() {
 
           <button
             onClick={goPlan}
-            className="rt-shimmer mt-auto w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
+            className="rt-shimmer mt-auto w-full max-w-[240px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-3 text-sm font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
           >
             Search
           </button>
@@ -251,13 +250,13 @@ function PlanPanel() {
       )}
 
       {tab === "map" && (
-        <div className="mt-5 flex flex-1 flex-col">
+        <div className="mt-3 flex flex-1 flex-col">
           {MAP_EMBED_URL ? (
             <iframe
               title="Interactive map"
               src={MAP_EMBED_URL}
               loading="lazy"
-              className="min-h-[260px] w-full flex-1 border-0 bg-white"
+              className="min-h-[150px] w-full flex-1 border-0 bg-white"
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 border border-white/30 bg-white/10 p-6 text-center">
@@ -267,7 +266,7 @@ function PlanPanel() {
           )}
           <button
             onClick={() => navigate(ROUTES.map)}
-            className="rt-shimmer mt-4 w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.2em] text-white transition hover:brightness-110"
+            className="rt-shimmer mt-4 w-full max-w-[240px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-3 text-sm font-bold uppercase tracking-[0.2em] text-white transition hover:brightness-110"
           >
             Open map
           </button>
@@ -276,7 +275,7 @@ function PlanPanel() {
 
       {tab === "blogs" && (
         <form
-          className="mt-5 flex flex-1 flex-col"
+          className="mt-3 flex flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             goBlogs();
@@ -289,16 +288,16 @@ function PlanPanel() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Ganpatipule sunset"
-            className="mt-2 h-12 w-full rounded-sm bg-white px-4 text-base text-slate-900 placeholder:text-slate-400"
+            className="mt-2 h-11 w-full rounded-sm bg-white px-4 text-base text-slate-900 placeholder:text-slate-400"
           />
-          <p className="mt-6 text-sm font-semibold">Popular topics</p>
+          <p className="mt-4 text-sm font-semibold">Popular topics</p>
           <div className="mt-3 flex flex-wrap gap-3">
             {BLOG_TAGS.map((tag) => (
               <button
                 type="button"
                 key={tag}
                 onClick={() => goBlogs(tag)}
-                className="rt-chip rounded-full px-6 py-2 text-base text-white ring-1 ring-white/60 hover:bg-white/15"
+                className="rt-chip rounded-full px-5 py-1.5 text-sm text-white ring-1 ring-white/60 hover:bg-white/15"
               >
                 {tag}
               </button>
@@ -306,7 +305,7 @@ function PlanPanel() {
           </div>
           <button
             type="submit"
-            className="rt-shimmer mt-auto w-full max-w-[286px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-4 text-base font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
+            className="rt-shimmer mt-auto w-full max-w-[240px] self-start bg-[color:var(--rt-laterite,#e0403a)] py-3 text-sm font-bold uppercase tracking-[0.25em] text-white transition hover:brightness-110"
           >
             Search
           </button>
@@ -327,12 +326,12 @@ function PhotoTile({ t }) {
       aria-label={`${t.title}: ${t.hint}`}
     >
       <PhotoSlot image={IMAGES[t.key]} label={t.title} fit={FIT[t.key]} />
-      <div className="rt-label absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-6 pb-5 pt-20">
-        <p className="flex items-center gap-2 font-display text-3xl font-semibold leading-tight text-white">
-          <Icon size={24} aria-hidden="true" className="shrink-0 text-[color:var(--rt-gold,#f2b84b)]" />
+      <div className="rt-label absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-5 pb-4 pt-14">
+        <p className="flex items-center gap-2 font-display text-2xl font-semibold leading-tight text-white">
+          <Icon size={20} aria-hidden="true" className="shrink-0 text-[color:var(--rt-gold,#f2b84b)]" />
           {t.title}
         </p>
-        <p className="rt-hint mt-1 flex items-center justify-between gap-2 text-base text-white/90">
+        <p className="rt-hint mt-1 flex items-center justify-between gap-2 text-sm text-white/90">
           {t.hint}
           <ArrowRight size={20} aria-hidden="true" className="rt-arrow shrink-0 text-[color:var(--rt-gold,#f2b84b)]" />
         </p>
@@ -348,7 +347,7 @@ export default function ExperiencesMosaic() {
   const renderTile = (t) => (
     <div
       key={t.key}
-      className={`rt-enter order-[var(--o)] lg:order-none ${t.panel ? "" : t.h} ${t.panel ? "" : "relative"}`}
+      className={`rt-enter order-[var(--o)] lg:order-none ${t.h} relative`}
       style={{
         "--o": t.o,
         transitionDelay: `${t.delay}ms`,
@@ -370,7 +369,7 @@ export default function ExperiencesMosaic() {
     <section
       id="experiences"
       ref={ref}
-      className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-ink,#0b1d26)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
+      className="relative z-10 scroll-mt-24 overflow-x-clip bg-[color:var(--rt-ink,#0b1d26)] px-5 pb-14 pt-6 sm:px-10 lg:px-16"
       style={{
         backgroundImage: `linear-gradient(rgba(8,24,32,0.35), rgba(8,24,32,0.35)), url(${ExperienceBg})`,
         backgroundSize: "cover",
@@ -381,11 +380,12 @@ export default function ExperiencesMosaic() {
         /* columns: on phones they dissolve so the tiles stack in the "o" order */
         .rt-col { display: contents; }
         @media (min-width: 1024px) {
-          .rt-col { display: flex; flex: 1 1 0; flex-direction: column; gap: 20px; min-width: 0; will-change: transform; }
-          .rt-col-l { transform: translateY(calc(var(--p, 0) * -28px)); }
-          .rt-col-r { transform: translateY(calc(var(--p, 0) * -72px)); }
+          .rt-col { display: flex; flex: 1 1 0; flex-direction: column; gap: 16px; min-width: 0; will-change: transform; }
+          .rt-col-l { transform: translateY(calc(var(--p, 0) * -24px)); }
+          .rt-col-r { transform: translateY(calc(var(--p, 0) * -64px)); }
         }
 
+        @media (min-width: 1024px) { .rt-row { transform: translateY(calc(var(--p, 0) * -24px)); } }
         .rt-enter { transition: opacity .9s ease-out, transform 1s cubic-bezier(.22,1,.36,1); }
 
         .rt-panel-wrap {
@@ -438,7 +438,7 @@ export default function ExperiencesMosaic() {
         .rt-chip:hover { transform: translateY(-3px); }
 
         @media (prefers-reduced-motion: reduce) {
-          .rt-col { transform: none !important; }
+          .rt-col, .rt-row { transform: none !important; }
           .rt-shimmer::after { animation: none; }
           .rt-enter { transition: none; opacity: 1 !important; transform: none !important; }
           .rt-tile, .rt-tile:hover, .rt-tile:focus-visible, .rt-zoom, .rt-label, .rt-hint { transition: none; transform: none; }
@@ -448,9 +448,17 @@ export default function ExperiencesMosaic() {
 
       <h2 className="sr-only">Explore</h2>
 
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-5 lg:flex-row lg:items-start">
+      <div className="mx-auto flex max-w-[1080px] flex-col gap-4 lg:flex-row lg:items-start">
         <div className="rt-col rt-col-l">{TILES.filter((t) => t.col === "L").map(renderTile)}</div>
-        <div className="rt-col rt-col-r">{TILES.filter((t) => t.col === "R").map(renderTile)}</div>
+        {/* right column: Plan, Culture + Guides side by side, then Adventure with Media Room under it.
+            The left side next to Adventure / Media stays empty so the background shows. */}
+        <div className="rt-col rt-col-r">
+          {renderTile(TILES.find((t) => t.key === "plan"))}
+          <div className="order-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:order-none">
+            {TILES.filter((t) => t.pair).map(renderTile)}
+          </div>
+          {TILES.filter((t) => t.col === "R" && !t.panel && !t.pair).map(renderTile)}
+        </div>
       </div>
     </section>
   );
