@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Building2, Film, Home, Search, Sparkles } from "lucide-react";
-import KokaniFoodImg from "../assets/Kokani-Food.jpg";
 import GuidedWalksImg from "../assets/Guided-Walks.jpg";
 import CommunityInteractionImg from "../assets/Community-interaction.jpg";
 import SocietyImg from "../assets/Society.jpg";
 import EconomyImg from "../assets/Economy.jpg";
+// Section background photo (add src/assets/Experience-Bg.jpg)
+import ExperienceBg from "../assets/Experience-Bg.jpg";
 
 /*
-  Explore mosaic — patchwork of tiles on a dark forest-style backdrop, laid out
-  like the reference: Homestays & Hotels, Plan Your Trip, Culture, Destinations,
+  Explore mosaic — a patchwork of tiles on a plain background, laid out like the
+  reference: Homestays & Hotels, Plan Your Trip, Culture, Destinations,
   Tourist Guides and Travel Agents, Adventure, Media Room.
 
   EDIT HERE
@@ -60,31 +61,6 @@ function useInView(threshold = 0.1) {
   return [ref, inView];
 }
 
-// Swaying palm silhouette in the bottom-right corner (stands in for the tiger)
-function PalmDecor() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 220 300"
-      className="rt-sway pointer-events-none absolute -bottom-6 right-0 hidden h-[24rem] w-auto text-[color:var(--rt-teal)] opacity-50 lg:block"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    >
-      <path d="M120 300 C 112 220, 128 150, 110 70" strokeWidth="9" />
-      <path d="M110 70 C 80 40, 40 40, 10 70" />
-      <path d="M110 70 C 85 25, 55 10, 25 15" />
-      <path d="M110 70 C 110 30, 120 10, 140 0" />
-      <path d="M110 70 C 140 30, 175 25, 205 40" />
-      <path d="M110 70 C 145 55, 180 70, 210 100" />
-      <path d="M110 70 C 70 70, 40 95, 25 130" />
-      <circle cx="104" cy="82" r="7" fill="currentColor" />
-      <circle cx="118" cy="86" r="7" fill="currentColor" />
-    </svg>
-  );
-}
-
 export default function ExperiencesMosaic() {
   const navigate = useNavigate();
   const [ref, inView] = useInView();
@@ -102,16 +78,19 @@ export default function ExperiencesMosaic() {
     navigate(theme ? `${ROUTES.plan}?theme=${theme.toLowerCase()}` : ROUTES.plan);
 
   const tileBtn =
-    "group relative block h-full w-full overflow-hidden text-left shadow-[0_24px_48px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_32px_60px_-20px_rgba(0,0,0,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--rt-gold)]";
+    "group relative block h-full w-full overflow-hidden text-left shadow-[0_18px_40px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-900/5 transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_56px_-20px_rgba(15,23,42,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--rt-gold)]";
 
-  // Photo tiles, placed like the reference (12-col grid, 100px rows on desktop)
+  // 12-column grid, 6 rows of 110px on desktop — three columns of tiles, no gaps:
+  //   left   : Homestays & Hotels (3 rows) + Destinations (3 rows)
+  //   middle : Plan Your Trip (2 rows) + Culture (4 rows)
+  //   right  : Tourist Guides & Agents + Adventure + Media Room (2 rows each)
   const photoTiles = [
     {
       key: "culture",
       title: "Culture",
       image: IMAGES.culture,
       route: ROUTES.culture,
-      cls: "col-span-2 h-44 lg:h-auto lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-3",
+      cls: "col-span-2 h-44 lg:h-auto lg:col-span-4 lg:col-start-5 lg:row-span-4 lg:row-start-3",
       delay: 150,
     },
     {
@@ -127,7 +106,7 @@ export default function ExperiencesMosaic() {
       title: "Tourist Guides and Travel Agents",
       image: IMAGES.guides,
       route: ROUTES.guides,
-      cls: "col-span-2 h-40 lg:h-auto lg:col-span-4 lg:col-start-8 lg:row-span-2 lg:row-start-5",
+      cls: "col-span-2 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1",
       delay: 350,
     },
     {
@@ -135,7 +114,7 @@ export default function ExperiencesMosaic() {
       title: "Adventure",
       image: IMAGES.adventure,
       route: ROUTES.adventure,
-      cls: "col-span-1 h-40 lg:h-auto lg:col-span-3 lg:col-start-1 lg:row-span-2 lg:row-start-7",
+      cls: "col-span-1 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-3",
       delay: 450,
     },
   ];
@@ -145,36 +124,17 @@ export default function ExperiencesMosaic() {
       id="experiences"
       ref={ref}
       className="relative scroll-mt-24 overflow-hidden bg-[color:var(--rt-ink)] px-5 py-16 sm:px-10 sm:py-24 lg:px-16"
+      style={{
+        // soft dark overlay on the photo so the tiles and their text stay readable
+        backgroundImage: `linear-gradient(rgba(10,42,60,0.55), rgba(10,42,60,0.55)), url(${ExperienceBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
-      <style>{`
-        @keyframes rt-sway-kf {
-          0%, 100% { transform: rotate(-2.5deg); transform-origin: 55% 100%; }
-          50%      { transform: rotate(2.5deg);  transform-origin: 55% 100%; }
-        }
-        .rt-sway { animation: rt-sway-kf 7s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .rt-sway { animation: none; } }
-      `}</style>
-
       <h2 className="sr-only">Explore Ratnagiri</h2>
 
-      {/* layered forest-style backdrop: glows + faint vertical bark lines */}
-      <span aria-hidden="true" className="pointer-events-none absolute -left-40 top-0 h-[28rem] w-[28rem] rounded-full bg-[color:var(--rt-teal)] opacity-25 blur-3xl" />
-      <span aria-hidden="true" className="pointer-events-none absolute -right-40 bottom-0 h-[28rem] w-[28rem] rounded-full bg-[color:var(--rt-laterite)] opacity-20 blur-3xl" />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.08]"
-        style={{ backgroundImage: "repeating-linear-gradient(90deg, #fff 0 2px, transparent 2px 64px)" }}
-      />
-      <PalmDecor />
-
       <div className="relative mx-auto max-w-[1280px]">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-12 lg:auto-rows-[100px] lg:gap-4">
-          {/* decorative tree trunk in the middle gap (desktop only) */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none hidden rounded-[2.5rem] bg-gradient-to-r from-white/5 via-white/10 to-white/5 lg:col-span-2 lg:col-start-6 lg:row-span-6 lg:row-start-1 lg:block"
-          />
-
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-12 lg:auto-rows-[110px] lg:gap-4">
           {/* ---------- Homestays & Hotels (the white "logo" tile) ---------- */}
           <div {...wrap("col-span-2 lg:col-span-4 lg:col-start-1 lg:row-span-3 lg:row-start-1", 0)}>
             <button onClick={() => navigate(ROUTES.stay)} className={`${tileBtn} flex flex-col items-center justify-center gap-4 rounded-2xl bg-white p-6 text-center`}>
@@ -192,8 +152,8 @@ export default function ExperiencesMosaic() {
           </div>
 
           {/* ---------- Plan Your Trip panel ---------- */}
-          <div {...wrap("col-span-2 lg:col-span-4 lg:col-start-8 lg:row-span-2 lg:row-start-1", 100)}>
-            <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[color:var(--rt-kokum)] to-[color:var(--rt-kokum-dark)] p-5 text-white shadow-[0_24px_48px_-20px_rgba(0,0,0,0.75)]">
+          <div {...wrap("col-span-2 lg:col-span-4 lg:col-start-5 lg:row-span-2 lg:row-start-1", 100)}>
+            <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[color:var(--rt-kokum)] to-[color:var(--rt-kokum-dark)] p-5 text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.45)]">
               <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full border border-white/20" />
               <div className="relative">
                 <p className="flex items-center gap-2 font-display text-lg font-semibold">
@@ -252,7 +212,7 @@ export default function ExperiencesMosaic() {
           ))}
 
           {/* ---------- Media Room ---------- */}
-          <div {...wrap("col-span-1 h-40 lg:h-auto lg:col-span-3 lg:col-start-4 lg:row-span-2 lg:row-start-7", 550)}>
+          <div {...wrap("col-span-1 h-40 lg:h-auto lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-5", 550)}>
             <button
               onClick={() => navigate(ROUTES.media)}
               className={`${tileBtn} rounded-2xl bg-gradient-to-br from-[color:var(--rt-teal)] to-[color:var(--rt-ink)]`}
