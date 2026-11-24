@@ -68,7 +68,7 @@ const ROUTES = {
   media: "/videos",
   plan: "/plan-your-trip",
   map: "/map", // TODO: your interactive map page
-  blogs: "/blogs", // TODO: your blog listing page (search goes to ?q=...)
+  blogs: "/stories", // stories/blog listing page (search goes to ?q=...)
 };
 
 const MAP_EMBED_URL = ""; // e.g. "/map?embed=1" — shown inside the panel when set

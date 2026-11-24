@@ -4,20 +4,28 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   ImagePlus,
+  MapPin,
+  Phone,
   PlusCircle,
   X,
 } from "lucide-react";
 import API_BASE_URL from "../config";
 
 /* ------------------------------------------------------------------
-   Ratnagiri Tourism Calendar: month grid, a scrollable "selected day"
-   side panel, category filters and the contribute form.
+   Ratnagiri Tourism Calendar: pictorial month grid, a scrollable
+   "selected day" side panel, category filters and the contribute form.
 
    GET  {api}?year=YYYY&month=M   -> [{ id, title, event_date, category,
-                                        organizer_name, description, photo_url }]
+                                        organizer_name, organizer_contact,
+                                        organizer_email, address, event_link,
+                                        description, photo_url }]
    POST {api}/contribute          -> creates a pending event (admin approves)
    POST /api/upload-photo         -> Cloudinary upload, returns { url }
+
+   NEW fields in the form: address (venue) and event_link (website / booking).
+   The database needs two columns for them (see events_migration.sql).
 ------------------------------------------------------------------ */
 
 const API = `${API_BASE_URL}/api/events`;
@@ -42,6 +50,16 @@ const toKey = (y, m, d) =>
 
 const keyToDate = (key) => new Date(`${key}T00:00:00`);
 
+// Only allow real web links
+function safeUrl(u) {
+  const v = String(u || "").trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/.test(v)) return `https://${v}`;
+  return null;
+}
+const telHref = (p) => `tel:${String(p).replace(/[^\d+]/g, "")}`;
+
 const emptyForm = {
   title: "",
   event_date: "",
@@ -49,6 +67,8 @@ const emptyForm = {
   organizer_name: "",
   organizer_contact: "",
   organizer_email: "",
+  address: "",
+  event_link: "",
   description: "",
 };
 
@@ -231,12 +251,18 @@ export default function EventsCalendar() {
     setSubmitting(true);
     setNotice(null);
     try {
+      let link = form.event_link.trim();
+      if (link && !safeUrl(link)) {
+        throw new Error("Please enter a valid link, e.g. https://example.com");
+      }
+      link = link ? safeUrl(link) : "";
+
       const photo_url = photoFile ? await uploadPhoto(photoFile) : null;
 
       const res = await fetch(`${API}/contribute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, photo_url }),
+        body: JSON.stringify({ ...form, event_link: link, photo_url }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -388,7 +414,7 @@ export default function EventsCalendar() {
             {cells.map((c, i) => {
               if (c.muted) {
                 return (
-                  <div key={i} className="min-h-[58px] rounded-xl p-2 text-xs font-semibold text-slate-300 md:min-h-[108px]">
+                  <div key={i} className="min-h-[58px] rounded-xl p-2 text-xs font-semibold text-slate-300 md:min-h-[136px]">
                     {c.day}
                   </div>
                 );
@@ -399,6 +425,8 @@ export default function EventsCalendar() {
               const isToday = key === todayKey;
               const isSel = key === selected;
               const has = dayEvents.length > 0;
+              const thumb = dayEvents.find((ev) => ev.photo_url);
+              const maxChips = thumb ? 1 : 2;
 
               return (
                 <button
@@ -406,7 +434,7 @@ export default function EventsCalendar() {
                   onClick={() => pickDay(key)}
                   aria-pressed={isSel}
                   aria-label={`${c.day} ${MONTHS[month]}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
-                  className={`group relative flex min-h-[58px] flex-col items-stretch rounded-xl p-1.5 text-left transition duration-200 md:min-h-[108px] md:p-2 ${
+                  className={`group relative flex min-h-[58px] flex-col items-stretch rounded-xl p-1.5 text-left transition duration-200 md:min-h-[136px] md:p-2 ${
                     isSel
                       ? "bg-gradient-to-br from-[#0b3149] to-[#0f766e] text-white shadow-lg shadow-[#0b3149]/25"
                       : has
@@ -450,10 +478,19 @@ export default function EventsCalendar() {
                     </div>
                   )}
 
-                  {/* desktop: compact title chips */}
+                  {/* desktop: event picture + compact title chips */}
                   {has && (
                     <div className="mt-1.5 hidden flex-1 flex-col gap-1 md:flex">
-                      {dayEvents.slice(0, 2).map((ev) => {
+                      {thumb && (
+                        <img
+                          src={thumb.photo_url}
+                          alt=""
+                          loading="lazy"
+                          draggable={false}
+                          className="h-11 w-full rounded-md object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      )}
+                      {dayEvents.slice(0, maxChips).map((ev) => {
                         const cat = CATEGORIES[ev.category] || CATEGORIES.beaches;
                         return (
                           <span
@@ -468,9 +505,9 @@ export default function EventsCalendar() {
                           </span>
                         );
                       })}
-                      {dayEvents.length > 2 && (
+                      {dayEvents.length > maxChips && (
                         <span className={`px-1 text-[10.5px] font-bold ${isSel ? "text-[#FBBF24]" : "text-[#B4532A]"}`}>
-                          +{dayEvents.length - 2} more
+                          +{dayEvents.length - maxChips} more
                         </span>
                       )}
                     </div>
@@ -538,6 +575,7 @@ export default function EventsCalendar() {
               const cat = CATEGORIES[ev.category] || CATEGORIES.beaches;
               const long = (ev.description || "").length > 110;
               const open = openId === ev.id;
+              const link = safeUrl(ev.event_link);
               return (
                 <article
                   key={ev.id}
@@ -548,7 +586,7 @@ export default function EventsCalendar() {
                       src={ev.photo_url}
                       alt={ev.title}
                       loading="lazy"
-                      className="h-40 w-full object-cover"
+                      className="h-44 w-full object-cover"
                     />
                   ) : (
                     <div className="h-1.5 w-full" style={{ background: cat.bg }} />
@@ -581,6 +619,45 @@ export default function EventsCalendar() {
                         {open ? "Show less" : "Read more"}
                       </button>
                     )}
+
+                    {(ev.address || ev.organizer_contact || link) && (
+                      <ul className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-[12.5px] text-slate-600">
+                        {ev.address && (
+                          <li className="flex items-start gap-2">
+                            <MapPin size={14} className="mt-0.5 shrink-0 text-[#B4532A]" />
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.address)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-[#0b3149] hover:underline"
+                            >
+                              {ev.address}
+                            </a>
+                          </li>
+                        )}
+                        {ev.organizer_contact && (
+                          <li className="flex items-center gap-2">
+                            <Phone size={14} className="shrink-0 text-[#B4532A]" />
+                            <a href={telHref(ev.organizer_contact)} className="font-semibold hover:text-[#0b3149] hover:underline">
+                              {ev.organizer_contact}
+                            </a>
+                          </li>
+                        )}
+                        {link && (
+                          <li className="flex items-center gap-2">
+                            <ExternalLink size={14} className="shrink-0 text-[#B4532A]" />
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-semibold text-teal-700 hover:underline"
+                            >
+                              Event link
+                            </a>
+                          </li>
+                        )}
+                      </ul>
+                    )}
                   </div>
                 </article>
               );
@@ -611,7 +688,7 @@ export default function EventsCalendar() {
               <h2 className="mt-2 text-2xl font-bold leading-tight">Contribute a tourism event</h2>
               <p className="mt-3 text-sm leading-relaxed text-white/75">
                 Submit your festival, tour or cultural gathering to feature on the Ratnagiri
-                Tourism schedule.
+                Tourism schedule. Add your phone number, address and a link so visitors can reach you.
               </p>
 
               <ol className="mt-7 space-y-5">
@@ -692,7 +769,30 @@ export default function EventsCalendar() {
               </Field>
             </div>
 
-            <Field label="Event Details & Location">
+            <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field label="Venue / Full Address *">
+                <input
+                  required
+                  maxLength={300}
+                  value={form.address}
+                  onChange={update("address")}
+                  placeholder="e.g., Ganpatipule Beach, Ratnagiri, Maharashtra 415615"
+                  className="input"
+                />
+              </Field>
+              <Field label="Event / Booking Link">
+                <input
+                  type="url"
+                  maxLength={500}
+                  value={form.event_link}
+                  onChange={update("event_link")}
+                  placeholder="https://yourwebsite.com/event"
+                  className="input"
+                />
+              </Field>
+            </div>
+
+            <Field label="Event Details & Timings">
               <textarea
                 rows={3}
                 value={form.description}
@@ -705,7 +805,7 @@ export default function EventsCalendar() {
             {/* Photo upload */}
             <div className="mt-4">
               <p className="mb-1.5 text-[13px] font-semibold text-slate-700">
-                Event Photo (shown on the calendar)
+                Event Photo / Poster (shown on the calendar and the home page)
               </p>
               <input
                 ref={fileRef}
