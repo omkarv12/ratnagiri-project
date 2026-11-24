@@ -28,6 +28,7 @@ import VisitorCounter from "../components/VisitorCounter";
 import HeroVideoTabs from "../components/HeroVideoTabs";
 // Experiences: photo-tile mosaic (replaces the old cards + mini calendar)
 import ExperiencesMosaic from "../components/ExperiencesMosaic";
+import FestivalsEvents from "../components/FestivalsEvents";
 // NOTE: HowDidYouHearModal is no longer imported here. It is mounted once in
 // App.jsx so it opens as soon as the website starts, even during loading.
 
@@ -429,6 +430,7 @@ export default function DashboardOverview() {
 
       {/* ================= Experiences — photo-tile mosaic ================= */}
       <ExperiencesMosaic />
+      <FestivalsEvents />
 
       {/* ================= Stories & Videos ================= */}
       <section
