@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import DashboardOverview from "./pages/DashboardOverview";
 import AdminDashboard from "./pages/AdminDashboard";
+import ComingSoon from "./pages/ComingSoon";
 
 // About
 import Places from "./pages/Places";
@@ -59,12 +60,15 @@ import TransportFacilities from "./pages/TransportFacilities";
 import MedicalFacilities from "./pages/MedicalFacilities";
 import PoliceStations from "./pages/PoliceStations";
 
+// Tour guides
+import TourGuides from "./pages/TourGuides";
+import GuideDetail from "./pages/GuideDetail";
+
 // Stories & media
 import Stories from "./pages/Stories";
 import StoryDetail from "./pages/StoryDetail";
 import ReelAwards from "./pages/ReelAwards";
 import Videos from "./pages/Videos";
-import GuideDetail from "./pages/GuideDetail";
 
 export default function App() {
   return (
@@ -93,7 +97,7 @@ export default function App() {
             <Route path="/society" element={<Society />} />
             <Route path="/economy" element={<Economy />} />
             <Route path="/good-governance" element={<GoodGovernance />} />
-            
+
             {/* Experiences */}
             <Route path="/experiences/upcoming-events" element={<UpcomingEventsPage />} />
             <Route path="/experiences/discover-your-stay" element={<DiscoverYourStay />} />
@@ -150,12 +154,15 @@ export default function App() {
             <Route path="/medical-facilities" element={<MedicalFacilities />} />
             <Route path="/police-stations" element={<PoliceStations />} />
 
+            {/* Tour guides */}
+            <Route path="/guides" element={<TourGuides />} />
+            <Route path="/guides/:id" element={<GuideDetail />} />
+
             {/* Stories & media */}
             <Route path="/stories" element={<Stories />} />
             <Route path="/stories/reels" element={<ReelAwards />} />
             <Route path="/stories/:slug" element={<StoryDetail />} />
             <Route path="/videos" element={<Videos />} />
-            <Route path="/guides/:id" element={<GuideDetail />} />
 
             {/* Admin (protected) */}
             <Route
@@ -166,6 +173,9 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Anything without a page yet (menu placeholders, bad links) */}
+            <Route path="*" element={<ComingSoon />} />
           </Route>
         </Routes>
       </Router>

@@ -10,8 +10,14 @@ const inputCls =
   "w-full border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5b0a30]";
 const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
-const fmtDate = (s) =>
-  new Date(s.replace(" ", "T")).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+// Backend sends "2026-11-25 10:30:00.123456". Only the date part is used,
+// which parses the same way in every browser (Safari included).
+const fmtDate = (s) => {
+  const d = new Date(String(s || "").slice(0, 10));
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+};
 
 function ReviewForm({ guideId, guideName, onDone }) {
   const empty = { reviewer_name: "", phone_number: "", email: "", rating: 0, message: "", website: "" };
@@ -49,7 +55,7 @@ function ReviewForm({ guideId, guideName, onDone }) {
     );
 
   return (
-    <form onSubmit={submit} className="grid gap-4">
+    <form onSubmit={submit} className="relative grid gap-4 sm:grid-cols-2">
       {err && <p role="alert" className="sm:col-span-2 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
       <div className="sm:col-span-2">
         <label className={labelCls}>Your rating for {guideName} *</label>
@@ -101,7 +107,7 @@ export default function GuideDetail() {
   // how many reviews per star, from the (up to 100) reviews returned
   const spread = useMemo(() => {
     const n = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    (guide?.reviews || []).forEach((r) => { n[r.rating] += 1; });
+    (guide?.reviews || []).forEach((r) => { if (n[r.rating] !== undefined) n[r.rating] += 1; });
     return n;
   }, [guide]);
 
@@ -114,7 +120,10 @@ export default function GuideDetail() {
       </div>
     );
 
+  const reviews = guide.reviews || [];
   const total = Number(guide.rating_count) || 0;
+  const avg = Number(guide.avg_rating) || 0;
+  const barBase = reviews.length || 1; // bars show the share among the reviews listed below
 
   return (
     <div className="min-h-screen" style={{ background: "#f4f3f1" }}>
@@ -129,8 +138,8 @@ export default function GuideDetail() {
           <div className="min-w-0 flex-1 space-y-3 text-[15px] text-gray-800">
             <h1 className="text-3xl text-gray-900" style={{ fontFamily: "Georgia, serif" }}>{guide.guide_name}</h1>
             <div className="flex items-center gap-2">
-              <Stars value={guide.avg_rating} size={20} />
-              <span className="font-semibold">{total ? guide.avg_rating.toFixed(1) : "No ratings yet"}</span>
+              <Stars value={avg} size={20} />
+              <span className="font-semibold">{total ? avg.toFixed(1) : "No ratings yet"}</span>
               {total > 0 && <span className="text-sm text-gray-500">({total} review{total === 1 ? "" : "s"})</span>}
             </div>
             <p className="flex items-center gap-2"><Award size={16} /> Registration No: {guide.registration_no}</p>
@@ -168,8 +177,8 @@ export default function GuideDetail() {
             {total > 0 && (
               <div className="mb-5 flex items-center gap-6 bg-white p-4 shadow-sm">
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900">{guide.avg_rating.toFixed(1)}</p>
-                  <Stars value={guide.avg_rating} />
+                  <p className="text-4xl font-bold text-gray-900">{avg.toFixed(1)}</p>
+                  <Stars value={avg} />
                   <p className="mt-1 text-xs text-gray-500">{total} review{total === 1 ? "" : "s"}</p>
                 </div>
                 <div className="flex-1 space-y-1">
@@ -177,7 +186,7 @@ export default function GuideDetail() {
                     <div key={n} className="flex items-center gap-2 text-xs text-gray-600">
                       <span className="w-3">{n}</span>
                       <div className="h-2 flex-1 bg-gray-200">
-                        <div className="h-2" style={{ width: `${total ? (spread[n] / guide.reviews.length) * 100 : 0}%`, background: "#e8a317" }} />
+                        <div className="h-2" style={{ width: `${(spread[n] / barBase) * 100}%`, background: "#e8a317" }} />
                       </div>
                       <span className="w-5 text-right">{spread[n]}</span>
                     </div>
@@ -186,11 +195,11 @@ export default function GuideDetail() {
               </div>
             )}
 
-            {guide.reviews.length === 0 ? (
+            {reviews.length === 0 ? (
               <p className="bg-white p-5 text-sm text-gray-600 shadow-sm">No reviews yet. Be the first to rate this guide.</p>
             ) : (
               <ul className="space-y-3">
-                {guide.reviews.map((r) => (
+                {reviews.map((r) => (
                   <li key={r.id} className="bg-white p-4 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold text-gray-900">{r.reviewer_name}</p>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import API_BASE_URL from "../config";
 import { GUIDE_LANGUAGES, languageName, splitCsv } from "../utils/guideLanguages";
@@ -10,6 +10,13 @@ const inputCls =
   "w-full border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5b0a30]";
 const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
+// today as YYYY-MM-DD in the visitor's own time zone (for the date picker's min)
+const todayStr = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+};
+
 /* ------------------------------ small pieces ------------------------------ */
 function LangChips({ codes }) {
   return (
@@ -18,7 +25,7 @@ function LangChips({ codes }) {
         <span
           key={c}
           title={languageName(c)}
-          className="grid h-8 min-w-8 place-items-center rounded-full px-2 text-sm text-white"
+          className="grid h-8 min-w-8 place-items-center rounded-full px-2 text-sm uppercase text-white"
           style={{ background: "#4a0526" }}
         >
           {c}
@@ -124,7 +131,7 @@ function EnquiryModal({ guide, destinations, onClose }) {
           <div><label className={labelCls}>Email</label>
             <input className={inputCls} type="email" value={f.email} onChange={set("email")} /></div>
           <div><label className={labelCls}>Travel date</label>
-            <input className={inputCls} type="date" value={f.travel_date} onChange={set("travel_date")} /></div>
+            <input className={inputCls} type="date" min={todayStr()} value={f.travel_date} onChange={set("travel_date")} /></div>
           <div><label className={labelCls}>Destination</label>
             <select className={inputCls} value={f.destination} onChange={set("destination")}>
               <option value="">Select destination</option>
@@ -232,6 +239,7 @@ function RegisterModal({ onClose }) {
           <div className="sm:col-span-2"><label className={labelCls}>Photo link *</label>
             <input className={inputCls} type="url" value={f.guide_photo} onChange={set("guide_photo")}
               placeholder="https://..." required />
+            <p className="mt-1 text-xs text-gray-500">Paste the link of a clear photo already hosted online. It must start with https://</p>
             {f.guide_photo && (
               <img src={f.guide_photo} alt="Preview" className="mt-2 h-24 w-20 object-cover"
                 onError={(e) => (e.currentTarget.style.display = "none")}
@@ -256,6 +264,7 @@ function RegisterModal({ onClose }) {
 /* ---------------------------------- page ---------------------------------- */
 export default function TourGuides() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -279,12 +288,14 @@ export default function TourGuides() {
   // "Request this guide" on the detail page sends the guide id here
   useEffect(() => {
     const id = location.state?.requestGuideId;
+    if (id == null) return;
     const g = guides.find((x) => x.id === id);
     if (g) {
       setModal({ type: "enquiry", guide: g });
-      window.history.replaceState({}, document.title); // don't reopen on refresh
+      // clear the router state so the modal doesn't reopen on refresh or back
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [guides, location.state]);
+  }, [guides, location.state, location.pathname, navigate]);
 
   const destinations = useMemo(
     () => [...new Set(guides.flatMap((g) => splitCsv(g.destinations)))].sort(),
@@ -389,8 +400,8 @@ export default function TourGuides() {
                     </Link>
                   </div>
                   <p className="flex items-center gap-2 text-sm text-gray-700">
-                    <Stars value={g.avg_rating} />
-                    {g.rating_count > 0 ? `${g.avg_rating.toFixed(1)} (${g.rating_count})` : "No ratings yet"}
+                    <Stars value={Number(g.avg_rating) || 0} />
+                    {g.rating_count > 0 ? `${Number(g.avg_rating).toFixed(1)} (${g.rating_count})` : "No ratings yet"}
                   </p>
                   <p className="text-[15px] text-gray-800">Registration No: {g.registration_no}</p>
                   <p className="flex flex-wrap items-center gap-2 text-[15px] text-gray-800">
