@@ -15,6 +15,8 @@ import VideosSection from "../components/VideosSection";
 import StoriesSection from "../components/StoriesSection";
 // Social Feeds: Instagram reels grid
 import SocialFeeds from "../components/SocialFeeds";
+// Footer (shown at the bottom of the home page)
+import Footer from "../components/Footer";
 // NOTE: HowDidYouHearModal is mounted once in App.jsx, not here.
 
 /*
@@ -25,6 +27,7 @@ import SocialFeeds from "../components/SocialFeeds";
     4. Videos
     5. Our Stories
     6. Social Feeds
+    7. Footer
 
   The old "Stories & Videos" 3-in-1 block and the "About" block (Society /
   Economy / Good Governance) were removed from this page. Those pages still
@@ -71,6 +74,7 @@ export default function DashboardOverview() {
       <VideosSection />
       <StoriesSection />
       <SocialFeeds />
+      <Footer />
     </div>
   );
 }
