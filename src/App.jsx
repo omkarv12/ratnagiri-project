@@ -64,6 +64,7 @@ import Stories from "./pages/Stories";
 import StoryDetail from "./pages/StoryDetail";
 import ReelAwards from "./pages/ReelAwards";
 import Videos from "./pages/Videos";
+import GuideDetail from "./pages/GuideDetail";
 
 export default function App() {
   return (
@@ -154,6 +155,7 @@ export default function App() {
             <Route path="/stories/reels" element={<ReelAwards />} />
             <Route path="/stories/:slug" element={<StoryDetail />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/guides/:id" element={<GuideDetail />} />
 
             {/* Admin (protected) */}
             <Route

@@ -98,12 +98,12 @@ export const PLAN_MENU = {
   label: "Plan Your Trip",
   route: "/plan-your-trip",
   children: [
-    // No Hotels / Tourist Guides / Travel Agents / Travel Handbook pages yet:
+    // No Hotels / Travel Agents / Travel Handbook pages yet:
     // placeholder routes.
     { label: "Accommodations - Hotels", route: "/plan-your-trip/hotels" },
     { label: "Accommodations - Homestays", route: "/experiences/discover-your-stay" },
     { label: "Itineraries", route: "/experiences/itineraries" },
-    { label: "Tourist Guides", route: "/plan-your-trip/tourist-guides" },
+    { label: "Tourist Guides", route: "/guides" },
     { label: "Travel Agents", route: "/plan-your-trip/travel-agents" },
     { label: "Travel Handbook", route: "/plan-your-trip/travel-handbook" },
   ],

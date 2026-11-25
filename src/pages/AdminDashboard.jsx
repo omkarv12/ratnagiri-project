@@ -15,6 +15,7 @@ import {
   Map as MapIcon,
   Route as RouteIcon,
   Film,
+  UserCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import API_BASE_URL from "../config";
@@ -29,6 +30,7 @@ import AdminExploreVillagesPanel from "../components/AdminExploreVillagesPanel";
 import AdminItinerariesPanel from "../components/AdminItinerariesPanel";
 import AdminCircuitsPanel from "../components/AdminCircuitsPanel";
 import AdminMediaPanel from "../components/AdminMediaPanel";
+import AdminGuidesPanel from "../components/AdminGuidesPanel";
 import { blogApi, adminListVillageProfiles } from "../api/blogApi";
 
 export default function AdminDashboard() {
@@ -38,6 +40,7 @@ export default function AdminDashboard() {
   const [pendingLocations, setPendingLocations] = useState([]);
   const [pendingHomestays, setPendingHomestays] = useState([]);
   const [pendingPathsCount, setPendingPathsCount] = useState(0);
+  const [pendingGuidesCount, setPendingGuidesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -71,6 +74,13 @@ export default function AdminDashboard() {
         const r = await fetch(`${API_BASE_URL}/api/admin/hidden-paths?status=pending`);
         const d = await r.json();
         setPendingPathsCount(d.counts?.pending || 0);
+      } catch { /* badge optional */ }
+
+      // Pending guides count (badge only; a failure here must not break the page)
+      try {
+        const r = await fetch(`${API_BASE_URL}/api/admin/guides?status=pending`);
+        const d = await r.json();
+        setPendingGuidesCount(d.counts?.pending || 0);
       } catch { /* badge optional */ }
 
       setLoading(false);
@@ -255,6 +265,7 @@ export default function AdminDashboard() {
       items: [
         { key: "pendingSubmissions", label: "Pending Submissions", icon: Inbox, badge: pendingCount },
         { key: "hiddenPaths", label: "Hidden Paths", icon: RouteIcon, badge: pendingPathsCount },
+        { key: "guides", label: "Tour Guides", icon: UserCheck, badge: pendingGuidesCount },
         { key: "reelsVideos", label: "Reels & Videos", icon: Film },
       ],
     },
@@ -628,6 +639,13 @@ export default function AdminDashboard() {
           <AdminHiddenPathsPanel
             canEdit={user?.role === "admin"}
             onPendingCountChange={setPendingPathsCount}
+          />
+        )}
+
+        {activeTab === "guides" && (
+          <AdminGuidesPanel
+            canEdit={user?.role === "admin"}
+            onPendingCountChange={setPendingGuidesCount}
           />
         )}
 
