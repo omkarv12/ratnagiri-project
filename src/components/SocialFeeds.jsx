@@ -17,7 +17,7 @@ import { ExternalLink } from "lucide-react";
 const PROFILE_URL = "https://www.instagram.com/"; // TODO: your Instagram profile
 const REELS = [
   { url: "https://www.instagram.com/reel/DftR--Sit71/" },
-  { url: "https://www.instagram.com/reel/Dey9wwYoXCl/" },
+  { url: "https://www.instagram.com/reel/DRLwt8kExHp/" },
   { url: "https://www.instagram.com/reel/DeCRYtcttcp/" },
 ];
 
