@@ -63,7 +63,7 @@ import PoliceStations from "./pages/PoliceStations";
 // Tour guides
 import TourGuides from "./pages/TourGuides";
 import GuideDetail from "./pages/GuideDetail";
-import GuideRegister from "./pages/GuideRegister";
+import GuideRegister from "./components/forms/GuideRegister";
 
 // Stories & media
 import Stories from "./pages/Stories";
