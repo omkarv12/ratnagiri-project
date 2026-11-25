@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Landmark, Mail, MapPin, Phone } from "lucide-react";
+import { Landmark, Lock, Mail, MapPin, Phone } from "lucide-react";
 // Dark background photo (same file the Experiences section uses). Shown faintly.
 import FooterBg from "../assets/Experience-Bg.jpg";
 
@@ -20,6 +20,10 @@ import FooterBg from "../assets/Experience-Bg.jpg";
 */
 
 const LOGO = null; // e.g. Logo
+
+// Where the "Admin Login" button goes. /admin is protected, so a visitor who is
+// not logged in is sent to the login page. Use "/login" to always open the login page.
+const ADMIN_ROUTE = "/admin";
 
 const CONTACT = {
   phone: "TODO: 1800-XXX-XXXX",
@@ -259,6 +263,12 @@ export default function Footer() {
         <Link to="/disclaimer" className="hover:text-[#e8a13a] hover:underline">Disclaimer</Link>
         <span className="mx-3 text-white/40" aria-hidden="true">|</span>
         <Link to="/privacy-policy" className="hover:text-[#e8a13a] hover:underline">Privacy Policy</Link>
+        <Link
+          to={ADMIN_ROUTE}
+          className="mt-4 inline-flex items-center gap-1.5 border border-white/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80 transition hover:border-[#e8a13a] hover:text-[#e8a13a] sm:ml-6 sm:mt-0"
+        >
+          <Lock size={13} aria-hidden="true" /> Admin Login
+        </Link>
       </div>
     </footer>
   );
