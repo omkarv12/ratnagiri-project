@@ -1131,6 +1131,7 @@ export default function DashboardLayout() {
           {/* Home has the hero video sliding under the header, so no breadcrumb row there */}
           {!isHome && <Breadcrumb />}
           <Outlet />
+          <footer/>
         </div>
       </main>
       <BackToTop />
