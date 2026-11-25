@@ -160,6 +160,20 @@ const THEME_CSS = `
 .rt-header-float::before,
 .rt-header-float::after { opacity: 0; }
 
+/* Home page, top of page only: fully transparent over the hero video, with
+   plain white links. As soon as the page scrolls, the header switches to
+   the light frosted bar above (rt-header-float). */
+.rt-header.rt-header-clear {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.rt-header.rt-header-clear::before,
+.rt-header.rt-header-clear::after { opacity: 0; }
+.rt-header-clear .rt-nav-link { text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+
 .rt-header-float .rt-nav-link { color: var(--rt-ink); }
 .rt-header-float .rt-nav-link:hover,
 .rt-header-float .group:hover > .rt-nav-link,
@@ -308,12 +322,11 @@ const THEME_CSS = `
   color: #fff;
   border: 2px solid #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,.25);
-  animation: rt-glow 2.2s ease-out infinite;
+  box-shadow: none;
 }
 .rt-btn-give:hover {
   background: linear-gradient(135deg, #E48152 0%, #D86F3F 45%, var(--rt-laterite-bright) 100%);
-  animation-play-state: paused;
-  box-shadow: 0 18px 30px -8px rgba(204,98,50,.9), 0 0 24px rgba(204,98,50,.6);
+  box-shadow: none;
 }
 @keyframes rt-beat {
   0%, 100% { transform: scale(1); }
@@ -923,7 +936,11 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   // Home has the hero video sliding under the header, so no breadcrumb row there.
+  // On home, at the very top, the header is fully transparent; once the page
+  // is scrolled it becomes the light frosted bar. Other pages always use the
+  // frosted bar.
   const isHome = location.pathname === "/dashboard";
+  const clearHeader = isHome && !scrolled;
 
   /* Search palette */
   const [searchOpen, setSearchOpen] = useState(false);
@@ -1021,8 +1038,8 @@ export default function DashboardLayout() {
         <div
           className="rt-header-in pointer-events-none sticky top-0 z-40"
         >
-          {/* Same light frosted header on every page */}
-          <header className="rt-header rt-header-float">
+          {/* Transparent on home at the top; light frosted bar everywhere else / once scrolled */}
+          <header className={`rt-header ${clearHeader ? "rt-header-clear" : "rt-header-float"}`}>
             <div
               className={`relative grid w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5 transition-[height] duration-300 ease-out ${
                 scrolled ? "h-16" : "h-20"
@@ -1097,7 +1114,6 @@ export default function DashboardLayout() {
                   title="Contribute: location and services"
                   className="rt-btn rt-btn-give"
                 >
-                  <span className="rt-shine pointer-events-none absolute inset-0 overflow-hidden rounded-full" />
                   <HeartHandshake size={18} className="rt-heart relative text-white" />
                   <span className="relative hidden 2xl:inline">Contribute</span>
                 </button>
