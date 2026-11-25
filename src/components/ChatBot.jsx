@@ -10,11 +10,12 @@ import { MENUS } from "../config/navMenus";
 /* ------------------------------------------------------------------ */
 
 const STORAGE_KEY = "rt-chat-v1";
+const BOT_NAME = "Ratnagiri Mitra";
 
 const GREETING = {
   id: "greeting",
   role: "bot",
-  text: "Namaskar! I'm the Visit Ratnagiri guide. Ask me about beaches, forts, food, stays or how to get here.",
+  text: "Namaskar! I'm Ratnagiri Mitra, your local guide. Ask me about beaches, forts, food, stays or how to get here.",
   actions: [{ label: "Open Interactive Map", route: "/map" }],
 };
 
@@ -173,12 +174,11 @@ function localReply(raw) {
 const uid = () => Math.random().toString(36).slice(2, 10);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* ---------- Cartoon robot mascot (pure SVG, no image files) ---------- */
+/* ---------- Ratnagiri Mitra: local guide mascot (pure SVG, no image files) ---------- */
 const MASCOT_CSS = `
 @keyframes rt-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes rt-ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.75);opacity:0}}
 @keyframes rt-blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
-@keyframes rt-glow{0%,100%{opacity:1}50%{opacity:.25}}
 @keyframes rt-wave{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(22deg)}75%{transform:rotate(-12deg)}85%{transform:rotate(18deg)}}
 @keyframes rt-pop{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.rt-anim,.rt-anim *{animation:none!important}}
@@ -189,25 +189,45 @@ function BotMascot({ size = 44, animate = true }) {
   const box = { transformBox: "fill-box", transformOrigin: "center" };
   return (
     <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" className="rt-anim">
-      {/* antenna */}
-      <line x1="32" y1="10" x2="32" y2="16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="32" cy="7" r="3.6" fill="#fbbf24" style={a("rt-glow", "1.6s")} />
+      {/* kurta / shoulders */}
+      <path d="M6 64 Q7 50 32 48 Q57 50 58 64 Z" fill="#ffffff" />
+      <path d="M26 49 L32 57 L38 49" fill="none" stroke="#99f6e4" strokeWidth="2" strokeLinejoin="round" />
+      {/* neck */}
+      <rect x="27" y="41" width="10" height="9" rx="3" fill="#b97a50" />
       {/* ears */}
-      <rect x="5" y="29" width="7" height="12" rx="3.5" fill="#99f6e4" />
-      <rect x="52" y="29" width="7" height="12" rx="3.5" fill="#99f6e4" />
-      {/* head */}
-      <rect x="10" y="15" width="44" height="38" rx="15" fill="#ffffff" />
-      {/* face screen */}
-      <rect x="15" y="20" width="34" height="27" rx="11" fill="#0b3149" />
+      <circle cx="17" cy="33" r="3.6" fill="#c68a5e" />
+      <circle cx="47" cy="33" r="3.6" fill="#c68a5e" />
+      {/* face */}
+      <ellipse cx="32" cy="32" rx="14.5" ry="15.5" fill="#d9a074" />
+      {/* pheta (turban) */}
+      <path d="M16 29 Q14 9 32 8 Q50 9 48 29 Q41 21 32 21 Q23 21 16 29 Z" fill="#f59e0b" />
+      <path d="M17 24 Q32 12 47 24" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M16 19 Q32 7 48 19" fill="none" stroke="#fbbf24" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M46 14 Q57 18 54 30 Q52 24 47 22 Z" fill="#f59e0b" />
+      {/* eyebrows */}
+      <path d="M22 27.5 Q26 25.5 29.5 27" stroke="#1f2937" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      <path d="M34.5 27 Q38 25.5 42 27.5" stroke="#1f2937" strokeWidth="1.6" fill="none" strokeLinecap="round" />
       {/* eyes (blink) */}
       <g style={{ ...box, ...a("rt-blink", "4.5s") }}>
-        <ellipse cx="25" cy="32" rx="3.4" ry="4.2" fill="#5eead4" />
-        <ellipse cx="39" cy="32" rx="3.4" ry="4.2" fill="#5eead4" />
+        <ellipse cx="26" cy="31.5" rx="2" ry="2.4" fill="#1f2937" />
+        <ellipse cx="38" cy="31.5" rx="2" ry="2.4" fill="#1f2937" />
+        <circle cx="26.7" cy="30.7" r=".7" fill="#fff" />
+        <circle cx="38.7" cy="30.7" r=".7" fill="#fff" />
       </g>
-      {/* smile + cheeks */}
-      <path d="M25 40 Q32 46.5 39 40" stroke="#5eead4" strokeWidth="2.6" fill="none" strokeLinecap="round" />
-      <circle cx="20" cy="39" r="2.2" fill="#fda4af" opacity=".7" />
-      <circle cx="44" cy="39" r="2.2" fill="#fda4af" opacity=".7" />
+      {/* nose */}
+      <path d="M32 32 Q30.5 36 32.5 37" stroke="#b97a50" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      {/* moustache */}
+      <path d="M23.5 39 Q28 35.5 32 38 Q36 35.5 40.5 39 Q36 40.5 32 39.2 Q28 40.5 23.5 39 Z" fill="#1f2937" />
+      {/* smile */}
+      <path d="M27 42.2 Q32 46.2 37 42.2" stroke="#7c2d12" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      {/* cheeks */}
+      <circle cx="21.5" cy="38" r="2" fill="#f97316" opacity=".25" />
+      <circle cx="42.5" cy="38" r="2" fill="#f97316" opacity=".25" />
+      {/* Alphonso mango badge */}
+      <g>
+        <path d="M50 49 Q58 50 58 57 Q58 63 51 62.5 Q46 60 47 54 Q47.5 50 50 49 Z" fill="#fbbf24" stroke="#fff" strokeWidth="1.2" />
+        <path d="M50 49 Q51 46 54 46.5 Q53 49 50 49 Z" fill="#16a34a" />
+      </g>
     </svg>
   );
 }
@@ -239,7 +259,7 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Small "Hi, I'm an AI guide" bubble next to the button (once per browser session).
+  // Small greeting bubble next to the button (once per browser session).
   const TEASER_KEY = "rt-chat-teaser";
   const [teaser, setTeaser] = useState(false);
   useEffect(() => {
@@ -348,7 +368,7 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
               <span className="inline-block origin-bottom-right" style={{ animation: "rt-wave 2.4s ease-in-out infinite" }}>
                 👋
               </span>{" "}
-              Hi, I'm your AI guide!
+              Namaskar! I'm {BOT_NAME}.
             </p>
             <p className="mt-0.5 text-slate-600">Ask me about beaches, food, stays or how to get here.</p>
             <button
@@ -373,7 +393,7 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
           dismissTeaser();
           setOpen((o) => !o);
         }}
-        aria-label={open ? "Close chat" : "Open AI chat assistant"}
+        aria-label={open ? "Close chat" : `Chat with ${BOT_NAME}`}
         aria-expanded={open}
         className={`fixed ${launcherPos} z-50 h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149] text-white shadow-xl shadow-slate-900/30 ring-4 ring-white/80 transition-transform hover:scale-105 active:scale-95 ${
           open ? "hidden sm:flex" : "flex"
@@ -388,8 +408,8 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
               style={{ animation: "rt-ring 2.2s ease-out infinite" }}
               aria-hidden="true"
             />
-            <span className="rt-anim relative flex" style={{ animation: "rt-float 3s ease-in-out infinite" }}>
-              <BotMascot size={46} />
+            <span className="rt-anim relative flex overflow-hidden rounded-full" style={{ animation: "rt-float 3s ease-in-out infinite" }}>
+              <BotMascot size={56} />
             </span>
             <span className="absolute -right-1 -top-1 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-slate-900 ring-2 ring-white">
               AI
@@ -402,23 +422,23 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
       {open && (
         <div
           role="dialog"
-          aria-label="Ratnagiri guide chat"
+          aria-label={`${BOT_NAME} chat`}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
           className={`fixed inset-0 z-50 flex h-[100dvh] flex-col overflow-hidden bg-white shadow-2xl sm:inset-auto ${panelPos} sm:h-[34rem] sm:max-h-[calc(100vh-9rem)] sm:w-[23.5rem] sm:rounded-3xl sm:border sm:border-slate-200`}
         >
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-[#082638] via-[#0b3149] to-[#0f5f5c] px-4 py-3.5 pt-[max(0.875rem,env(safe-area-inset-top))] text-white">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15">
-              <BotMascot size={34} />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15">
+              <BotMascot size={40} />
             </span>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 truncate text-base font-bold leading-tight">
-                Ratnagiri Guide
+                {BOT_NAME}
                 <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-slate-900">
                   AI
                 </span>
               </p>
-              <p className="truncate text-xs text-teal-100">AI assistant for places, food, stays and travel</p>
+              <p className="truncate text-xs text-teal-100">Your local guide for places, food, stays and travel</p>
             </div>
             <button
               type="button"
@@ -449,8 +469,8 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
               <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex flex-col items-start"}>
                 <div className="flex max-w-full items-end gap-2">
                   {m.role !== "user" && (
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
-                      <BotMascot size={24} animate={false} />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
+                      <BotMascot size={30} animate={false} />
                     </span>
                   )}
                   <div
@@ -483,8 +503,8 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
 
             {typing && (
               <div className="flex items-end gap-2" aria-label="Typing">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
-                  <BotMascot size={24} />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-teal-500 to-[#0b3149]">
+                  <BotMascot size={30} />
                 </span>
                 <div className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3">
                   {[0, 150, 300].map((d) => (
@@ -543,7 +563,7 @@ export default function ChatBot({ apiUrl = "", position = "bottom-right", lift =
               </button>
             </div>
             <p className="mt-2 text-center text-[11px] text-slate-500">
-              AI assistant: answers can be wrong. Check official sources before you travel.
+              {BOT_NAME} is an AI assistant: answers can be wrong. Check official sources before you travel.
             </p>
           </form>
         </div>
