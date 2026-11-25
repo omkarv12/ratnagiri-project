@@ -63,6 +63,7 @@ import PoliceStations from "./pages/PoliceStations";
 // Tour guides
 import TourGuides from "./pages/TourGuides";
 import GuideDetail from "./pages/GuideDetail";
+import GuideRegister from "./pages/GuideRegister";
 
 // Stories & media
 import Stories from "./pages/Stories";
@@ -154,8 +155,9 @@ export default function App() {
             <Route path="/medical-facilities" element={<MedicalFacilities />} />
             <Route path="/police-stations" element={<PoliceStations />} />
 
-            {/* Tour guides */}
+            {/* Tour guides (register must stay above :id) */}
             <Route path="/guides" element={<TourGuides />} />
+            <Route path="/guides/register" element={<GuideRegister />} />
             <Route path="/guides/:id" element={<GuideDetail />} />
 
             {/* Stories & media */}

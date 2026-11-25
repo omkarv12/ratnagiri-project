@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import API_BASE_URL from "../config";
 import { GUIDE_LANGUAGES } from "../utils/guideLanguages";
 
 const MAX_PHOTO_MB = 5;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const EMPTY = {
   guide_name: "",
@@ -16,6 +17,7 @@ const EMPTY = {
   experience_years: "",
   license_number: "",
   about: "",
+  website: "", // honeypot: real users never see or fill this
 };
 
 export default function GuideRegister() {
@@ -23,9 +25,12 @@ export default function GuideRegister() {
   const [languages, setLanguages] = useState([]);
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [stage, setStage] = useState(""); // "", "uploading", "saving"
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const fileRef = useRef(null);
+
+  const submitting = stage !== "";
 
   // Clean up the preview URL when it changes or the page unmounts
   useEffect(() => {
@@ -44,12 +49,14 @@ export default function GuideRegister() {
   const onPhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file for your photo.");
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError("Photo must be a JPG, PNG or WebP image.");
+      e.target.value = "";
       return;
     }
     if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
       setError(`Photo must be smaller than ${MAX_PHOTO_MB} MB.`);
+      e.target.value = "";
       return;
     }
     setError("");
@@ -57,10 +64,16 @@ export default function GuideRegister() {
     setPreview(URL.createObjectURL(file));
   };
 
+  const removePhoto = () => {
+    setPhoto(null);
+    setPreview("");
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   const validate = () => {
     if (!form.guide_name.trim()) return "Please enter your full name.";
-    if (!/^[0-9+\-\s]{8,15}$/.test(form.phone_number.trim()))
-      return "Please enter a valid phone number.";
+    if (form.phone_number.replace(/\D/g, "").length < 10)
+      return "Please enter a valid 10-digit phone number.";
     if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return "Please enter a valid email address.";
     if (languages.length === 0) return "Select at least one language you speak.";
     if (!form.destinations.trim()) return "List the destinations you guide at.";
@@ -74,28 +87,47 @@ export default function GuideRegister() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
     const problem = validate();
     if (problem) {
       setError(problem);
       return;
     }
     setError("");
-    setSubmitting(true);
-    try {
-      const body = new FormData();
-      Object.entries(form).forEach(([k, v]) => body.append(k, String(v).trim()));
-      body.append("languages", languages.join(","));
-      body.append("guide_photo", photo);
 
-      const res = await fetch(`${API_BASE_URL}/api/guides`, { method: "POST", body });
+    try {
+      // Step 1: upload the photo to Cloudinary through the existing endpoint
+      setStage("uploading");
+      const fd = new FormData();
+      fd.append("photo", photo);
+      const up = await fetch(`${API_BASE_URL}/api/upload-photo`, { method: "POST", body: fd });
+      const upData = await up.json().catch(() => ({}));
+      if (!up.ok || !upData.url) {
+        throw new Error(upData.error || "Photo upload failed. Please try again.");
+      }
+
+      // Step 2: register the guide with the uploaded photo's URL
+      setStage("saving");
+      const payload = {
+        ...Object.fromEntries(Object.entries(form).map(([k, v]) => [k, String(v).trim()])),
+        languages: languages.join(","),
+        guide_photo: upData.url,
+      };
+      const res = await fetch(`${API_BASE_URL}/api/guides/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Registration failed. Please try again.");
+
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
-      setSubmitting(false);
+      setStage("");
     }
   };
 
@@ -120,6 +152,13 @@ export default function GuideRegister() {
   const input = "w-full border rounded px-3 py-2";
   const label = "block text-sm font-semibold text-gray-700 mb-1";
 
+  const buttonText =
+    stage === "uploading"
+      ? "Uploading photo..."
+      : stage === "saving"
+      ? "Submitting..."
+      : "Submit registration";
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <Link to="/guides" className="text-sm text-teal-700 hover:underline">
@@ -132,6 +171,18 @@ export default function GuideRegister() {
       </p>
 
       <form onSubmit={submit} className="bg-white p-6 rounded shadow space-y-5">
+        {/* Honeypot: hidden from people, bots tend to fill it */}
+        <input
+          type="text"
+          name="website"
+          value={form.website}
+          onChange={set("website")}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+        />
+
         <div>
           <label className={label}>Full name *</label>
           <input className={input} value={form.guide_name} onChange={set("guide_name")} />
@@ -143,6 +194,8 @@ export default function GuideRegister() {
             <input
               className={input}
               type="tel"
+              inputMode="numeric"
+              placeholder="10-digit mobile number"
               value={form.phone_number}
               onChange={set("phone_number")}
             />
@@ -210,6 +263,7 @@ export default function GuideRegister() {
               className={input}
               type="number"
               min="0"
+              max="60"
               value={form.experience_years}
               onChange={set("experience_years")}
             />
@@ -229,6 +283,7 @@ export default function GuideRegister() {
           <textarea
             className={input}
             rows={4}
+            maxLength={1500}
             placeholder="Tell tourists a little about your experience and the tours you offer."
             value={form.about}
             onChange={set("about")}
@@ -238,13 +293,34 @@ export default function GuideRegister() {
         <div>
           <label className={label}>Your photo *</label>
           <div className="flex items-center gap-4">
-            {preview && (
-              <img src={preview} alt="Preview" className="h-28 w-24 object-cover rounded" />
+            {preview ? (
+              <img src={preview} alt="Preview" className="h-28 w-24 object-cover rounded border" />
+            ) : (
+              <div className="h-28 w-24 rounded border-2 border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 text-center px-1">
+                No photo yet
+              </div>
             )}
-            <input type="file" accept="image/*" onChange={onPhoto} />
+            <div className="space-y-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={onPhoto}
+                className="block text-sm"
+              />
+              {photo && (
+                <button
+                  type="button"
+                  onClick={removePhoto}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Remove photo
+                </button>
+              )}
+            </div>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            A clear, front-facing photo. Maximum {MAX_PHOTO_MB} MB.
+            A clear, front-facing photo (JPG, PNG or WebP). Maximum {MAX_PHOTO_MB} MB.
           </p>
         </div>
 
@@ -259,7 +335,7 @@ export default function GuideRegister() {
           disabled={submitting}
           className="px-6 py-2.5 bg-orange-600 text-white font-semibold rounded hover:bg-orange-700 disabled:opacity-60"
         >
-          {submitting ? "Submitting..." : "Submit registration"}
+          {buttonText}
         </button>
       </form>
     </div>
