@@ -117,8 +117,10 @@ const THEME_CSS = `
 }
 .rt-header-in { animation: rt-drop .5s ease-out both; }
 
-/* At the top of the page: full-width bar with a sea gradient.
-   After scrolling: a floating, rounded, frosted-glass bar. */
+/* The header always uses the light frosted style (rt-header-float) on
+   every page: full-width, white frosted bar with dark links and the
+   brand as a kokum-red block on the left. The dark base styles below
+   are kept only as a fallback. */
 .rt-header {
   position: relative;
   pointer-events: auto;
@@ -146,8 +148,7 @@ const THEME_CSS = `
   pointer-events: none;
   transition: opacity .35s ease;
 }
-/* After scrolling: full-width, light frosted bar with dark links
-   (like the reference), and the brand as a kokum-red block on the left. */
+/* Light frosted bar with dark links (applied on all pages). */
 .rt-header-float {
   border-radius: 0;
   background-color: rgba(255, 255, 255, .86);
@@ -185,18 +186,7 @@ const THEME_CSS = `
   box-shadow: 0 8px 18px -10px rgba(112,35,57,.7);
 }
 
-/* Home page, top of page: the header is see-through over the hero video,
-   plain white links with a thin red line under them. As soon as the page
-   scrolls, it turns back into the floating frosted bar above. */
-.rt-header.rt-header-clear {
-  background-color: transparent;
-  box-shadow: none;
-}
-.rt-header.rt-header-clear::before,
-.rt-header.rt-header-clear::after { opacity: 0; }
-.rt-header-clear .rt-nav-link { text-shadow: 0 1px 8px rgba(0,0,0,.55); }
-
-/* Reading-progress line, only visible while floating */
+/* Reading-progress line */
 .rt-progress {
   position: absolute;
   left: 1.5rem; right: 1.5rem; bottom: 3px;
@@ -433,6 +423,7 @@ const NAV_ITEM_CLASS =
   "rt-nav-link flex min-h-[2.75rem] items-center whitespace-nowrap px-3 xl:px-4 py-2 rounded-lg text-[0.9375rem] xl:text-base font-semibold text-white";
 
 // "About" is not shown in the header any more.
+// TODO: replace this with the fixed list of pages and subpages once provided.
 const NAV_ITEMS = [
   { label: "Home", route: "/dashboard", exact: true },
   ...MENUS.filter((m) => !/^about/i.test(m.label)),
@@ -931,11 +922,8 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // On the home page the hero video runs under the header. At the very top
-  // the header is see-through (plain links over the video); once the page is
-  // scrolled it becomes the normal floating bar.
+  // Home has the hero video sliding under the header, so no breadcrumb row there.
   const isHome = location.pathname === "/dashboard";
-  const clearHeader = isHome && !scrolled;
 
   /* Search palette */
   const [searchOpen, setSearchOpen] = useState(false);
@@ -983,7 +971,7 @@ export default function DashboardLayout() {
     document.body.appendChild(s);
   }, [lang]);
 
-  // Floating state + reading progress, throttled to one update per frame.
+  // Header height + reading progress, throttled to one update per frame.
   useEffect(() => {
     let raf = 0;
     const update = () => {
@@ -1029,16 +1017,12 @@ export default function DashboardLayout() {
           sidebarOpen ? "lg:ml-64" : "ml-0"
         }`}
       >
-        {/* Sticky wrapper: its padding is what makes the bar "float" off the edges.
-            pointer-events-none so the transparent gap never blocks clicks. */}
+        {/* Sticky wrapper. pointer-events-none so the transparent gap never blocks clicks. */}
         <div
           className="rt-header-in pointer-events-none sticky top-0 z-40"
         >
-          <header
-            className={`rt-header ${scrolled ? "rt-header-float" : ""} ${
-              clearHeader ? "rt-header-clear" : ""
-            }`}
-          >
+          {/* Same light frosted header on every page */}
+          <header className="rt-header rt-header-float">
             <div
               className={`relative grid w-full grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-5 transition-[height] duration-300 ease-out ${
                 scrolled ? "h-16" : "h-20"
@@ -1121,7 +1105,7 @@ export default function DashboardLayout() {
               </div>
             </div>
 
-            {/* Reading progress (visible while floating) */}
+            {/* Reading progress */}
             <span ref={progressRef} className="rt-progress" aria-hidden="true" />
           </header>
         </div>
