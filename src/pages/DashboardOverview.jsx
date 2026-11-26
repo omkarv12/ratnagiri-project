@@ -10,7 +10,7 @@ import ExperiencesMosaic from "../components/ExperiencesMosaic";
 // Festivals & Events: featured event panel + poster slider
 import FestivalsEvents from "../components/FestivalsEvents";
 // Videos: big YouTube player + playlist
-import VideosSection from "../components/VideosSection";
+
 // Our Stories: blog slider
 import StoriesSection from "../components/StoriesSection";
 // Social Feeds: Instagram reels grid
@@ -71,7 +71,7 @@ export default function DashboardOverview() {
       <HeroVideoTabs />
       <ExperiencesMosaic />
       <FestivalsEvents />
-      <VideosSection />
+      
       <StoriesSection />
       <SocialFeeds />
       <Footer />
