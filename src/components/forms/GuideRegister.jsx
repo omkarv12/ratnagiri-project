@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import API_BASE_URL from "../config";
-import { GUIDE_LANGUAGES } from "../utils/guideLanguages";
+import API_BASE_URL from "../../config";
+import { GUIDE_LANGUAGES } from "../../utils/guideLanguages";
 
 const MAX_PHOTO_MB = 5;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
