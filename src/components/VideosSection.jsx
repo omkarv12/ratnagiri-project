@@ -3,14 +3,14 @@ import { ExternalLink, Play } from "lucide-react";
 import API_BASE_URL from "../config";
 
 /*
-  VIDEOS — your YouTube playlist "Ratnagiri".
+  VIDEOS — your YouTube playlist "Ratnagiri" (channel: Travelling Is Awesome).
 
   How it works
-  1) The list on the right comes from your backend (GET /api/youtube-videos),
-     which reads the playlist set in the backend variable YOUTUBE_PLAYLIST_ID.
-     -> Set  YOUTUBE_PLAYLIST_ID = PLkGXcFDfFwyDFyYxi7Mx-YK9x7ZM7auMm
-        (and YOUTUBE_API_KEY) where your backend runs, then restart it.
-  2) If the backend cannot give the list (variable missing, key wrong...),
+  1) The list on the right comes from your backend (GET /api/youtube-videos).
+     This page now sends the playlist ID itself (?playlist=...), so the list
+     always matches PLAYLIST_ID below, whatever YOUTUBE_PLAYLIST_ID is set to
+     on the backend. YOUTUBE_API_KEY must still be set on the backend.
+  2) If the backend cannot give the list (key wrong, quota, playlist private...),
      the section automatically shows YouTube's own playlist player instead,
      so real videos from this playlist always play.
 */
@@ -28,7 +28,7 @@ export default function VideosSection() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE_URL}/api/youtube-videos`)
+    fetch(`${API_BASE_URL}/api/youtube-videos?playlist=${encodeURIComponent(PLAYLIST_ID)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;
